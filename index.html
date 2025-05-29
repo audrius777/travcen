@@ -48,6 +48,22 @@
     <option value="price-low">Kaina: nuo žemiausios</option>
     <option value="price-high">Kaina: nuo aukščiausios</option>
   </select>
+    @media (max-width: 768px) {
+  .search-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .search-box input,
+  .search-box select,
+  .search-box button {
+    width: 90%;
+    max-width: 400px;
+    margin: 0.5rem 0;
+  }
+}
+
     <button>Search</button>
   </div>
 
