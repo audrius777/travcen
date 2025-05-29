@@ -79,3 +79,9 @@ header {
 .footer .info {
   margin-bottom: 0.5rem;
 }
+@media (max-width: 768px) {
+  .ads-left,
+  .ads-right {
+    display: none !important;
+  }
+}
