@@ -110,3 +110,9 @@ header {
   font-size: 1.5rem;
   cursor: pointer;
 }
+@media (max-width: 768px) {
+  .ads-left,
+  .ads-right {
+    display: none !important;
+  }
+}
