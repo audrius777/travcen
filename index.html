@@ -1,42 +1,39 @@
 <!DOCTYPE html>
-<html lang="lt">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TravCen - Kelionių centras</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TravCen - Partner Travel Hub</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="overlay"></div>
+  <header>
+    <h1>TravCen</h1>
+    <p>Welcome to the Travel Aggregator Platform</p>
+  </header>
 
-  <div class="top-bar">
-    <div class="language-selector">
-      <select id="language">
-        <option value="lt">LT</option>
-        <option value="en">EN</option>
-        <option value="fr">FR</option>
-        <option value="de">DE</option>
-        <option value="es">ES</option>
-        <option value="zh">ZH</option>
-        <option value="ko">KO</option>
-        <option value="sv">SV</option>
-        <option value="no">NO</option>
-        <option value="da">DA</option>
-      </select>
-    </div>
-    <div class="auth-buttons">
-      <button><img src="https://img.icons8.com/color/20/000000/google-logo.png" /> Google</button>
-      <button><img src="https://img.icons8.com/color/20/000000/facebook-new.png" /> Facebook</button>
-    </div>
-  </div>
+  <main>
+    <section class="admin-section">
+      <h2>Internal Agent Registration (Admin Only)</h2>
+      <form id="adminForm">
+        <input type="text" placeholder="Agency Name" id="adminName" required />
+        <input type="url" placeholder="Agency Data URL" id="adminUrl" required />
+        <button type="submit">Add Agent (Admin)</button>
+      </form>
+    </section>
 
-  <div class="container">
-    <header>
-      <h1>TravCen</h1>
-      <p>Visos kelionės vienoje vietoje</p>
-    </header>
-  </div>
+    <section class="public-section">
+      <h2>Travel Agency Partnership Form</h2>
+      <form id="publicForm">
+        <input type="text" placeholder="Agency Name" id="publicName" required />
+        <input type="email" placeholder="Email" id="publicEmail" required />
+        <input type="url" placeholder="Website URL" id="publicUrl" required />
+        <textarea placeholder="Additional Info"></textarea>
+        <button type="submit">Submit Request</button>
+      </form>
+    </section>
+  </main>
 
-  <script src="script.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
