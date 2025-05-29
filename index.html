@@ -1,1 +1,49 @@
 
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravCen - Kelionių pasaulis</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>TravCen</h1>
+    <div class="language-selector">
+      <select>
+        <option value="lt">Lietuvių</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="zh">中文</option>
+        <option value="ko">한국어</option>
+        <option value="sv">Svenska</option>
+        <option value="no">Norsk</option>
+        <option value="da">Dansk</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="search-section">
+    <input type="text" id="from" placeholder="Išvykimo vieta" />
+    <input type="text" id="to" placeholder="Kelionės tikslas" />
+    <button onclick="filterOffers()">Ieškoti</button>
+  </div>
+
+  <div id="offers" class="offers-section">
+    <!-- Kelionių kortelės bus čia -->
+  </div>
+
+  <footer>
+    <div class="info">
+      <a href="#">DUK</a> | <a href="#">Taisyklės</a> | <a href="#">Privatumo politika</a> | <a href="#">Kontaktai</a>
+    </div>
+    <div class="disclaimer">
+      <p>TravCen veikia kaip tarpininkas tarp vartotojų ir kelionių agentūrų. Mes neatsakome už paslaugų kokybę ar pasikeitimus.</p>
+    </div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
