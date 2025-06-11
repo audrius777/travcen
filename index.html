@@ -109,5 +109,37 @@
       </form>
     </div>
   </div>
-</body>
+</body><script>
+  async function loadOffers() {
+    const response = await fetch('offers.json');
+    const offers = await response.json();
+    const container = document.getElementById('card-list');
+    container.innerHTML = '';
+
+    offers.forEach(offer => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-from', offer.from);
+      card.setAttribute('data-to', offer.to);
+      card.setAttribute('data-type', offer.type);
+      card.setAttribute('data-price', offer.price);
+
+      card.innerHTML = `
+        <img src="${offer.image}" alt="${offer.title}">
+        <h3>${offer.title}</h3>
+        <p>From: ${offer.from}</p>
+        <p>To: ${offer.to}</p>
+        <p>Type: ${offer.type}</p>
+        <p>Price: €${offer.price}</p>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  window.onload = () => {
+    loadOffers();
+  };
+</script>
+
 </html>
