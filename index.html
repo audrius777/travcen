@@ -201,5 +201,68 @@
     loadOffers();
   };
 </script>
+  <script>
+  const translations = {
+    en: {
+      siteTitle: "TravCen",
+      welcomeText: "All travel offers in one place",
+      searchBtn: "Search"
+    },
+    fr: {
+      siteTitle: "TravCen",
+      welcomeText: "Toutes les offres de voyage en un seul endroit",
+      searchBtn: "Rechercher"
+    },
+    es: {
+      siteTitle: "TravCen",
+      welcomeText: "Todas las ofertas de viaje en un solo lugar",
+      searchBtn: "Buscar"
+    },
+    de: {
+      siteTitle: "TravCen",
+      welcomeText: "Alle Reiseangebote an einem Ort",
+      searchBtn: "Suchen"
+    },
+    zh: {
+      siteTitle: "TravCen",
+      welcomeText: "一站式旅游优惠",
+      searchBtn: "搜索"
+    },
+    ko: {
+      siteTitle: "TravCen",
+      welcomeText: "모든 여행 상품을 한 곳에",
+      searchBtn: "검색"
+    },
+    da: {
+      siteTitle: "TravCen",
+      welcomeText: "Alle rejsetilbud på ét sted",
+      searchBtn: "Søg"
+    },
+    sv: {
+      siteTitle: "TravCen",
+      welcomeText: "Alla resetilbud på ett ställe",
+      searchBtn: "Sök"
+    },
+    no: {
+      siteTitle: "TravCen",
+      welcomeText: "Alle reisetilbud på ett sted",
+      searchBtn: "Søk"
+    },
+    lt: {
+      siteTitle: "TravCen",
+      welcomeText: "Visi kelionių pasiūlymai vienoje vietoje",
+      searchBtn: "Ieškoti"
+    }
+  };
+
+  function setLanguage(lang) {
+    const t = translations[lang];
+    if (!t) return;
+    document.getElementById('site-title').innerText = t.siteTitle;
+    document.getElementById('welcome-text').innerText = t.welcomeText;
+    document.getElementById('search-btn').innerText = t.searchBtn;
+  }
+</script>
+
 
 </html>
