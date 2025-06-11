@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Greece from Vilnius",
+    "from": "Vilnius",
+    "to": "Greece",
+    "type": "leisure",
+    "price": 299,
+    "image": "https://source.unsplash.com/280x180/?beach"
+  },
+  {
+    "title": "Alps from Kaunas",
+    "from": "Kaunas",
+    "to": "Swiss Alps",
+    "type": "adventure",
+    "price": 499,
+    "image": "https://source.unsplash.com/280x180/?mountains"
+  },
+  {
+    "title": "Paris from Riga",
+    "from": "Riga",
+    "to": "Paris",
+    "type": "cultural",
+    "price": 199,
+    "image": "https://source.unsplash.com/280x180/?paris"
+  }
+]
