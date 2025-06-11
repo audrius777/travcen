@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravCen - Travel Offers Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    const translations = {
+      en: { siteTitle: "TravCen", welcomeText: "All travel offers in one place", searchBtn: "Search" },
+      fr: { siteTitle: "TravCen", welcomeText: "Toutes les offres de voyage en un seul endroit", searchBtn: "Rechercher" },
+      es: { siteTitle: "TravCen", welcomeText: "Todas las ofertas de viaje en un solo lugar", searchBtn: "Buscar" },
+      de: { siteTitle: "TravCen", welcomeText: "Alle Reiseangebote an einem Ort", searchBtn: "Suchen" },
+      zh: { siteTitle: "TravCen", welcomeText: "一站式旅游优惠", searchBtn: "搜索" },
+      ko: { siteTitle: "TravCen", welcomeText: "모든 여행 상품을 한 곳에", searchBtn: "검색" },
+      da: { siteTitle: "TravCen", welcomeText: "Alle rejsetilbud på ét sted", searchBtn: "Søg" },
+      sv: { siteTitle: "TravCen", welcomeText: "Alla resetilbud på ett ställe", searchBtn: "Sök" },
+      no: { siteTitle: "TravCen", welcomeText: "Alle reisetilbud på ett sted", searchBtn: "Søk" },
+      lt: { siteTitle: "TravCen", welcomeText: "Visi kelionių pasiūlymai vienoje vietoje", searchBtn: "Ieškoti" }
+    };
+
+    function setLanguage(lang) {
+      const t = translations[lang];
+      if (!t) return;
+      document.getElementById('site-title').innerText = t.siteTitle;
+      document.getElementById('welcome-text').innerText = t.welcomeText;
+      document.getElementById('search-btn').innerText = t.searchBtn;
+    }
+
+    window.onload = () => {
+      setLanguage('en');
+    };
+  </script>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="language-selector">
+      <select onchange="setLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="zh">中文</option>
+        <option value="ko">한국어</option>
+        <option value="da">Dansk</option>
+        <option value="sv">Svenska</option>
+        <option value="no">Norsk</option>
+        <option value="lt">Lietuvių</option>
+      </select>
+    </div>
+  </div>
+  <header>
+    <h1 id="site-title">TravCen</h1>
+    <p id="welcome-text">All travel offers in one place</p>
+  </header>
+  <div class="search-section">
+    <input type="text" placeholder="From" />
+    <input type="text" placeholder="To" />
+    <button id="search-btn">Search</button>
+  </div>
+</body>
+</html>
