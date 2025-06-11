@@ -13,6 +13,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TravCen - Travel Offers Hub</title>
   <link rel="stylesheet" href="style.css" />
+  <script>
+  const translations = {
+    en: {
+      welcome: "All travel offers in one place",
+      search: "Search",
+      departure: "Departure location",
+      destination: "Destination",
+      tripType: "Trip type",
+      lastMinute: "Last Minute",
+      loginGoogle: "Sign in with Google",
+      loginFacebook: "Sign in with Facebook",
+      faq: "FAQ",
+      privacy: "Privacy Policy",
+      contact: "Contact",
+      disclaimer: "TravCen is an intermediary platform. We do not take responsibility for the quality of services purchased through partner sites.",
+    },
+    fr: {
+      welcome: "Toutes les offres de voyage en un seul endroit",
+      search: "Chercher",
+      departure: "Lieu de départ",
+      destination: "Destination",
+      tripType: "Type de voyage",
+      lastMinute: "Dernière minute",
+      loginGoogle: "Se connecter avec Google",
+      loginFacebook: "Se connecter avec Facebook",
+      faq: "FAQ",
+      privacy: "Politique de confidentialité",
+      contact: "Contact",
+      disclaimer: "TravCen est une plateforme intermédiaire. Nous ne sommes pas responsables de la qualité des services achetés via des sites partenaires.",
+    },
+    // pridėsime kitas kalbas toliau...
+  };
+
+  function setLanguage(lang) {
+    document.getElementById("welcome-text").innerText = translations[lang].welcome;
+    document.getElementById("search-btn").innerText = translations[lang].search;
+    document.getElementById("departure").placeholder = translations[lang].departure;
+    document.getElementById("destination").placeholder = translations[lang].destination;
+    document.getElementById("trip-type").options[0].text = translations[lang].tripType;
+    document.getElementById("trip-type").options[3].text = translations[lang].lastMinute;
+    document.getElementById("login-google").innerText = translations[lang].loginGoogle;
+    document.getElementById("login-facebook").innerText = translations[lang].loginFacebook;
+    document.getElementById("footer-disclaimer").innerText = translations[lang].disclaimer;
+    document.getElementById("footer-faq").innerText = translations[lang].faq;
+    document.getElementById("footer-privacy").innerText = translations[lang].privacy;
+    document.getElementById("footer-contact").innerText = translations[lang].contact;
+  }
+</script>
+
 </head>
 <body>
   <div class="top-bar">
