@@ -1,0 +1,1 @@
+function setLanguage(lang) { alert('Language set: ' + lang); } function filterCards() { alert('Search clicked'); }
