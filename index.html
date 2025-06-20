@@ -1,5 +1,12 @@
+from zipfile import ZipFile
+import os
 
-<!DOCTYPE html>
+# Redefine directory structure after kernel reset
+base_dir = "/mnt/data/travcen_complete"
+os.makedirs(base_dir, exist_ok=True)
+
+# Sample HTML content (simplified to fit the structure with placeholders)
+index_html = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -11,7 +18,7 @@
 <body>
   <div class="top-bar">
     <div class="language-selector">
-      <select onchange="setLanguage(this.value)">
+      <select id="language-select" onchange="setLanguage(this.value)">
         <option value="en">English</option>
         <option value="fr">Français</option>
         <option value="es">Español</option>
@@ -25,16 +32,14 @@
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google</button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook</button>
+      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Google</button>
+      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Facebook</button>
     </div>
   </div>
-
   <header>
     <h1 id="site-title">TravCen</h1>
     <p id="welcome-text">All travel offers in one place</p>
   </header>
-
   <div class="search-section">
     <input type="text" id="departure" placeholder="Departure location" />
     <input type="text" id="destination" placeholder="Destination" />
@@ -47,17 +52,14 @@
     </select>
     <select id="price-sort">
       <option value="">Sort by price</option>
-      <option value="price-low">Price: Low to High</option>
-      <option value="price-high">Price: High to Low</option>
+      <option value="price-low">Low to High</option>
+      <option value="price-high">High to Low</option>
     </select>
     <button id="search-btn" onclick="filterCards()">Search</button>
   </div>
-
   <div class="ads ads-left">Ad Left</div>
   <div class="ads ads-right">Ad Right</div>
-
   <div class="results" id="card-list"></div>
-
   <div class="footer">
     <div class="info">
       <a id="footer-faq" href="#">FAQ</a> |
@@ -69,19 +71,133 @@
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
     </p>
   </div>
-
-  <div id="partner-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
-      <h2>Partner Registration</h2>
-      <form>
-        <input type="text" placeholder="Company Name" required /><br/>
-        <input type="url" placeholder="Website URL" required /><br/>
-        <input type="email" placeholder="Contact Email" required /><br/>
-        <textarea placeholder="Short Description" rows="4"></textarea><br/>
-        <button type="submit">Submit</button>
-      </form>
-    </div>
-  </div>
 </body>
 </html>
+"""
+
+style_css = """
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url('background.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #000;
+}
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+header {
+  text-align: center;
+  padding: 2rem 0;
+  background-color: rgba(0, 102, 204, 0.8);
+  color: white;
+}
+.search-section {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 1rem;
+  background-color: #ffffffcc;
+}
+.ads {
+  position: fixed;
+  top: 100px;
+  width: 120px;
+  height: 600px;
+  background: #ddd;
+}
+.ads-left {
+  left: 0;
+}
+.ads-right {
+  right: 0;
+}
+.results {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 2rem;
+}
+.footer {
+  text-align: center;
+  padding: 2rem;
+  background-color: #eef6ff;
+}
+"""
+
+script_js = """
+const translations = {
+  en: {
+    siteTitle: "TravCen",
+    welcomeText: "All travel offers in one place",
+    searchBtn: "Search",
+    departure: "Departure location",
+    destination: "Destination",
+    tripType: "Trip type",
+    lastMinute: "Last Minute",
+    loginGoogle: "Google",
+    loginFacebook: "Facebook",
+    faq: "FAQ",
+    privacy: "Privacy Policy",
+    contact: "Contact",
+    disclaimer: "TravCen is an intermediary platform..."
+  },
+  fr: {
+    siteTitle: "TravCen",
+    welcomeText: "Toutes les offres de voyage...",
+    searchBtn: "Chercher",
+    departure: "Lieu de départ",
+    destination: "Destination",
+    tripType: "Type de voyage",
+    lastMinute: "Dernière minute",
+    loginGoogle: "Google",
+    loginFacebook: "Facebook",
+    faq: "FAQ",
+    privacy: "Politique de confidentialité",
+    contact: "Contact",
+    disclaimer: "TravCen est une plateforme intermédiaire..."
+  }
+};
+
+function setLanguage(lang) {
+  const t = translations[lang];
+  if (!t) return;
+  document.getElementById('site-title').innerText = t.siteTitle;
+  document.getElementById('welcome-text').innerText = t.welcomeText;
+  document.getElementById('search-btn').innerText = t.searchBtn;
+  document.getElementById('departure').placeholder = t.departure;
+  document.getElementById('destination').placeholder = t.destination;
+  document.getElementById("trip-type").options[0].text = t.tripType;
+  document.getElementById("trip-type").options[4].text = t.lastMinute;
+  document.getElementById("login-google").innerText = t.loginGoogle;
+  document.getElementById("login-facebook").innerText = t.loginFacebook;
+  document.getElementById("footer-faq").innerText = t.faq;
+  document.getElementById("footer-privacy").innerText = t.privacy;
+  document.getElementById("footer-contact").innerText = t.contact;
+  document.getElementById("footer-disclaimer").innerText = t.disclaimer;
+}
+"""
+
+# Write files to disk
+with open(f"{base_dir}/index.html", "w") as f:
+    f.write(index_html)
+with open(f"{base_dir}/style.css", "w") as f:
+    f.write(style_css)
+with open(f"{base_dir}/script.js", "w") as f:
+    f.write(script_js)
+
+# Create a zip archive
+zip_path = "/mnt/data/travcen_rebuild.zip"
+with ZipFile(zip_path, "w") as zipf:
+    for root, dirs, files in os.walk(base_dir):
+        for file in files:
+            file_path = os.path.join(root, file)
+            arcname = os.path.relpath(file_path, base_dir)
+            zipf.write(file_path, arcname)
+
+zip_path
+
