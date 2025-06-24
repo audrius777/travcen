@@ -51,9 +51,6 @@
     <button id="search-btn" onclick="filterCards()">Search</button>
   </div>
 
-  <div class="ads ads-left">Ad Left</div>
-  <div class="ads ads-right">Ad Right</div>
-
   <div class="results" id="card-list">
     <div class="card" data-from="Vilnius" data-to="Greece" data-type="leisure" data-price="299">
       <img src="https://source.unsplash.com/280x180/?beach" />
@@ -76,55 +73,14 @@
     <div class="info">
       <a id="footer-faq" href="#">FAQ</a> |
       <a id="footer-privacy" href="#">Privacy Policy</a> |
-      <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a>
+      <a id="footer-contact" href="#">Contact</a>
     </div>
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
     </p>
   </div>
 
-  <div id="partner-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
-      <h2>Partner Registration</h2>
-      <form>
-        <input type="text" placeholder="Company Name" required /><br/>
-        <input type="url" placeholder="Website URL" required /><br/>
-        <input type="email" placeholder="Contact Email" required /><br/>
-        <textarea placeholder="Short Description" rows="4"></textarea><br/>
-        <button type="submit">Submit</button>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    function filterCards() {
-      const departure = document.getElementById('departure').value.toLowerCase();
-      const destination = document.getElementById('destination').value.toLowerCase();
-      const tripType = document.getElementById('trip-type').value.toLowerCase();
-      const sort = document.getElementById('price-sort').value;
-
-      let cards = Array.from(document.querySelectorAll('.card'));
-
-      cards.forEach(card => {
-        const from = card.getAttribute('data-from').toLowerCase();
-        const to = card.getAttribute('data-to').toLowerCase();
-        const type = card.getAttribute('data-type').toLowerCase();
-        const matches = from.includes(departure) && to.includes(destination) && (tripType === "" || type === tripType);
-        card.style.display = matches ? 'block' : 'none';
-      });
-
-      let visibleCards = cards.filter(card => card.style.display === 'block');
-      if (sort === 'price-low') {
-        visibleCards.sort((a, b) => a.getAttribute('data-price') - b.getAttribute('data-price'));
-      } else if (sort === 'price-high') {
-        visibleCards.sort((a, b) => b.getAttribute('data-price') - a.getAttribute('data-price'));
-      }
-
-      const container = document.getElementById('card-list');
-      visibleCards.forEach(card => container.appendChild(card));
-    }
-  </script>
+  <script src="translate.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
