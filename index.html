@@ -122,18 +122,19 @@
   </div>
 
   <div id="partner-modal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
-      <h2>Partner Registration</h2>
-      <form>
-        <input type="text" placeholder="Company Name" required /><br/>
-        <input type="url" placeholder="Website URL" required /><br/>
-        <input type="email" placeholder="Contact Email" required /><br/>
-        <textarea placeholder="Short Description" rows="4"></textarea><br/>
-        <button type="submit">Submit</button>
-      </form>
-    </div>
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
+    <h2>Partner Registration</h2>
+    <form id="partner-form">
+      <input id="company" type="text" placeholder="Company Name" required /><br/>
+      <input id="url" type="url" placeholder="Website URL" required /><br/>
+      <input id="email" type="email" placeholder="Contact Email" required /><br/>
+      <textarea id="description" placeholder="Short Description" rows="4"></textarea><br/>
+      <button type="submit">Submit</button>
+    </form>
   </div>
+</div>
+
 
   <script>
     const translations = {
