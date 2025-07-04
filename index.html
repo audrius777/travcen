@@ -347,7 +347,8 @@
       description: document.getElementById("description").value,
     };
 
-    fetch("http://localhost:3000/register-partner", {
+    fetch("http://localhost:3000/api/partner", {
+
       method: "POST",
       headers: {
         "Content-Type": "application/json",
