@@ -336,38 +336,51 @@
       visibleCards.forEach(card => container.appendChild(card));
     }
   </script>
-  <script>
+ <script>
   document.querySelector("#partner-form")?.addEventListener("submit", function(e) {
     e.preventDefault();
 
-    const data = {
-      company: document.getElementById("company").value,
-      url: document.getElementById("url").value,
-      email: document.getElementById("email").value,
-      description: document.getElementById("description").value,
-    };
+    const company = document.getElementById("company").value.trim();
+    const url = document.getElementById("url").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const description = document.getElementById("description").value.trim();
+
+    // Paprasta formos validacija
+    if (!company || !url || !email || !description) {
+      alert("Užpildykite visus laukus.");
+      return;
+    }
+
+    // El. pašto formatas
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert("Neteisingas el. pašto adresas.");
+      return;
+    }
+
+    const data = { company, url, email, description };
 
     fetch("http://localhost:3000/api/partner", {
-
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     })
-      .then((res) => {
-        if (res.ok) {
-          alert("Partner registered successfully!");
-          document.getElementById("partner-form").reset();
-          document.getElementById("partner-modal").style.display = "none";
-        } else {
-          throw new Error("Server error");
-        }
-      })
-      .catch((err) => {
-        alert("Submission failed: " + err.message);
-      });
+    .then((res) => {
+      if (res.ok) {
+        alert("Partneris sėkmingai užregistruotas!");
+        document.getElementById("partner-form").reset();
+        document.getElementById("partner-modal").style.display = "none";
+      } else {
+        throw new Error("Serverio klaida");
+      }
+    })
+    .catch((err) => {
+      alert("Klaida siunčiant duomenis: " + err.message);
+    });
   });
 </script>
+
 </body>
 </html>
