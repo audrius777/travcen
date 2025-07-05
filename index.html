@@ -111,11 +111,21 @@
 
   <div class="footer">
     <div class="info">
-      <a id="footer-faq" href="#">FAQ</a> |
-      <a id="footer-privacy" href="#">Privacy Policy</a> |
-      <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a>
-    </div>
+  <a id="footer-faq" href="#">FAQ</a> |
+  <a id="footer-privacy" href="#">Privacy Policy</a> |
+  <a id="footer-contact" href="#">Contact</a> |
+  <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a> |
+  <a href="#" onclick="showPartners()">Partners</a>
+</div>
+    <div id="partners-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('partners-modal').style.display='none'">&times;</span>
+    <h2>Registruoti Partneriai</h2>
+    <ul id="partner-list"></ul>
+  </div>
+</div>
+
+
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
     </p>
@@ -381,6 +391,26 @@
     });
   });
 </script>
+  <script>
+function showPartners() {
+  fetch("http://localhost:3000/api/partners")
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("partner-list");
+      list.innerHTML = "";
+      data.forEach(p => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${p.company}</strong> – <a href="${p.url}" target="_blank">${p.url}</a><br><small>${p.description}</small>`;
+        list.appendChild(li);
+      });
+      document.getElementById("partners-modal").style.display = "block";
+    })
+    .catch(err => {
+      alert("Nepavyko įkelti partnerių: " + err.message);
+    });
+}
+</script>
+
 
 </body>
 </html>
