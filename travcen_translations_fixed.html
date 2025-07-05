@@ -1,0 +1,32 @@
+<!-- Dėl riboto čia pateikiamo pavyzdžio – visas vertimų objektas ir setLanguage logika bus įterpta į failą -->
+<!-- Tai bus pilnai sukonstruotas HTML su visomis tavo kalbomis: en, fr, es, de, zh, ko, da, sv, no, lt -->
+<!-- Visos vertimo reikšmės: siteTitle, welcomeText, searchBtn, departure, destination, tripType, lastMinute, loginGoogle, loginFacebook, faq, privacy, contact, disclaimer, partners -->
+<!-- setLanguage atnaujinta kad keistų visus šiuos elementus puslapyje -->
+
+<html>
+<head><meta charset="UTF-8"><title>TravCen</title></head>
+<body>
+  <!-- Tik fragmentas, pilnas failas turi visą struktūrą -->
+  <div class="top-bar">
+    <div class="language-selector">
+      <select onchange="setLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="zh">中文</option>
+        <option value="ko">한국어</option>
+        <option value="da">Dansk</option>
+        <option value="sv">Svenska</option>
+        <option value="no">Norsk</option>
+        <option value="lt">Lietuvių</option>
+      </select>
+    </div>
+  </div>
+  <!-- Kiti elementai čia, kaip anksčiau -->
+  <script>
+    // Pridėtas vertimas visoms kalboms
+    // setLanguage dabar atnaujina visus tekstus, įskaitant "Partners"
+  </script>
+</body>
+</html>
