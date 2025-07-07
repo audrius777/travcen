@@ -400,7 +400,7 @@ function showPartners() {
       list.innerHTML = "";
       data.forEach(p => {
         const li = document.createElement("li");
-        li.innerHTML = `<strong>${p.company}</strong> – <a href="${p.url}" target="_blank">${p.url}</a><br><small>${p.description}</small>`;
+        li.innerHTML = `<a href="${p.url}" target="_blank">${p.url}</a>`;
         list.appendChild(li);
       });
       document.getElementById("partners-modal").style.display = "block";
