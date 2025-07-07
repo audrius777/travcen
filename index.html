@@ -115,12 +115,12 @@
   <a id="footer-privacy" href="#">Privacy Policy</a> |
   <a id="footer-contact" href="#">Contact</a> |
   <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a> |
-  <a href="#" onclick="showPartners()">Partners</a>
+  <a href="#" id="footer-partners" onclick="showPartners()">Partners</a>
 </div>
     <div id="partners-modal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('partners-modal').style.display='none'">&times;</span>
-    <h2>Registruoti Partneriai</h2>
+    <h2 id="partners-title">Registruoti Partneriai</h2>
     <ul id="partner-list"></ul>
   </div>
 </div>
