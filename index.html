@@ -61,9 +61,13 @@
     </div>
     
 <div class="auth-buttons">
-    <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google</button>
-    <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook</button>
-  </div>
+  <button onclick="window.location.href='/auth/google'">
+    <img src="https://img.icons8.com/color/20/000000/google-logo.png" /> Sign in with Google
+  </button>
+  <button onclick="window.location.href='/auth/facebook'">
+    <img src="https://img.icons8.com/color/20/000000/facebook-new.png" /> Sign in with Facebook
+  </button>
+</div>
 
   <!-- Naujas blokas: rodomas tik prisijungus -->
  <div id="user-status" style="display: none; margin-top: 10px;">
