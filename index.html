@@ -59,11 +59,17 @@
         <option value="lt">Lietuvių</option>
       </select>
     </div>
-    <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google</button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook</button>
-    </div>
+  <div class="auth-buttons">
+  <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google</button>
+  <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook</button>
+
+  <!-- Naujas blokas: rodomas tik prisijungus -->
+  <div id="user-status" style="display: none; margin-top: 10px;">
+    <p id="logged-user" style="display: inline; margin-right: 10px;"></p>
+    <button id="logout-btn">Atsijungti</button>
   </div>
+</div>
+
 
   <header>
     <h1 id="site-title">TravCen</h1>
@@ -417,21 +423,23 @@ function showPartners() {
     .then(res => res.json())
     .then(data => {
       if (data.loggedIn) {
-        const header = document.createElement("p");
-        header.innerText = "👤 Prisijungta kaip: " + data.email;
-        document.body.prepend(header);
+        // Paslepiam login mygtukus
+        document.getElementById("login-google").style.display = "none";
+        document.getElementById("login-facebook").style.display = "none";
 
-        const logoutBtn = document.createElement("button");
-        logoutBtn.innerText = "Atsijungti";
-        logoutBtn.onclick = () => {
-          fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+        // Parodom prisijungusio vartotojo info
+        document.getElementById("user-status").style.display = "inline-block";
+        document.getElementById("logged-user").innerText = "👤 Prisijungta kaip: " + data.email;
+
+        // Atsijungimo logika
+        document.getElementById("logout-btn").onclick = () => {
+          fetch("/api/logout", { method: "POST" })
+            .then(() => location.reload());
         };
-        document.body.prepend(logoutBtn);
       }
     })
     .catch(() => {});
 </script>
-
 
 </body>
 </html>
