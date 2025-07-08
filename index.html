@@ -410,6 +410,26 @@ function showPartners() {
     });
 }
 </script>
+<script>
+  // Patikrinam ar vartotojas prisijungęs
+  fetch("/api/user", { credentials: "include" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.loggedIn) {
+        const header = document.createElement("p");
+        header.innerText = "👤 Prisijungta kaip: " + data.email;
+        document.body.prepend(header);
+
+        const logoutBtn = document.createElement("button");
+        logoutBtn.innerText = "Atsijungti";
+        logoutBtn.onclick = () => {
+          fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+        };
+        document.body.prepend(logoutBtn);
+      }
+    })
+    .catch(() => {});
+</script>
 
 
 </body>
