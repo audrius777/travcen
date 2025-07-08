@@ -9,11 +9,12 @@ document.getElementById("login-form").addEventListener("submit", function(e) {
     headers: {
       "Content-Type": "application/json"
     },
+    credentials: "include", // LABAI SVARBU!
     body: JSON.stringify({ email, password })
   })
   .then(res => {
     if (res.ok) {
-      window.location.href = "/index.html";
+      window.location.href = "/"; // grįžtam į pradžią
     } else {
       document.getElementById("error-message").innerText = "Neteisingi prisijungimo duomenys.";
     }
@@ -22,3 +23,4 @@ document.getElementById("login-form").addEventListener("submit", function(e) {
     document.getElementById("error-message").innerText = "Klaida jungiantis prie serverio.";
   });
 });
+
