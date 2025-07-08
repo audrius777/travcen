@@ -371,12 +371,13 @@
     const data = { company, url, email, description };
 
     fetch("http://localhost:3000/api/partner", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  credentials: "include",  // ← ŠITAS BŪTINAS
+  body: JSON.stringify(data)
+})
     .then((res) => {
       if (res.ok) {
         alert("Partneris sėkmingai užregistruotas!");
