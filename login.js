@@ -13,7 +13,7 @@ document.getElementById("login-form").addEventListener("submit", function(e) {
   })
   .then(res => {
     if (res.ok) {
-      window.location.href = "/";
+      window.location.href = "/index.html";
     } else {
       document.getElementById("error-message").innerText = "Neteisingi prisijungimo duomenys.";
     }
