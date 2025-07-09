@@ -357,107 +357,103 @@
       const container = document.getElementById('card-list');
       visibleCards.forEach(card => container.appendChild(card));
     }
+    
   </script>
- <script>
-  document.querySelector("#partner-form")?.addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    const company = document.getElementById("company").value.trim();
-    const url = document.getElementById("url").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const description = document.getElementById("description").value.trim();
-
-    // Paprasta formos validacija
-    if (!company || !url || !email || !description) {
-      alert("Užpildykite visus laukus.");
-      return;
-    }
-
-    // El. pašto formatas
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert("Neteisingas el. pašto adresas.");
-      return;
-    }
-
-    const data = { company, url, email, description };
-
-    fetch("http://localhost:3000/api/partner", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  credentials: "include",  // ← ŠITAS BŪTINAS
-  body: JSON.stringify(data)
-})
-    .then((res) => {
-      if (res.ok) {
-        alert("Partneris sėkmingai užregistruotas!");
-        document.getElementById("partner-form").reset();
-        document.getElementById("partner-modal").style.display = "none";
-      } else {
-        throw new Error("Serverio klaida");
-      }
-    })
-    .catch((err) => {
-      alert("Klaida siunčiant duomenis: " + err.message);
-    });
-  });
-</script>
   <script>
-function showPartners() {
-  fetch("http://localhost:3000/api/partners")
-    .then(res => res.json())
-    .then(data => {
-      const list = document.getElementById("partner-list");
-      list.innerHTML = "";
-      data.forEach(p => {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href="${p.url}" target="_blank">${p.url}</a>`;
-        list.appendChild(li);
-      });
-      document.getElementById("partners-modal").style.display = "block";
-    })
-    .catch(err => {
-      alert("Nepavyko įkelti partnerių: " + err.message);
+  const BACKEND_URL = window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : "https://travcen.vercel.app";
+
+  window.addEventListener("DOMContentLoaded", () => {
+    // Google / Facebook prisijungimai
+    document.getElementById("login-google")?.addEventListener("click", () => {
+      window.location.href = `${BACKEND_URL}/auth/google`;
     });
-}
-</script>
-<script>
-  // Patikrinam ar vartotojas prisijungęs
-  fetch("/api/user", { credentials: "include" })
-    .then(res => res.json())
-    .then(data => {
-      if (data.loggedIn) {
-        // Paslepiam login mygtukus
-        document.getElementById("login-google").style.display = "none";
-        document.getElementById("login-facebook").style.display = "none";
 
-        // Parodom prisijungusio vartotojo info
-        document.getElementById("user-status").style.display = "inline-block";
-        document.getElementById("logged-user").innerText = "👤 Prisijungta kaip: " + data.email;
+    document.getElementById("login-facebook")?.addEventListener("click", () => {
+      window.location.href = `${BACKEND_URL}/auth/facebook`;
+    });
 
-        // Atsijungimo logika
-        document.getElementById("logout-btn").onclick = () => {
-          fetch("/api/logout", { method: "POST" })
-            .then(() => location.reload());
-        };
+    // Patikrinam ar prisijungęs vartotojas
+    fetch(`${BACKEND_URL}/api/user`, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn) {
+          document.getElementById("login-google").style.display = "none";
+          document.getElementById("login-facebook").style.display = "none";
+          document.getElementById("user-status").style.display = "inline-block";
+          document.getElementById("logged-user").innerText = "👤 Prisijungta kaip: " + data.email;
+
+          document.getElementById("logout-btn").onclick = () => {
+            fetch(`${BACKEND_URL}/api/logout`, { method: "POST" })
+              .then(() => location.reload());
+          };
+        }
+      });
+
+    // Partnerių forma
+    document.querySelector("#partner-form")?.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const company = document.getElementById("company").value.trim();
+      const url = document.getElementById("url").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const description = document.getElementById("description").value.trim();
+
+      if (!company || !url || !email || !description) {
+        alert("Užpildykite visus laukus.");
+        return;
       }
-    })
-    .catch(() => {});
-</script>
-<script>
-  // Naudok savo tikrą domeną
-  const BACKEND_URL = "https://travcen.vercel.app/";
 
-  document.getElementById("login-google").addEventListener("click", () => {
-    window.location.href = `${BACKEND_URL}/auth/google`;
-  });
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert("Neteisingas el. pašto adresas.");
+        return;
+      }
 
-  document.getElementById("login-facebook").addEventListener("click", () => {
-    window.location.href = `${BACKEND_URL}/auth/facebook`;
+      const data = { company, url, email, description };
+
+      fetch(`${BACKEND_URL}/api/partner`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data)
+      })
+      .then(res => {
+        if (res.ok) {
+          alert("Partneris sėkmingai užregistruotas!");
+          document.getElementById("partner-form").reset();
+          document.getElementById("partner-modal").style.display = "none";
+        } else {
+          throw new Error("Serverio klaida");
+        }
+      })
+      .catch(err => {
+        alert("Klaida siunčiant duomenis: " + err.message);
+      });
+    });
+
+    // Partnerių sąrašas
+    document.getElementById("footer-partners")?.addEventListener("click", function() {
+      fetch(`${BACKEND_URL}/api/partners`)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("partner-list");
+          list.innerHTML = "";
+          data.forEach(p => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="${p.url}" target="_blank">${p.url}</a>`;
+            list.appendChild(li);
+          });
+          document.getElementById("partners-modal").style.display = "block";
+        })
+        .catch(err => {
+          alert("Nepavyko įkelti partnerių: " + err.message);
+        });
+    });
   });
 </script>
+
 
 </body>
 </html>
