@@ -126,12 +126,12 @@
   <a id="footer-faq" href="#">FAQ</a> |
   <a id="footer-privacy" href="#">Privacy Policy</a> |
   <a id="footer-contact" href="#">Contact</a> |
-  <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a> |
-  <a href="#" id="footer-partners" onclick="showPartners()">Partners</a>
+  <a href="#" id="open-partner-modal">Become a Partner</a>
+  <a href="#" id="footer-partners">Partners</a>
 </div>
     <div id="partners-modal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="document.getElementById('partners-modal').style.display='none'">&times;</span>
+    <span class="close" id="close-partners-modal">&times;</span>
     <h2 id="partners-title">Registruoti Partneriai</h2>
     <ul id="partner-list"></ul>
   </div>
@@ -145,7 +145,7 @@
 
   <div id="partner-modal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
+   <span class="close" id="close-partner-modal">&times;</span>
     <h2>Partner Registration</h2>
     <form id="partner-form">
       <input id="company" type="text" placeholder="Company Name" required /><br/>
@@ -487,8 +487,20 @@ function filterCards() {
         .catch(err => {
           alert("Nepavyko įkelti partnerių: " + err.message);
         });
+     });
+
+    // Modalų uždarymo mygtukai – turi būti čia, viduje DOMContentLoaded
+    document.getElementById("close-partners-modal")?.addEventListener("click", function () {
+      document.getElementById("partners-modal").style.display = "none";
     });
-  });
+
+    document.getElementById("close-partner-modal")?.addEventListener("click", function () {
+      document.getElementById("partner-modal").style.display = "none";
+    });
+});
+
+
+
 </script>
 
 
