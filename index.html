@@ -331,41 +331,81 @@
       document.getElementById("footer-contact").innerText = t.contact;
     }
 
-    function filterCards() {
-      const departure = document.getElementById('departure').value.toLowerCase();
-      const destination = document.getElementById('destination').value.toLowerCase();
-      const tripType = document.getElementById('trip-type').value.toLowerCase();
-      const sort = document.getElementById('price-sort').value;
+function filterCards() {
+  const departure = document.getElementById('departure').value.toLowerCase();
+  const destination = document.getElementById('destination').value.toLowerCase();
+  const tripType = document.getElementById('trip-type').value.toLowerCase();
+  const sort = document.getElementById('price-sort').value;
 
-      let cards = Array.from(document.querySelectorAll('.card'));
+  const container = document.getElementById('card-list');
+  let cards = Array.from(container.querySelectorAll('.card'));
 
-      cards.forEach(card => {
-        const from = card.getAttribute('data-from').toLowerCase();
-        const to = card.getAttribute('data-to').toLowerCase();
-        const type = card.getAttribute('data-type').toLowerCase();
-        const matches = from.includes(departure) && to.includes(destination) && (tripType === "" || type === tripType);
-        card.style.display = matches ? 'block' : 'none';
-      });
+  cards.forEach(card => {
+    const from = card.getAttribute('data-from')?.toLowerCase() || '';
+    const to = card.getAttribute('data-to')?.toLowerCase() || '';
+    const type = card.getAttribute('data-type')?.toLowerCase() || '';
 
-      let visibleCards = cards.filter(card => card.style.display === 'block');
-      if (sort === 'price-low') {
-        visibleCards.sort((a, b) => a.getAttribute('data-price') - b.getAttribute('data-price'));
-      } else if (sort === 'price-high') {
-        visibleCards.sort((a, b) => b.getAttribute('data-price') - a.getAttribute('data-price'));
-      }
+    const matches =
+      from.includes(departure) &&
+      to.includes(destination) &&
+      (tripType === "" || type === tripType);
 
-      const container = document.getElementById('card-list');
-      visibleCards.forEach(card => container.appendChild(card));
-    }
+    card.style.display = matches ? 'block' : 'none';
+  });
+
+  let visibleCards = cards.filter(card => card.style.display === 'block');
+  if (sort === 'price-low') {
+    visibleCards.sort((a, b) => a.getAttribute('data-price') - b.getAttribute('data-price'));
+  } else if (sort === 'price-high') {
+    visibleCards.sort((a, b) => b.getAttribute('data-price') - a.getAttribute('data-price'));
+  }
+
+  // Perkeliame surūšiuotas korteles atgal į konteinerį
+  visibleCards.forEach(card => container.appendChild(card));
+}
+
     
   </script>
-  <script>
+ <script>
   const BACKEND_URL = window.location.hostname.includes("localhost")
     ? "http://localhost:3000"
     : "https://travcen.vercel.app";
 
+  async function loadPartnerOffers() {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/offers`);
+      const offers = await res.json();
+
+      const container = document.getElementById("card-list");
+      container.innerHTML = "";
+
+      offers.forEach(offer => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.setAttribute("data-from", offer.from.toLowerCase());
+        card.setAttribute("data-to", offer.to.toLowerCase());
+        card.setAttribute("data-type", offer.type.toLowerCase());
+        card.setAttribute("data-price", offer.price);
+
+        card.innerHTML = `
+          <img src="${offer.image}" />
+          <h3>${offer.title}</h3>
+          <p>Price: €${offer.price}</p>
+          <a href="${offer.url}" target="_blank">View</a>
+        `;
+
+        container.appendChild(card);
+      });
+      filterCards(); // automatinis filtravimas po įkėlimo
+
+    } catch (err) {
+      alert("Klaida kraunant pasiūlymus: " + err.message);
+    }
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
-    // Google / Facebook prisijungimai
+    loadPartnerOffers(); // Įkeliame partnerių keliones
+
     document.getElementById("login-google")?.addEventListener("click", () => {
       window.location.href = `${BACKEND_URL}/auth/google`;
     });
@@ -374,7 +414,6 @@
       window.location.href = `${BACKEND_URL}/auth/facebook`;
     });
 
-    // Patikrinam ar prisijungęs vartotojas
     fetch(`${BACKEND_URL}/api/user`, { credentials: "include" })
       .then(res => res.json())
       .then(data => {
@@ -391,7 +430,6 @@
         }
       });
 
-    // Partnerių forma
     document.querySelector("#partner-form")?.addEventListener("submit", function(e) {
       e.preventDefault();
 
@@ -419,22 +457,21 @@
         credentials: "include",
         body: JSON.stringify(data)
       })
-      .then(res => {
-        if (res.ok) {
-          alert("Partneris sėkmingai užregistruotas!");
-          document.getElementById("partner-form").reset();
-          document.getElementById("partner-modal").style.display = "none";
-        } else {
-          throw new Error("Serverio klaida");
-        }
-      })
-      .catch(err => {
-        alert("Klaida siunčiant duomenis: " + err.message);
-      });
+        .then(res => {
+          if (res.ok) {
+            alert("Partneris sėkmingai užregistruotas!");
+            document.getElementById("partner-form").reset();
+            document.getElementById("partner-modal").style.display = "none";
+          } else {
+            throw new Error("Serverio klaida");
+          }
+        })
+        .catch(err => {
+          alert("Klaida siunčiant duomenis: " + err.message);
+        });
     });
 
-    // Partnerių sąrašas
-    document.getElementById("footer-partners")?.addEventListener("click", function() {
+    document.getElementById("footer-partners")?.addEventListener("click", function () {
       fetch(`${BACKEND_URL}/api/partners`)
         .then(res => res.json())
         .then(data => {
