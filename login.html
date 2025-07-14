@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TravCen Login</title>
+</head>
+<body>
+  <h2>Prisijungimas</h2>
+  <form id="login-form" method="POST" action="#">
+    <input type="email" id="email" placeholder="El. paštas" required><br><br>
+    <input type="password" id="password" placeholder="Slaptažodis" required><br><br>
+    <button type="submit">Prisijungti</button>
+  </form>
+  <p id="error-message" style="color: red;"></p>
+
+  <hr>
+  <p>arba</p>
+  <a href="http://localhost:3000/auth/google">
+    <button type="button">Prisijungti per Google</button>
+  </a>
+
+  <script src="login.js"></script>
+</body>
+</html>
+
