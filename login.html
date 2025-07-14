@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TravCen Login</title>
+  <script src="language.js" defer></script>
+</head>
+<body>
+
+  <select id="language-select" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+    <option value="en">🇬🇧 English</option>
+    <option value="lt">🇱🇹 Lietuvių</option>
+    <option value="fr">🇫🇷 Français</option>
+    <option value="es">🇪🇸 Español</option>
+    <option value="de">🇩🇪 Deutsch</option>
+    <option value="zh">🇨🇳 中文</option>
+    <option value="ko">🇰🇷 한국어</option>
+    <option value="da">🇩🇰 Dansk</option>
+    <option value="sv">🇸🇪 Svenska</option>
+    <option value="no">🇳🇴 Norsk</option>
+  </select>
+
+  <h2>Prisijungimas</h2>
+  <form id="login-form" method="POST" action="#">
+    <input type="email" id="email" placeholder="El. paštas" required><br><br>
+    <input type="password" id="password" placeholder="Slaptažodis" required><br><br>
+    <button type="submit">Prisijungti</button>
+  </form>
+  <p id="error-message" style="color: red;"></p>
+
+  <hr>
+  <p data-i18n="subtitle">arba</p>
+  <a href="http://localhost:3000/auth/google">
+    <button type="button">Prisijungti per Google</button>
+  </a>
+
+  <script src="login.js"></script>
+</body>
+</html>
+
