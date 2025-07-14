@@ -3,7 +3,6 @@
 <html lang="en">
 <head><meta content="default-src 'self'; script-src 'self' https://www.googletagmanager.com 'nonce-7xBmxEC506vSPid8n-PyTg' 'sha256-9/Ask3SuSBEt5rSZa28nLmRxsljFg8XQf6HwImuvoKw=' 'sha256-Zf5tE4LMNwg2Q3AO48LwKglbx59KiiKnjoUIYDh90Zc=' 'sha256-QIYzOFozCED1/3wYT024gjzd3DH9/wyiEJp4wGZ+BMg='; style-src 'self'  'unsafe-inline'; img-src 'self' data: https://img.icons8.com https://source.unsplash.com https://medpoint.ee; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com http://localhost:3000; frame-src 'self' https://www.facebook.com;" http-equiv="Content-Security-Policy"/><!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
-
 <!-- SEO Meta Tags -->
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -34,21 +33,9 @@
 <!-- Styles -->
 <link href="style.css" rel="stylesheet"/>
 <style>.inline-style-1 { display: none; margin-top: 10px; }
-.inline-style-2 { display: inline; margin-right: 10px; }</style>  <script src="language.js" defer></script>
+.inline-style-2 { display: inline; margin-right: 10px; }</style> <script defer="" src="language.js"></script>
 </head>
 <body>
-  <select id="language-select" style="position: absolute; top: 10px; right: 10px;">
-    <option value="en">🇬🇧 English</option>
-    <option value="lt">🇱🇹 Lietuvių</option>
-    <option value="fr">🇫🇷 Français</option>
-    <option value="es">🇪🇸 Español</option>
-    <option value="de">🇩🇪 Deutsch</option>
-    <option value="zh">🇨🇳 中文</option>
-    <option value="ko">🇰🇷 한국어</option>
-    <option value="da">🇩🇰 Dansk</option>
-    <option value="sv">🇸🇪 Svenska</option>
-    <option value="no">🇳🇴 Norsk</option>
-  </select>
 <div class="top-bar">
 <div class="language-selector">
 <select onchange="setLanguage(this.value)">
@@ -75,12 +62,12 @@
 <!-- Naujas blokas: rodomas tik prisijungus -->
 <div class="inline-style-1" id="user-status">
 <p class="inline-style-2" id="logged-user"></p>
-<button id="logout-btn">Atsijungti</button>
+<button data-i18n="atsijungti" id="logout-btn">Atsijungti</button>
 </div>
 </div>
 <header>
-<h1 id="site-title">TravCen</h1>
-<p id="welcome-text">All travel offers in one place</p>
+<h1 data-i18n="travcen" id="site-title">TravCen</h1>
+<p data-i18n="all_travel_offers_in_one_place" id="welcome-text">All travel offers in one place</p>
 </header>
 <div class="search-section">
 <input id="departure" placeholder="Departure location" type="text"/>
@@ -97,39 +84,39 @@
 <option value="price-low">Price: Low to High</option>
 <option value="price-high">Price: High to Low</option>
 </select>
-<button id="search-btn">Search</button> <!-- JS event attached separately -->
+<button data-i18n="search" id="search-btn">Search</button> <!-- JS event attached separately -->
 </div>
 <div class="ads ads-left">Ad Left</div>
 <div class="ads ads-right">Ad Right</div>
 <div class="results" id="card-list">
 <div class="card" data-from="Vilnius" data-price="299" data-to="Greece" data-type="leisure">
 <img src="https://source.unsplash.com/280x180/?beach"/>
-<h3>Greece from Vilnius</h3>
+<h3 data-i18n="greece_from_vilnius">Greece from Vilnius</h3>
 <p data-i18n="subtitle">Price: €299</p>
 </div>
 <div class="card" data-from="Kaunas" data-price="499" data-to="Alps" data-type="adventure">
 <img src="https://source.unsplash.com/280x180/?mountain"/>
-<h3>Alps from Kaunas</h3>
-<p>Price: €499</p>
+<h3 data-i18n="alps_from_kaunas">Alps from Kaunas</h3>
+<p data-i18n="price:_€499">Price: €499</p>
 </div>
 <div class="card" data-from="Vilnius" data-price="199" data-to="Paris" data-type="cultural">
 <img src="https://source.unsplash.com/280x180/?paris"/>
-<h3>Paris from Vilnius</h3>
-<p>Price: €199</p>
+<h3 data-i18n="paris_from_vilnius">Paris from Vilnius</h3>
+<p data-i18n="price:_€199">Price: €199</p>
 </div>
 </div>
 <div class="footer">
 <div class="info">
-<a href="#" id="footer-faq">FAQ</a> |
-  <a href="#" id="footer-privacy">Privacy Policy</a> |
-  <a href="#" id="footer-contact">Contact</a> |
-  <a href="#" id="open-partner-modal">Become a Partner</a>
-<a href="#" id="footer-partners">Partners</a>
+<a data-i18n="faq" href="#" id="footer-faq">FAQ</a> |
+  <a data-i18n="privacy_policy" href="#" id="footer-privacy">Privacy Policy</a> |
+  <a data-i18n="contact" href="#" id="footer-contact">Contact</a> |
+  <a data-i18n="become_a_partner" href="#" id="open-partner-modal">Become a Partner</a>
+<a data-i18n="partners" href="#" id="footer-partners">Partners</a>
 </div>
 <div class="modal" id="partners-modal">
 <div class="modal-content">
-<span class="close" id="close-partners-modal">×</span>
-<h2 id="partners-title">Registruoti Partneriai</h2>
+<span class="close" data-i18n="×" id="close-partners-modal">×</span>
+<h2 data-i18n="registruoti_partneriai" id="partners-title">Registruoti Partneriai</h2>
 <ul id="partner-list"></ul>
 </div>
 </div>
@@ -139,18 +126,17 @@
 </div>
 <div class="modal" id="partner-modal">
 <div class="modal-content">
-<span class="close" id="close-partner-modal">×</span>
-<h2>Partner Registration</h2>
+<span class="close" data-i18n="×" id="close-partner-modal">×</span>
+<h2 data-i18n="partner_registration">Partner Registration</h2>
 <form id="partner-form">
 <input id="company" placeholder="Company Name" required="" type="text"/><br/>
 <input id="url" placeholder="Website URL" required="" type="url"/><br/>
 <input id="email" placeholder="Contact Email" required="" type="email"/><br/>
 <textarea id="description" placeholder="Short Description" rows="4"></textarea><br/>
-<button type="submit">Submit</button>
+<button data-i18n="submit" type="submit">Submit</button>
 </form>
 </div>
 </div>
-
 <script nonce="7xBmxEC506vSPid8n-PyTg">
   const BACKEND_URL = window.location.hostname.includes("localhost")
     ? "http://localhost:3000"
@@ -292,6 +278,6 @@
 
 
 </script>
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
