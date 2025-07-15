@@ -60,7 +60,7 @@ app.use(rateLimit({
 }));
 
 app.use(cors({
-  origin: "http://localhost:8080", // arba tavo frontendo domenas
+  origin: "https://travcen.vercel.app",
   credentials: true
 }));
 
