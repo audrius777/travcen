@@ -93,9 +93,12 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback',
   passport.authenticate('google', {
-    failureRedirect: '/login.html',
-    successRedirect: '/'
-  })
+    failureRedirect: 'https://travcen.vercel.app/login.html',
+    session: false
+  }),
+  function(req, res) {
+    res.redirect('https://travcen.vercel.app/index.html');
+  }
 );
 
 app.use('/auth', authRoutes);
