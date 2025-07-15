@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: travcen-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node backendas/server_secure.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
