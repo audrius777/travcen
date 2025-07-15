@@ -21,14 +21,14 @@ passport.use(new GoogleStrategy({
 }));
 
 // Facebook strategy
-passport.use(new FacebookStrategy({
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: "/auth/facebook/callback",
-  profileFields: ["id", "emails", "name", "displayName"]
-}, (accessToken, refreshToken, profile, done) => {
-  const email = profile.emails?.[0]?.value || "no-email";
-  done(null, { email, name: profile.displayName });
-}));
+// Facebook login išjungtas (nenaudojamas)
+// passport.use(new FacebookStrategy({
+//   clientID: process.env.FACEBOOK_CLIENT_ID,
+//   clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+//   callbackURL: "/auth/facebook/callback"
+// }, function(accessToken, refreshToken, profile, done) {
+//   ...
+// }));
+
 
 module.exports = passport;
