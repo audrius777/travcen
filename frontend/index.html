@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head><meta content="default-src 'self'; script-src 'self' https://www.googletagmanager.com 'nonce-7xBmxEC506vSPid8n-PyTg' 'sha256-9/Ask3SuSBEt5rSZa28nLmRxsljFg8XQf6HwImuvoKw=' 'sha256-Zf5tE4LMNwg2Q3AO48LwKglbx59KiiKnjoUIYDh90Zc=' 'sha256-QIYzOFozCED1/3wYT024gjzd3DH9/wyiEJp4wGZ+BMg='; style-src 'self'  'unsafe-inline'; img-src 'self' data: https://img.icons8.com https://source.unsplash.com https://medpoint.ee; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com http://localhost:3000; frame-src 'self' https://www.facebook.com;" http-equiv="Content-Security-Policy"/><!-- Google tag (gtag.js) -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
+<script nonce="7xBmxEC506vSPid8n-PyTg">
+fetch(`${BACKEND_URL}/api/user`, { credentials: "include" })
+  .then(res => res.json())
+  .then(data => {
+    if (data.loggedIn) {
+      document.getElementById("logged-user").innerText = "👤 Prisijungta kaip: " + data.email;
+      if (data.email === "info@travcen.com") {
+        document.getElementById("partner-modal")?.style.display = "block";
+      }
+    }
+  });
+</script>
+<!-- SEO Meta Tags -->
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TravCen - Travel Offers Hub</title>
+<meta content="Discover all travel offers in one place. TravCen helps you compare and book trips easily." name="description"/>
+<meta content="travel, trips, vacations, holiday deals, last minute, cheap flights, TravCen" name="keywords"/>
+<meta content="TravCen Team" name="author"/>
+<meta content="index, follow" name="robots"/>
+<link href="https://travcen.com/" rel="canonical"/>
+<!-- Open Graph (Facebook, LinkedIn) -->
+<meta content="TravCen - All Travel Offers in One Place" property="og:title"/>
+<meta content="Easily compare and book vacations, flights, and travel deals from various providers." property="og:description"/>
+<meta content="https://travcen.com/images/og-image.jpg" property="og:image"/>
+<meta content="https://travcen.com/" property="og:url"/>
+<meta content="website" property="og:type"/>
+<meta content="TravCen" property="og:site_name"/>
+<!-- Twitter Card -->
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="TravCen - All Travel Offers in One Place" name="twitter:title"/>
+<meta content="Easily compare and book vacations, flights, and travel deals from various providers." name="twitter:description"/>
+<meta content="https://travcen.com/images/og-image.jpg" name="twitter:image"/>
+<meta content="@travcen" name="twitter:site"/>
+<!-- Favicon -->
+<link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<!-- Styles -->
+<link href="style.css" rel="stylesheet"/>
+<style>.inline-style-1 { display: none; margin-top: 10px; }
+.inline-style-2 { display: inline; margin-right: 10px; }</style><script defer="" src="translate.js"></script></head>
+<body>
+<div class="top-bar">
+<div class="language-selector">
+<select onchange="setLanguage(this.value)">
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="es">Español</option>
+<option value="de">Deutsch</option>
+<option value="zh">中文</option>
+<option value="ko">한국어</option>
+<option value="da">Dansk</option>
+<option value="sv">Svenska</option>
+<option value="no">Norsk</option>
+<option value="lt">Lietuvių</option>
+</select>
+</div>
+<div class="auth-buttons">
+<button id="login-google">
+<img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google
+  </button>
+<button id="login-facebook">
+<img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook
+  </button>
+</div>
+<!-- Naujas blokas: rodomas tik prisijungus -->
+<div class="inline-style-1" id="user-status">
+<p class="inline-style-2" id="logged-user"></p>
+<button id="logout-btn">Atsijungti</button>
+</div>
+</div>
+<header>
+<h1 id="site-title">TravCen</h1>
+<p id="welcome-text">All travel offers in one place</p>
+</header>
+<div class="search-section">
+<input id="departure" placeholder="Departure location" type="text"/>
+<input id="destination" placeholder="Destination" type="text"/>
+<select id="trip-type">
+<option value="">Trip type</option>
+<option value="leisure">Leisure</option>
+<option value="adventure">Adventure</option>
+<option value="cultural">Cultural</option>
+<option value="last-minute">Last Minute</option>
+</select>
+<select id="price-sort">
+<option value="">Sort by price</option>
+<option value="price-low">Price: Low to High</option>
+<option value="price-high">Price: High to Low</option>
+</select>
+<button id="search-btn">Search</button> <!-- JS event attached separately -->
+</div>
+<div class="ads ads-left">Ad Left</div>
+<div class="ads ads-right">Ad Right</div>
+<div class="results" id="card-list">
+<div class="card" data-from="Vilnius" data-price="299" data-to="Greece" data-type="leisure">
+<img src="https://source.unsplash.com/280x180/?beach"/>
+<h3>Greece from Vilnius</h3>
+<p>Price: €299</p>
+</div>
+<div class="card" data-from="Kaunas" data-price="499" data-to="Alps" data-type="adventure">
+<img src="https://source.unsplash.com/280x180/?mountain"/>
+<h3>Alps from Kaunas</h3>
+<p>Price: €499</p>
+</div>
+<div class="card" data-from="Vilnius" data-price="199" data-to="Paris" data-type="cultural">
+<img src="https://source.unsplash.com/280x180/?paris"/>
+<h3>Paris from Vilnius</h3>
+<p>Price: €199</p>
+</div>
+</div>
+<div class="footer">
+<div class="info">
+<a href="#" id="footer-faq">FAQ</a> |
+  <a href="#" id="footer-privacy">Privacy Policy</a> |
+  <a href="#" id="footer-contact">Contact</a> |
+  <a href="#" id="open-partner-modal">Become a Partner</a>
+<a href="#" id="footer-partners">Partners</a>
+</div>
+<div class="modal" id="partners-modal">
+<div class="modal-content">
+<span class="close" id="close-partners-modal">×</span>
+<h2 id="partners-title">Registruoti Partneriai</h2>
+<ul id="partner-list"></ul>
+</div>
+</div>
+<p class="disclaimer" id="footer-disclaimer">
+<strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
+    </p>
+</div>
+<div class="modal" id="partner-modal">
+<div class="modal-content">
+<span class="close" id="close-partner-modal">×</span>
+<h2 id="partner-registration-title">Partner Registration</h2>
+<form id="partner-form">
+<input id="company" placeholder="Company Name" required="" type="text"/><br/>
+<input id="url" placeholder="Website URL" required="" type="url"/><br/>
+<input id="email" placeholder="Contact Email" required="" type="email"/><br/>
+<textarea id="description" placeholder="Short Description" rows="4"></textarea><br/>
+<button id="partner-submit-btn" type="submit">Submit</button>
+</form>
+</div>
+</div>
+<script nonce="7xBmxEC506vSPid8n-PyTg">
+  const BACKEND_URL = window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : "https://travcen.vercel.app";
+
+  async function loadPartnerOffers() {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/offers`);
+      const offers = await res.json();
+
+      const container = document.getElementById("card-list");
+      container.innerHTML = "";
+
+      offers.forEach(offer => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.setAttribute("data-from", offer.from.toLowerCase());
+        card.setAttribute("data-to", offer.to.toLowerCase());
+        card.setAttribute("data-type", offer.type.toLowerCase());
+        card.setAttribute("data-price", offer.price);
+
+        card.innerHTML = `
+          <img src="${offer.image}" />
+          <h3>${offer.title}</h3>
+          <p>Price: €${offer.price}</p>
+          <a href="${offer.url}" target="_blank">View</a>
+        `;
+
+        container.appendChild(card);
+      });
+      filterCards(); // automatinis filtravimas po įkėlimo
+
+    } catch (err) {
+      alert("Klaida kraunant pasiūlymus: " + err.message);
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("search-btn")?.addEventListener("click", function () {
+      filterCards();
+    });
+
+    
+    loadPartnerOffers(); // Įkeliame partnerių keliones
+
+    document.getElementById("login-google")?.addEventListener("click", () => {
+      window.location.href = `${BACKEND_URL}/auth/google`;
+    });
+
+    document.getElementById("login-facebook")?.addEventListener("click", () => {
+      window.location.href = `${BACKEND_URL}/auth/facebook`;
+    });
+
+    fetch(`${BACKEND_URL}/api/user`, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn) {
+          document.getElementById("login-google").style.display = "none";
+          document.getElementById("login-facebook").style.display = "none";
+          document.getElementById("user-status").style.display = "inline-block";
+          document.getElementById("logged-user").innerText = "👤 Prisijungta kaip: " + data.email;
+
+          document.getElementById("logout-btn").onclick = () => {
+            fetch(`${BACKEND_URL}/api/logout`, { method: "POST" })
+              .then(() => location.reload());
+          };
+        }
+      });
+
+    document.querySelector("#partner-form")?.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const company = document.getElementById("company").value.trim();
+      const url = document.getElementById("url").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const description = document.getElementById("description").value.trim();
+
+      if (!company || !url || !email || !description) {
+        alert("Užpildykite visus laukus.");
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert("Neteisingas el. pašto adresas.");
+        return;
+      }
+
+      const data = { company, url, email, description };
+
+      fetch(`${BACKEND_URL}/api/partner`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data)
+      })
+        .then(res => {
+          if (res.ok) {
+            alert("Partneris sėkmingai užregistruotas!");
+            document.getElementById("partner-form").reset();
+            document.getElementById("partner-modal").style.display = "none";
+          } else {
+            throw new Error("Serverio klaida");
+          }
+        })
+        .catch(err => {
+          alert("Klaida siunčiant duomenis: " + err.message);
+        });
+    });
+
+    document.getElementById("footer-partners")?.addEventListener("click", function () {
+      fetch(`${BACKEND_URL}/api/partners`)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("partner-list");
+          list.innerHTML = "";
+          data.forEach(p => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="${p.url}" target="_blank">${p.url}</a>`;
+            list.appendChild(li);
+          });
+          document.getElementById("partners-modal").style.display = "block";
+        })
+        .catch(err => {
+          alert("Nepavyko įkelti partnerių: " + err.message);
+        });
+     });
+
+    // Modalų uždarymo mygtukai – turi būti čia, viduje DOMContentLoaded
+    document.getElementById("close-partners-modal")?.addEventListener("click", function () {
+      document.getElementById("partners-modal").style.display = "none";
+    });
+
+    document.getElementById("close-partner-modal")?.addEventListener("click", function () {
+      document.getElementById("partner-modal").style.display = "none";
+    
+// Rodyti partnerio formą tik adminui
+fetch(`${BACKEND_URL}/api/user`, { credentials: "include" })
+  .then(res => res.json())
+  .then(user => {
+    if (user.email === "info@travcen.com") {
+      document.getElementById("partner-modal")?.style.display = "block";
+    }
+  })
+  .catch(() => {});
+
+});
+});
+
+
+
+
+fetch(`${BACKEND_URL}/api/user`, { credentials: "include" })
+  .then(res => res.json())
+  .then(data => {
+    if (data.loggedIn) {
+      document.getElementById("logged-user").innerText = "👤 Prisijungta kaip: " + data.email;
+      if (data.email === "info@travcen.com") {
+        document.getElementById("partner-modal")?.style.display = "block";
+      }
+    }
+  });
+
+</script>
+<script src="script.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("/api/user", { credentials: "include" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.loggedIn && data.email === "info@travcen.com") {
+        const partnerModal = document.getElementById("partner-modal");
+        if (partnerModal) {
+          partnerModal.style.display = "block";
+        }
+      }
+    });
+});
+</script>
+
+</body>
+</html>
