@@ -2,115 +2,203 @@ const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const fs = require("fs/promises");
-const path = require("path");
+const mongoose = require("mongoose");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const csrf = require("csurf");
+const crypto = require("crypto");
 const dotenv = require("dotenv");
 const cors = require("cors");
 
 dotenv.config();
 
+// Duomenų bazės prisijungimas
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("Prisijungta prie MongoDB"))
+.catch(err => console.error("DB klaida:", err));
+
+// Express aplikacija
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({ origin: "https://travcen.vercel.app", credentials: true }));
-app.use(express.json());
-app.use(express.static("public"));
+// Saugumo middleware'ai
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "https://travcen.vercel.app",
+  credentials: true
+}));
 
+// Užklausų limitavimas
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minučių
+  max: 100 // 100 užklausų per langą
+});
+app.use(limiter);
+
+// Kūno parseriai
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+
+// Sesijos konfigūracija
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: true,
-    sameSite: "none"
-  }
-}));
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000 // 24 valandos
+  },
+  store: new (require("connect-mongo")(session))({
+    mongooseConnection: mongoose.connection,
+    ttl: 24 * 60 * 60 // 1 diena
+  })
+});
 
+// Passport inicializavimas
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((user, done) => done(null, user));
+// User modelis
+const User = mongoose.model("User", new mongoose.Schema({
+  googleId: String,
+  email: String,
+  name: String,
+  role: { type: String, default: "user" }
+}));
+
+// Passport strategijos
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/auth/google/callback"
+  callbackURL: `${process.env.BASE_URL}/auth/google/callback`
 },
-(accessToken, refreshToken, profile, done) => {
-  return done(null, profile);
+async (accessToken, refreshToken, profile, done) => {
+  try {
+    let user = await User.findOne({ googleId: profile.id });
+    
+    if (!user) {
+      user = await User.create({
+        googleId: profile.id,
+        email: profile.emails[0].value,
+        name: profile.displayName,
+        role: profile.emails[0].value === process.env.ADMIN_EMAIL ? "admin" : "user"
+      });
+    }
+    
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
 }));
 
+// CSRF apsauga (išskyrus API routes)
+const csrfProtection = csrf({ cookie: true });
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return next();
+  }
+  csrfProtection(req, res, next);
+});
+
+// Autentifikacijos maršrutai
 app.get("/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { 
+    scope: ["profile", "email"],
+    prompt: "select_account"
+  })
 );
 
 app.get("/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/login.html",
+    failureRedirect: "/login?error=auth_failed",
     successRedirect: "/"
   })
 );
 
-app.get("/api/user", (req, res) => {
+// API maršrutai
+const router = express.Router();
+
+router.get("/user", (req, res) => {
   if (req.isAuthenticated()) {
-    res.json({ loggedIn: true, email: req.user.emails[0].value });
+    res.json({ 
+      loggedIn: true,
+      user: {
+        email: req.user.email,
+        name: req.user.name,
+        role: req.user.role
+      }
+    });
   } else {
     res.json({ loggedIn: false });
   }
 });
 
-app.post("/api/logout", (req, res) => {
+router.post("/logout", (req, res) => {
   req.logout(() => {
+    req.session.destroy();
+    res.clearCookie("connect.sid");
     res.sendStatus(200);
   });
 });
 
-function isAdmin(req) {
-  return req.isAuthenticated() && req.user?.emails?.[0]?.value === process.env.ADMIN_EMAIL;
-}
+// Partnerių valdymas
+const Partner = mongoose.model("Partner", new mongoose.Schema({
+  company: String,
+  url: String,
+  email: { type: String, unique: true },
+  description: String,
+  status: { type: String, default: "active" },
+  expiresAt: Date,
+  createdAt: { type: Date, default: Date.now }
+}));
 
-app.get("/api/admin/check", (req, res) => {
-  if (isAdmin(req)) {
-    res.json({ isAdmin: true });
-  } else {
-    res.status(403).json({ isAdmin: false });
-  }
-});
-
-app.get("/api/partners", async (req, res) => {
+router.get("/partners", async (req, res) => {
   try {
-    const data = await fs.readFile("./partners.json", "utf-8");
-    res.json(JSON.parse(data));
+    const partners = await Partner.find({});
+    res.json(partners);
   } catch (err) {
-    res.status(500).json({ error: "Nepavyko nuskaityti partnerių." });
+    res.status(500).json({ error: "Nepavyko gauti partnerių" });
   }
 });
 
-app.post("/api/partner", async (req, res) => {
-  if (!isAdmin(req)) {
-    return res.status(403).json({ error: "Tik administratorius gali registruoti partnerius." });
+router.post("/partner", async (req, res) => {
+  if (!req.isAuthenticated() || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Unauthorized" });
   }
 
   try {
-    const { company, url, email, description } = req.body;
-    const data = await fs.readFile("./partners.json", "utf-8");
-    const partners = JSON.parse(data);
-
-    if (partners.some(p => p.email === email)) {
-      return res.status(400).json({ error: "Toks el. pašto adresas jau egzistuoja." });
-    }
-
-    partners.push({ company, url, email, description });
-    await fs.writeFile("./partners.json", JSON.stringify(partners, null, 2));
-    res.json({ message: "Partneris sėkmingai įregistruotas." });
+    const partner = await Partner.create(req.body);
+    res.status(201).json(partner);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Klaida įrašant partnerį." });
+    res.status(400).json({ error: err.message });
   }
 });
 
+// Priskiriame routes prie /api kelio
+app.use("/api", router);
+
+// Klaidų apdorojimas
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Kažkas nutiko!" });
+});
+
+// Serverio paleidimas
 app.listen(PORT, () => {
   console.log(`Serveris paleistas http://localhost:${PORT}`);
 });
