@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+
+<script>
+const BACKEND_URL = "https://travcen.onrender.com";
+</script>
+
+  <meta charset="UTF-8" />
+  <title>TravCen – Admin Panelė</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🛡️ Partnerių sąrašas (Admin)</h1>
+  <table id="partners-table" border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Įmonė</th>
+        <th>Svetainė</th>
+        <th>El. paštas</th>
+        <th>Aprašymas</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="4">Kraunama...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function loadPartners() {
+      const table = document.getElementById("partners-table").querySelector("tbody");
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/partners`, {
+          credentials: "include"
+        });
+        const partners = await res.json();
+        if (!Array.isArray(partners) || partners.length === 0) {
+          table.innerHTML = "<tr><td colspan='4'>Nėra registruotų partnerių</td></tr>";
+          return;
+        }
+        table.innerHTML = "";
+        for (const p of partners) {
+          const row = `<tr>
+            <td>${p.company || "-"}</td>
+            <td><a href="${p.url}" target="_blank">${p.url}</a></td>
+            <td>${p.email || "-"}</td>
+            <td>${p.description || "-"}</td>
+          </tr>`;
+          table.innerHTML += row;
+        }
+      } catch (err) {
+        table.innerHTML = "<tr><td colspan='4'>Nepavyko gauti partnerių duomenų</td></tr>";
+        console.error("❌ Klaida:", err);
+      }
+    }
+
+    loadPartners();
+  </script>
+</body>
+</html>
