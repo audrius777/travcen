@@ -7,7 +7,8 @@ module.exports = async function demoOffers() {
       type: "cultural",
       price: 299,
       url: "https://demo-partner.com/roma",
-      image: "https://source.unsplash.com/280x180/?rome"
+      image: "https://source.unsplash.com/280x180/?rome",
+      partner: "DemoPartner" // Added for consistency
     }
   ];
 };
