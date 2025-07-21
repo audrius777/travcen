@@ -50,7 +50,7 @@
     "authentication"
   ],
   "repository": {
-    "type": "git",
+    "type": "commonjs",
     "url": "https://github.com/yourusername/travcen-backend.git"
   },
   "license": "MIT"
