@@ -1,94 +1,254 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 <head>
   <meta charset="UTF-8" />
-  <title>Partnerių Statusai</title>
+  <title>TravCen - Partnerių modulių būsenos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
+    /* Papildomi stiliai specifiški šiam puslapiui */
+    .status-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
     }
-    table {
-      border-collapse: collapse;
+    
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    #status-table {
       width: 100%;
+      border-collapse: collapse;
       margin-top: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.75rem;
+    
+    #status-table th {
+      background-color: #0066cc;
+      color: white;
+      padding: 12px;
       text-align: left;
     }
-    th {
-      background-color: #f2f2f2;
+    
+    #status-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
     }
+    
     .status-ok {
-      color: green;
+      color: #2ecc71;
       font-weight: bold;
     }
+    
     .status-error {
-      color: red;
+      color: #e74c3c;
       font-weight: bold;
+    }
+    
+    .status-warning {
+      color: #f39c12;
+      font-weight: bold;
+    }
+    
+    .refresh-btn {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .refresh-btn:hover {
+      background: #0052a3;
+    }
+    
+    .loading-indicator {
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+      color: #7f8c8d;
     }
   </style>
 </head>
 <body>
-  <h1>Partnerių Statusai</h1>
-  <table id="status-table">
-    <thead>
-      <tr>
-        <th>Partnerio Failas</th>
-        <th>Statusas</th>
-        <th>Žinutė</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td colspan="3">Kraunama...</td></tr>
-    </tbody>
-  </table>
+  <div class="top-bar">
+    <div class="language-selector">
+      <select id="language-selector">
+        <option value="en">English</option>
+        <option value="lt" selected>Lietuvių</option>
+      </select>
+    </div>
+    <div class="auth-buttons">
+      <button id="logout-btn">Atsijungti</button>
+    </div>
+  </div>
+
+  <div class="status-container">
+    <div class="status-header">
+      <h1>🛠 Partnerių modulių būsenos</h1>
+      <button class="refresh-btn" onclick="loadStatus()">
+        <span>Atnaujinti</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6M1 20v-6h6"></path>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+    </div>
+
+    <table id="status-table">
+      <thead>
+        <tr>
+          <th>Partneris</th>
+          <th>Būsena</th>
+          <th>Paskutinis patikrinimas</th>
+          <th>Detalės</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="4" class="loading-indicator">
+            <div class="spinner"></div>
+            Kraunama partnerių būsenos informacija...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="footer">
+    <div class="info">
+      <a href="#" id="footer-faq">DUK</a> |
+      <a href="#" id="footer-privacy">Privatumo politika</a> |
+      <a href="#" id="footer-contact">Kontaktai</a>
+    </div>
+    <p class="disclaimer" id="footer-disclaimer">
+      <strong>Pastaba:</strong> TravCen yra tarpininkavimo platforma. Mes neatsakome už paslaugas, įsigytas per partnerių svetaines.
+    </p>
+  </footer>
 
   <script>
-    const BACKEND_URL = window.location.hostname.includes("localhost")
-      ? "http://localhost:3000"
-      : "https://travcen-backend.onrender.com";
+    const BACKEND_URL = "https://travcen.onrender.com";
+    const STATUS_TABLE = document.querySelector("#status-table tbody");
+    const LOGOUT_BTN = document.getElementById("logout-btn");
 
+    // Statuso klasės nustatymas
+    function getStatusClass(status) {
+      if (status === "OK" || status === "Aktyvus") return "status-ok";
+      if (status === "Error" || status === "Klaida") return "status-error";
+      if (status === "Warning" || status === "Įspėjimas") return "status-warning";
+      return "";
+    }
+
+    // Datos formatavimas
+    function formatDate(dateString) {
+      if (!dateString) return 'Nėra duomenų';
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return new Date(dateString).toLocaleDateString('lt-LT', options);
+    }
+
+    // Duomenų įkėlimas
     async function loadStatus() {
-      const tableBody = document.querySelector("#status-table tbody");
+      STATUS_TABLE.innerHTML = `
+        <tr>
+          <td colspan="4" class="loading-indicator">
+            <div class="spinner"></div>
+            Kraunama partnerių būsenos informacija...
+          </td>
+        </tr>
+      `;
+
       try {
-        const res = await fetch(`${BACKEND_URL}/api/status`, {
+        // Patikrinam ar vartotojas prisijungęs
+        const userRes = await fetch(`${BACKEND_URL}/api/user`, {
+          credentials: "include"
+        });
+        
+        if (!userRes.ok) throw new Error('Nepavyko patikrinti vartotojo');
+        
+        const userData = await userRes.json();
+
+        if (!userData.loggedIn || !userData.isAdmin) {
+          STATUS_TABLE.innerHTML = `
+            <tr>
+              <td colspan="4" class="status-error">
+                🔒 Prieiga uždrausta. Tik administratoriams.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        // Gaunam partnerių statusus
+        const res = await fetch(`${BACKEND_URL}/api/partner-status`, {
           credentials: "include"
         });
 
-        if (!res.ok) throw new Error("Nepavyko gauti statusų");
+        if (!res.ok) throw new Error("Serverio klaida: " + res.status);
 
         const statuses = await res.json();
 
-        tableBody.innerHTML = "";
+        if (!Array.isArray(statuses) || statuses.length === 0) {
+          STATUS_TABLE.innerHTML = `
+            <tr>
+              <td colspan="4">Nerasta jokių partnerių su būsenos informacija</td>
+            </tr>
+          `;
+          return;
+        }
 
-        statuses.forEach(partner => {
-          const row = document.createElement("tr");
+        // Atvaizduojam duomenis
+        STATUS_TABLE.innerHTML = statuses.map(partner => `
+          <tr>
+            <td>${partner.company || partner.file || 'Nenurodyta'}</td>
+            <td class="${getStatusClass(partner.status)}">
+              ${partner.status || 'Nežinoma būsena'}
+            </td>
+            <td>${formatDate(partner.lastUpdated)}</td>
+            <td>${partner.message || '-'}</td>
+          </tr>
+        `).join('');
 
-          const fileCell = document.createElement("td");
-          fileCell.textContent = partner.file;
-
-          const statusCell = document.createElement("td");
-          statusCell.textContent = partner.status;
-          statusCell.className = partner.status === "OK" ? "status-ok" : "status-error";
-
-          const messageCell = document.createElement("td");
-          messageCell.textContent = partner.message;
-
-          row.appendChild(fileCell);
-          row.appendChild(statusCell);
-          row.appendChild(messageCell);
-
-          tableBody.appendChild(row);
-        });
       } catch (err) {
-        tableBody.innerHTML = `<tr><td colspan="3" class="status-error">Klaida: ${err.message}</td></tr>`;
+        console.error("Klaida:", err);
+        STATUS_TABLE.innerHTML = `
+          <tr>
+            <td colspan="4" class="status-error">
+              ❌ Klaida kraunant duomenis: ${err.message}
+            </td>
+          </tr>
+        `;
       }
     }
 
-    document.addEventListener("DOMContentLoaded", loadStatus);
+    // Atsijungimo logika
+    LOGOUT_BTN.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/logout`, {
+          method: 'POST',
+          credentials: "include"
+        });
+        
+        if (res.ok) {
+          window.location.href = 'login.html';
+        } else {
+          alert('Atsijungti nepavyko');
+        }
+      } catch (err) {
+        console.error('Atsijungimo klaida:', err);
+        alert('Įvyko klaida bandant atsijungti');
+      }
+    });
+
+    // Pradinis duomenų įkėlimas
+    document.addEventListener('DOMContentLoaded', loadStatus);
   </script>
 </body>
 </html>
