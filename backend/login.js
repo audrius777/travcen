@@ -1,29 +1,53 @@
 const BACKEND_URL = window.location.hostname.includes("localhost")
   ? "http://localhost:3000"
-  : "https://travcen-backend.onrender.com"; // ← pakeisk, jei naudoji kitą backend adresą
+  : "https://travcen-backend.onrender.com";
 
-document.getElementById("login-form").addEventListener("submit", function(e) {
+document.getElementById("login-form").addEventListener("submit", async function(e) {
   e.preventDefault();
+  
+  const form = e.target;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const errorElement = document.getElementById("error-message");
+  const submitBtn = form.querySelector('button[type="submit"]');
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  // Validacija
+  if (!email || !password) {
+    errorElement.innerText = "Prašome užpildyti visus laukus";
+    return;
+  }
 
-  fetch(`${BACKEND_URL}/api/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",
-    body: JSON.stringify({ email, password })
-  })
-  .then(res => {
-    if (res.ok) {
+  if (password.length < 8) {
+    errorElement.innerText = "Slaptažodis turi būti bent 8 simbolių ilgio";
+    return;
+  }
+
+  // UI būsenos keitimas
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Prisijungiama...';
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
       window.location.href = "/";
     } else {
-      document.getElementById("error-message").innerText = "Neteisingi prisijungimo duomenys.";
+      errorElement.innerText = data.message || "Neteisingi prisijungimo duomenys";
     }
-  })
-  .catch(() => {
-    document.getElementById("error-message").innerText = "Klaida jungiantis prie serverio.";
-  });
+  } catch (error) {
+    errorElement.innerText = "Klaida jungiantis prie serverio. Bandykite vėliau.";
+    console.error("Prisijungimo klaida:", error);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Prisijungti";
+  }
 });
