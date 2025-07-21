@@ -1,64 +1,107 @@
-
-const fs = require("fs");
-const path = require("path");
-
-// === Nustatymai ===
-const partnersPath = path.join(__dirname, "partners.json");
-const today = new Date();
+const { sendEmail } = require('./mailer');
+const { connectToDatabase } = require('./db');
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REMINDER_INTERVAL_DAYS = 7;
 const EXPIRY_GRACE_DAYS = 30;
 
-if (!fs.existsSync(partnersPath)) {
-  console.error("❌ Nerastas partners.json");
-  process.exit(1);
-}
+async function checkPartnerExpiry() {
+  let db;
+  try {
+    // Prisijungiame prie duomenų bazės
+    db = await connectToDatabase();
+    const partnersCollection = db.collection('partners');
+    
+    const today = new Date();
+    let updatedCount = 0;
+    let reminderCount = 0;
 
-const partners = JSON.parse(fs.readFileSync(partnersPath, "utf8"));
-let updated = false;
+    // Gauname visus partnerius, kuriems yra nustatytas galiojimo laikas
+    const partners = await partnersCollection.find({
+      expiresAt: { $exists: true, $ne: null }
+    }).toArray();
 
-for (const partner of partners) {
-  if (!partner.expiresAt) continue;
+    for (const partner of partners) {
+      const expires = new Date(partner.expiresAt);
+      const daysOverdue = Math.floor((today - expires) / DAY_MS);
+      let updateData = {};
+      let needsUpdate = false;
 
-  const expires = new Date(partner.expiresAt);
-  const daysOverdue = Math.floor((today - expires) / DAY_MS);
+      // Tikriname ar partneris turėtų būti pašalintas
+      if (daysOverdue >= EXPIRY_GRACE_DAYS) {
+        if (partner.status !== 'removed') {
+          console.log(`❌ Pašalinamas: ${partner.company} (${daysOverdue} d. po termino)`);
+          updateData.status = 'removed';
+          updateData.removalDate = today;
+          needsUpdate = true;
+        }
+        continue;
+      }
 
-  if (daysOverdue >= EXPIRY_GRACE_DAYS) {
-    if (partner.status !== "removed") {
-      console.log(`❌ Pašalinamas: ${partner.company} (${daysOverdue} d. po termino)`);
-      partner.status = "removed";
-      updated = true;
+      // Tikriname ar partnerio prenumerata pasibaigusi
+      if (expires < today) {
+        if (partner.status !== 'inactive') {
+          console.log(`⚠️ Prenumerata pasibaigusi: ${partner.company}`);
+          updateData.status = 'inactive';
+          needsUpdate = true;
+        }
+
+        // Priminimo logika
+        const lastReminder = partner.lastReminder ? new Date(partner.lastReminder) : null;
+        const needsReminder = !lastReminder || 
+          (today - lastReminder) >= REMINDER_INTERVAL_DAYS * DAY_MS;
+
+        if (needsReminder && partner.email) {
+          console.log(`📧 Siunčiamas priminimas: ${partner.email} – ${partner.company}`);
+          
+          try {
+            await sendEmail({
+              to: partner.email,
+              subject: 'Partnerystės priminimas',
+              text: `Gerb. ${partner.company},\n\nJūsų partnerystė su TravCen pasibaigė. Prašome atnaujinti sutartį.\n\nPagarbiai,\nTravCen komanda`
+            });
+            
+            updateData.lastReminder = today;
+            needsUpdate = true;
+            reminderCount++;
+          } catch (emailError) {
+            console.error(`❌ Nepavyko išsiųsti laiško ${partner.email}:`, emailError);
+          }
+        }
+      } else {
+        // Aktyvavimo logika
+        if (partner.status !== 'active') {
+          console.log(`✅ Aktyvuojamas: ${partner.company}`);
+          updateData.status = 'active';
+          needsUpdate = true;
+        }
+      }
+
+      // Atnaujiname partnerio duomenis, jei reikia
+      if (needsUpdate) {
+        await partnersCollection.updateOne(
+          { _id: partner._id },
+          { $set: updateData }
+        );
+        updatedCount++;
+      }
     }
-    continue;
+
+    console.log(`\n📊 Rezultatai:`);
+    console.log(`- Iš viso patikrinta partnerių: ${partners.length}`);
+    console.log(`- Atnaujinta įrašų: ${updatedCount}`);
+    console.log(`- Išsiųsta priminimų: ${reminderCount}`);
+
+  } catch (error) {
+    console.error('❌ Kritinė klaida vykdant skriptą:', error);
+    process.exit(1);
+  } finally {
+    if (db) {
+      await db.close();
+    }
   }
-
-  if (expires < today) {
-    if (partner.status !== "inactive") {
-      console.log(`⚠️ Prenumerata pasibaigusi: ${partner.company}`);
-      partner.status = "inactive";
-      updated = true;
-    }
-
-    // Priminimo logika
-    const last = partner.lastReminder ? new Date(partner.lastReminder) : null;
-    const needsReminder = !last || (today - last) >= REMINDER_INTERVAL_DAYS * DAY_MS;
-    if (needsReminder) {
-      console.log(`📧 Siunčiamas priminimas: ${partner.email} – ${partner.company}`);
-      partner.lastReminder = today.toISOString().split("T")[0];
-      updated = true;
-    }
-  } else {
-    if (partner.status !== "active") {
-      console.log(`✅ Aktyvuojamas: ${partner.company}`);
-      partner.status = "active";
-      updated = true;
-    }
-  }
 }
 
-if (updated) {
-  fs.writeFileSync(partnersPath, JSON.stringify(partners, null, 2), "utf8");
-  console.log("✅ Atnaujintas partners.json");
-} else {
-  console.log("ℹ️ Viskas atnaujinta – jokių pakeitimų.");
-}
+// Paleidžiame tikrinimą
+checkPartnerExpiry()
+  .then(() => process.exit(0))
+  .catch(() => process.exit(1));
