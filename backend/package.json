@@ -2,14 +2,14 @@
   "name": "travcen-backend",
   "version": "1.1.0",
   "description": "Kelionių svetainės Express backendas su MongoDB palaikymu",
-  "main": "backendas/server_secure.js",
-  "type": "module",
+  "main": "backend/server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server_secure.js",
-    "dev": "nodemon backendas/server_secure.js",
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
     "test": "jest",
     "lint": "eslint .",
-    "migrate": "node backendas/migrations/migrate.js"
+    "migrate": "node backend/migrations/migrate.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -17,7 +17,7 @@
     "helmet": "^7.1.0",
     "cors": "^2.8.5",
     "express-session": "^1.17.3",
-    "connect-mongo": "^5.0.0",
+    "connect-mongo": "^4.6.0",
     "bcryptjs": "^2.4.3",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
@@ -50,7 +50,7 @@
     "authentication"
   ],
   "repository": {
-    "type": "commonjs",
+    "type": "git",
     "url": "https://github.com/yourusername/travcen-backend.git"
   },
   "license": "MIT"
