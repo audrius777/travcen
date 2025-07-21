@@ -1,0 +1,14 @@
+# Aplankai ir failai, kurių nereikia kelti į GitHub
+.env
+node_modules/
+partners.json
+partners_backup.json
+
+# Log failai
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS failai
+.DS_Store
+Thumbs.db
