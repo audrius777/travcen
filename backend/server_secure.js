@@ -42,7 +42,7 @@ app.use(limiter);
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// Sesijos konfigūracija
+// Sesijos konfigūracija (pataisyta)
 app.use(session({
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
   resave: false,
@@ -57,7 +57,7 @@ app.use(session({
     mongooseConnection: mongoose.connection,
     ttl: 24 * 60 * 60 // 1 diena
   })
-});
+})); // 
 
 // Passport inicializavimas
 app.use(passport.initialize());
