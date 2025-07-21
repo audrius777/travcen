@@ -1,23 +1,57 @@
 {
   "name": "travcen-backend",
-  "version": "1.0.2",
-  "description": "Kelioni\u0173 svetain\u0117s Express backendas",
+  "version": "1.1.0",
+  "description": "Kelionių svetainės Express backendas su MongoDB palaikymu",
   "main": "backendas/server_secure.js",
+  "type": "module",
   "scripts": {
-    "start": "node backendas/server_secure.js"
+    "start": "NODE_ENV=production node backendas/server_secure.js",
+    "dev": "nodemon backendas/server_secure.js",
+    "test": "jest",
+    "lint": "eslint .",
+    "migrate": "node backendas/migrations/migrate.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "helmet": "^6.0.1",
+    "mongoose": "^8.0.3",
+    "helmet": "^7.1.0",
     "cors": "^2.8.5",
     "express-session": "^1.17.3",
-    "bcrypt": "^5.1.0",
-    "passport": "^0.6.0",
+    "connect-mongo": "^5.0.0",
+    "bcryptjs": "^2.4.3",
+    "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-facebook": "^3.0.0",
     "nodemailer": "^6.9.3",
     "dotenv": "^16.3.1",
-    "express-rate-limit": "^6.7.0"
-  }
+    "express-rate-limit": "^6.7.0",
+    "csurf": "^1.11.0",
+    "validator": "^13.11.0",
+    "winston": "^3.11.0",
+    "http-errors": "^2.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^16.1.0",
+    "eslint-plugin-import": "^2.29.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "travel",
+    "express",
+    "mongodb",
+    "authentication"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/travcen-backend.git"
+  },
+  "license": "MIT"
 }
