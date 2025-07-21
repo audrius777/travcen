@@ -5,7 +5,7 @@
   "main": "backendas/server_secure.js",
   "type": "module",
   "scripts": {
-    "start": "NODE_ENV=production node backendas/server_secure.js",
+    "start": "node server_secure.js",
     "dev": "nodemon backendas/server_secure.js",
     "test": "jest",
     "lint": "eslint .",
