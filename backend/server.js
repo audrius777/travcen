@@ -87,7 +87,7 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // Visada secure, nes dirbame su HTTPS
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000
   },
@@ -167,14 +167,14 @@ passport.use(new GoogleStrategy({
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: true,
+    sameSite: 'lax',
     signed: true
   }
 });
 
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path === '/api/user') {
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
     return next();
   }
   csrfProtection(req, res, next);
