@@ -1,82 +1,79 @@
 // Globalus vertimų objektas
 window.translations = {
   en: {
-    // ... (jūsų esami vertimai)
+    // ... (jūsų vertimai)
   },
   lt: {
-    // ... (jūsų esami vertimai)
+    // ... (jūsų vertimai)
   }
 };
 
-/**
- * Nustato puslapio kalbą ir atnaujina visus elementus
- * @param {string|object} lang - Kalbos kodas arba HTML elementas
- */
-function setLanguage(lang) {
-  // Gauname kalbos reikšmę
-  const langValue = typeof lang === 'string' ? lang : lang.value;
-  
-  // Validuojame kalbą
-  if (!window.translations[langValue]) {
-    console.error(`Vertimų kalbai '${langValue}' nerasta`);
-    return;
-  }
+function setLanguage(langParam) {
+  try {
+    // Parametro validacija
+    const lang = typeof langParam === 'object' ? langParam.value : langParam;
+    if (!lang) throw new Error('Nenurodytas kalbos parametras');
 
-  // Išsaugome pasirinktą kalbą
-  localStorage.setItem('selectedLanguage', langValue);
-  
-  // Gauname vertimus pasirinktai kalbai
-  const t = window.translations[langValue];
-
-  /**
-   * Saugus elemento atnaujinimas
-   * @param {string} id - Elemento ID
-   * @param {function} updater - Atnaujinimo funkcija
-   */
-  const safeUpdate = (id, updater) => {
-    const element = document.getElementById(id);
-    if (element) {
-      updater(element);
-    } else {
-      console.debug(`Elementas su ID '${id}' nerastas`);
+    // Kalbos validacija
+    if (!window.translations[lang]) {
+      throw new Error(`Vertimų kalbai '${lang}' nerasta`);
     }
-  };
 
-  // Atnaujiname visus elementus
-  // ... (jūsų esami safeUpdate iškvietimai)
+    // Išsaugojimas
+    localStorage.setItem('selectedLanguage', lang);
+    const t = window.translations[lang];
 
-  // Atnaujiname html lang atributą
-  document.documentElement.lang = langValue;
+    // Elementų atnaujinimas
+    const elementsToUpdate = {
+      '#login-title': el => el.textContent = t.loginTitle,
+      '#email': el => el.placeholder = t.emailPlaceholder,
+      '#password': el => el.placeholder = t.passwordPlaceholder,
+      '#login-button': el => el.textContent = t.loginButton,
+      '.divider': el => el.textContent = t.orText,
+      '.google-login span': el => el.textContent = t.googleLogin
+    };
 
-  // Google Analytics eventas
-  if (typeof gtag === 'function') {
-    gtag('event', 'language_change', {
-      'event_category': 'Language',
-      'event_label': langValue
+    Object.entries(elementsToUpdate).forEach(([selector, updater]) => {
+      document.querySelectorAll(selector).forEach(updater);
     });
+
+    // HTML lang atributas
+    document.documentElement.lang = lang;
+
+    // Analytics
+    if (typeof gtag === 'function') {
+      gtag('event', 'language_change', {
+        'event_category': 'Language',
+        'event_label': lang
+      });
+    }
+  } catch (error) {
+    console.error('Klaida keičiant kalbą:', error);
   }
 }
 
-// Puslapio užkrovimo metu nustatome kalbą
+// Inicializacija
 document.addEventListener('DOMContentLoaded', () => {
-  const browserLang = navigator.language.slice(0, 2);
+  const browserLang = (navigator.language || 'en').slice(0, 2);
   const savedLang = localStorage.getItem('selectedLanguage') || 
-                   (['en', 'lt'].includes(browserLang) ? browserLang : 'lt');
-  
-  const languageSelector = document.getElementById('language-selector');
-  
-  if (languageSelector) {
-    languageSelector.value = savedLang;
-    languageSelector.addEventListener('change', (e) => {
-      setLanguage(e.target);
-    });
+                   (['en', 'lt'].includes(browserLang) ? browserLang : 'lt';
+
+  const selector = document.getElementById('language-selector');
+  if (selector) {
+    selector.value = savedLang;
+    selector.addEventListener('change', (e) => setLanguage(e.target));
   }
-  
+
   setLanguage(savedLang);
 });
 
-// Užtikriname, kad funkcija bus prieinama globaliai
-window.setLanguage = (param) => {
-  const lang = param?.value || param;
-  return setLanguage(lang);
+// Globalus eksportas
+window.setLanguage = function(param) {
+  try {
+    const lang = param && (param.value || param);
+    if (!lang) throw new Error('Nenurodytas kalbos parametras');
+    return setLanguage(lang);
+  } catch (error) {
+    console.error('Klaida vykdant setLanguage:', error);
+  }
 };
