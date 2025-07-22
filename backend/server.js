@@ -51,9 +51,10 @@ app.use(session({
     sameSite: 'strict',
     maxAge: 24 * 60 * 60 * 1000
   },
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    ttl: 24 * 60 * 60
+store: MongoStore.create({
+  mongoUrl: process.env.MONGODB_URI,
+  dbName: 'travcen', // Papildomas parametras
+  ttl: 24 * 60 * 60
   })
 }));
 
