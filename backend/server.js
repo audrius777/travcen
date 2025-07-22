@@ -42,6 +42,13 @@ async function connectToDatabase() {
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// CORS konfigūracija (pakeista)
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+}));
+
 // Saugumo middleware'iai
 app.use(helmet({
   contentSecurityPolicy: {
@@ -60,12 +67,6 @@ app.use(helmet({
   }
 }));
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-}));
-
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -80,7 +81,7 @@ app.use(limiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// 3. Sesijos konfigūracija
+// 3. Sesijos konfigūracija (pakeista)
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -88,7 +89,7 @@ const sessionConfig = {
   cookie: {
     httpOnly: true,
     secure: true, // Visada secure, nes dirbame su HTTPS
-    sameSite: 'lax',
+    sameSite: 'none', // Pakeista į 'none'
     maxAge: 24 * 60 * 60 * 1000
   },
   store: MongoStore.create({
@@ -163,21 +164,23 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// 6. CSRF apsauga
+// 6. CSRF apsauga (pakeista)
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
     secure: true,
-    sameSite: 'lax',
+    sameSite: 'none', // Pakeista į 'none'
     signed: true
   }
 });
 
+// CSRF middleware (pakeistas)
 app.use((req, res, next) => {
+  // Praleidžiame CSRF tikrinimą API ir autentifikacijos maršrutams
   if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
     return next();
   }
-  csrfProtection(req, res, next);
+  return csrfProtection(req, res, next);
 });
 
 // 7. Autentifikacijos maršrutai
@@ -255,7 +258,7 @@ router.post('/partner', async (req, res) => {
 
 app.use('/api', router);
 
-// 9. Klaidų apdorojimas
+// 9. Klaidų apdorojimas (pakeistas)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
@@ -274,7 +277,13 @@ app.use((err, req, res, next) => {
   }
   
   if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).json({ error: 'Negaliojanti CSRF sesija' });
+    console.log('CSRF klaida. Tikrinami slapukai:');
+    console.log('CSRF Cookie:', req.cookies._csrf);
+    console.log('Session ID:', req.cookies['connect.sid']);
+    return res.status(403).json({ 
+      error: 'Negaliojanti CSRF sesija',
+      solution: 'Prašome atnaujinti puslapį ir bandyti dar kartą'
+    });
   }
   
   res.status(500).json({ error: 'Vidinė serverio klaida' });
@@ -284,7 +293,7 @@ app.use((err, req, res, next) => {
 async function startServer() {
   await connectToDatabase();
   
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
     console.log(`API pasiekiamas /api endpoint'uose`);
     console.log(`Google autentifikacija pasiekiama /auth/google`);
