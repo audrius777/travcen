@@ -2,14 +2,14 @@
   "name": "travcen-backend",
   "version": "1.1.0",
   "description": "Kelionių svetainės Express backendas su MongoDB palaikymu",
-  "main": "server.js",
+  "main": "backend/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
     "test": "jest",
     "lint": "eslint .",
-    "migrate": "node migrations/migrate.js"
+    "migrate": "node backend/migrations/migrate.js"
   },
   "dependencies": {
     "express": "^4.18.2",
