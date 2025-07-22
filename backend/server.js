@@ -14,7 +14,10 @@ const MongoStore = require('connect-mongo');
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000
+    });
     console.log('Prisijungta prie MongoDB Atlas');
     
     mongoose.connection.on('connected', () => {
@@ -37,7 +40,7 @@ async function connectToDatabase() {
 
 // 2. Express aplikacijos konfigūracija
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Saugumo middleware'iai
 app.use(helmet({
@@ -67,6 +70,7 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  message: 'Per daug užklausų iš šio IP, bandykite vėliau',
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -160,9 +164,17 @@ passport.use(new GoogleStrategy({
 }));
 
 // 6. CSRF apsauga
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = csrf({ 
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    signed: true
+  }
+});
+
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api')) {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/user') {
     return next();
   }
   csrfProtection(req, res, next);
