@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
@@ -7,70 +8,124 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const csrf = require('csurf');
 const crypto = require('crypto');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const MongoStore = require('connect-mongo');
 
-dotenv.config();
+// 1. Duomenų bazės konfigūracija
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Prisijungta prie MongoDB Atlas');
+    
+    mongoose.connection.on('connected', () => {
+      console.log('Mongoose ryšys su DB aktyvus');
+    });
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('Mongoose ryšio klaida:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.warn('Mongoose atsijungė nuo DB');
+    });
+    
+  } catch (err) {
+    console.error('Kritinė duomenų bazės klaida:', err);
+    process.exit(1);
+  }
+}
 
-// Duomenų bazės prisijungimas
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Prisijungta prie MongoDB'))
-.catch(err => console.error('DB klaida:', err));
-
+// 2. Express aplikacijos konfigūracija
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
-  credentials: true
+// Saugumo middleware'iai
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
+      connectSrc: ["'self'", process.env.MONGODB_URI]
+    }
+  },
+  hsts: {
+    maxAge: 63072000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+}));
+
+// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false
 });
 app.use(limiter);
 
+// Kūno parseriai
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Sesijos konfigūracija
-app.use(session({
+// 3. Sesijos konfigūracija
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000
   },
-store: MongoStore.create({
-  mongoUrl: process.env.MONGODB_URI,
-  dbName: 'travcen', // Papildomas parametras
-  ttl: 24 * 60 * 60
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60,
+    autoRemove: 'native'
   })
-}));
+};
 
+app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// User modelis
-const User = mongoose.model('User', new mongoose.Schema({
-  googleId: String,
-  email: String,
-  name: String,
-  role: { type: String, default: 'user' }
-}));
+// 4. Mongoose modeliai
+const userSchema = new mongoose.Schema({
+  googleId: { type: String, unique: true },
+  email: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  createdAt: { type: Date, default: Date.now }
+});
 
-// Passport konfigūracija
-passport.serializeUser((user, done) => done(null, user.id));
+const partnerSchema = new mongoose.Schema({
+  company: { type: String, required: true },
+  url: { type: String, required: true },
+  email: { type: String, unique: true, required: true },
+  description: String,
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  expiresAt: Date,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+const Partner = mongoose.model('Partner', partnerSchema);
+
+// 5. Passport konfigūracija
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
@@ -83,8 +138,9 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.BASE_URL}/auth/google/callback`
-}, async (accessToken, refreshToken, profile, done) => {
+  callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
+  passReqToCallback: true
+}, async (req, accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ googleId: profile.id });
     
@@ -103,7 +159,7 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// CSRF apsauga
+// 6. CSRF apsauga
 const csrfProtection = csrf({ cookie: true });
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
@@ -112,7 +168,7 @@ app.use((req, res, next) => {
   csrfProtection(req, res, next);
 });
 
-// Maršrutai
+// 7. Autentifikacijos maršrutai
 app.get('/auth/google',
   passport.authenticate('google', { 
     scope: ['profile', 'email'],
@@ -123,12 +179,14 @@ app.get('/auth/google',
 app.get('/auth/google/callback',
   passport.authenticate('google', {
     failureRedirect: '/login?error=auth_failed',
-    successRedirect: '/'
+    successRedirect: process.env.FRONTEND_URL || '/'
   })
 );
 
+// 8. API maršrutai
 const router = express.Router();
 
+// Vartotojo duomenų endpoint'as
 router.get('/user', (req, res) => {
   if (req.isAuthenticated()) {
     res.json({ 
@@ -137,63 +195,91 @@ router.get('/user', (req, res) => {
         email: req.user.email,
         name: req.user.name,
         role: req.user.role
-      }
+      },
+      csrfToken: req.csrfToken()
     });
   } else {
     res.json({ loggedIn: false });
   }
 });
 
+// Atsijungimo endpoint'as
 router.post('/logout', (req, res) => {
-  req.logout(() => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Atsijungimo klaida' });
+    }
     req.session.destroy();
     res.clearCookie('connect.sid');
-    res.sendStatus(200);
+    res.json({ success: true });
   });
 });
 
-// Partnerių modelis ir maršrutai
-const Partner = mongoose.model('Partner', new mongoose.Schema({
-  company: String,
-  url: String,
-  email: { type: String, unique: true },
-  description: String,
-  status: { type: String, default: 'active' },
-  expiresAt: Date,
-  createdAt: { type: Date, default: Date.now }
-}));
-
+// Partnerių endpoint'ai
 router.get('/partners', async (req, res) => {
   try {
-    const partners = await Partner.find({});
+    const partners = await Partner.find({ status: 'active' });
     res.json(partners);
   } catch (err) {
-    res.status(500).json({ error: 'Nepavyko gauti partnerių' });
+    res.status(500).json({ error: 'Nepavyko gauti partnerių sąrašo' });
   }
 });
 
 router.post('/partner', async (req, res) => {
   if (!req.isAuthenticated() || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Unauthorized' });
+    return res.status(403).json({ error: 'Nepakankamos teisės' });
   }
 
   try {
     const partner = await Partner.create(req.body);
     res.status(201).json(partner);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Partneris su tokiu el. paštu jau egzistuoja' });
+    }
     res.status(400).json({ error: err.message });
   }
 });
 
 app.use('/api', router);
 
-// Klaidų apdorojimas
+// 9. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Kažkas nutiko!' });
+  
+  if (err.name === 'MongoServerError') {
+    return res.status(400).json({ 
+      error: 'Duomenų bazės operacijos klaida',
+      details: err.message 
+    });
+  }
+  
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ 
+      error: 'Validacijos klaida',
+      details: err.errors 
+    });
+  }
+  
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ error: 'Negaliojanti CSRF sesija' });
+  }
+  
+  res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// Serverio paleidimas
-app.listen(PORT, () => {
-  console.log(`Serveris paleistas http://localhost:${PORT}`);
+// 10. Serverio paleidimas
+async function startServer() {
+  await connectToDatabase();
+  
+  app.listen(PORT, () => {
+    console.log(`Serveris paleistas http://localhost:${PORT}`);
+    console.log(`API pasiekiamas /api endpoint'uose`);
+    console.log(`Google autentifikacija pasiekiama /auth/google`);
+  });
+}
+
+startServer().catch(err => {
+  console.error('Serverio paleidimo klaida:', err);
+  process.exit(1);
 });
