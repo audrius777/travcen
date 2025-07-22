@@ -42,11 +42,12 @@ async function connectToDatabase() {
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// CORS konfigūracija (pakeista)
+// CORS konfigūracija (svarbu, kad būtų pirmas middleware)
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }));
 
 // Saugumo middleware'iai
@@ -81,7 +82,7 @@ app.use(limiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// 3. Sesijos konfigūracija (pakeista)
+// 3. Sesijos konfigūracija
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -89,8 +90,9 @@ const sessionConfig = {
   cookie: {
     httpOnly: true,
     secure: true, // Visada secure, nes dirbame su HTTPS
-    sameSite: 'none', // Pakeista į 'none'
-    maxAge: 24 * 60 * 60 * 1000
+    sameSite: 'none', // Būtina naudoti 'none' su skirtingomis domenomis
+    maxAge: 24 * 60 * 60 * 1000,
+    domain: process.env.COOKIE_DOMAIN // Pvz.: '.onrender.com'
   },
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
@@ -164,20 +166,25 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// 6. CSRF apsauga (pakeista)
+// 6. CSRF apsauga
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
     secure: true,
-    sameSite: 'none', // Pakeista į 'none'
-    signed: true
+    sameSite: 'none', // Turi atitikti sesijos nustatymus
+    signed: true,
+    domain: process.env.COOKIE_DOMAIN // Tas pats kaip sesijos slapuke
   }
 });
 
-// CSRF middleware (pakeistas)
+// CSRF middleware
 app.use((req, res, next) => {
-  // Praleidžiame CSRF tikrinimą API ir autentifikacijos maršrutams
-  if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
+  // Praleidžiame CSRF tikrinimą API, autentifikacijos ir statiniams failams
+  if (req.path.startsWith('/api') || 
+      req.path.startsWith('/auth') || 
+      req.path === '/' || 
+      req.path === '/favicon.ico' ||
+      req.path.startsWith('/static')) {
     return next();
   }
   return csrfProtection(req, res, next);
@@ -258,7 +265,7 @@ router.post('/partner', async (req, res) => {
 
 app.use('/api', router);
 
-// 9. Klaidų apdorojimas (pakeistas)
+// 9. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
