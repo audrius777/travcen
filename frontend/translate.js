@@ -1,32 +1,35 @@
 // Globalus vertimų objektas
 window.translations = {
   en: {
-    // ... (esami vertimai išliks tokie patys)
+    // ... (jūsų esami vertimai)
   },
   lt: {
-    // ... (esami vertimai išliks tokie patys)
+    // ... (jūsų esami vertimai)
   }
 };
 
 /**
  * Nustato puslapio kalbą ir atnaujina visus elementus
- * @param {string} lang - Kalbos kodas (pvz., 'en', 'lt')
+ * @param {string|object} lang - Kalbos kodas arba HTML elementas
  */
 function setLanguage(lang) {
+  // Gauname kalbos reikšmę
+  const langValue = typeof lang === 'string' ? lang : lang.value;
+  
   // Validuojame kalbą
-  if (!window.translations[lang]) {
-    console.error(`Vertimų kalbai '${lang}' nerasta`);
-    lang = 'lt'; // Default kalba
+  if (!window.translations[langValue]) {
+    console.error(`Vertimų kalbai '${langValue}' nerasta`);
+    return;
   }
 
   // Išsaugome pasirinktą kalbą
-  localStorage.setItem('selectedLanguage', lang);
+  localStorage.setItem('selectedLanguage', langValue);
   
   // Gauname vertimus pasirinktai kalbai
-  const t = window.translations[lang];
+  const t = window.translations[langValue];
 
   /**
-   * Saugus elemento atnaujinimas su papildoma informacija
+   * Saugus elemento atnaujinimas
    * @param {string} id - Elemento ID
    * @param {function} updater - Atnaujinimo funkcija
    */
@@ -35,20 +38,21 @@ function setLanguage(lang) {
     if (element) {
       updater(element);
     } else {
-      console.debug(`Elementas su ID '${id}' nerastas (kalba: ${lang})`);
+      console.debug(`Elementas su ID '${id}' nerastas`);
     }
   };
 
-  // ... (visi esami safeUpdate iškvietimai išliks tokie patys)
+  // Atnaujiname visus elementus
+  // ... (jūsų esami safeUpdate iškvietimai)
 
   // Atnaujiname html lang atributą
-  document.documentElement.lang = lang;
+  document.documentElement.lang = langValue;
 
   // Google Analytics eventas
   if (typeof gtag === 'function') {
     gtag('event', 'language_change', {
       'event_category': 'Language',
-      'event_label': lang
+      'event_label': langValue
     });
   }
 }
@@ -64,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (languageSelector) {
     languageSelector.value = savedLang;
     languageSelector.addEventListener('change', (e) => {
-      setLanguage(e.target.value);
+      setLanguage(e.target);
     });
   }
   
@@ -72,4 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Užtikriname, kad funkcija bus prieinama globaliai
-window.setLanguage = setLanguage;
+window.setLanguage = (param) => {
+  const lang = param?.value || param;
+  return setLanguage(lang);
+};
