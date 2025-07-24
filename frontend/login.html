@@ -1,186 +1,88 @@
+l
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TravCen - Login</title>
-  <style>
-    /* Pagrindiniai stiliai */
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #f5f7fa;
-    }
-    
-    .login-container {
-      width: 100%;
-      max-width: 400px;
-      padding: 30px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-    
-    .language-selector {
-      margin-bottom: 20px;
-    }
-    
-    select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-    
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #333;
-    }
-    
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      box-sizing: border-box;
-    }
-    
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    
-    .divider {
-      text-align: center;
-      margin: 20px 0;
-      color: #777;
-    }
-    
-    .google-login {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      background: #fff;
-      color: #757575;
-      border: 1px solid #ddd;
-    }
-    
-    .google-login img {
-      width: 20px;
-      height: 20px;
-    }
-  </style>
+  <!-- ... (likusi head dalis nepakitusi) ... -->
 </head>
 <body>
   <div class="login-container">
-    <div class="language-selector">
-      <select id="language-selector">
-        <option value="en">English</option>
-        <option value="lt">Lietuvių</option>
-      </select>
-    </div>
-    
-    <h1 id="login-title">Login</h1>
-    
-    <form id="login-form">
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit" id="login-button">Login</button>
-    </form>
-    
-    <div class="divider">or</div>
-    
-    <button id="google-login" class="google-login">
-      <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google">
-      <span>Sign in with Google</span>
-    </button>
+    <select id="language-selector">
+      <option value="en">English</option>
+      <option value="lt">Lietuvių</option>
+    </select>
+
+    <!-- ... (likęs HTML nepakitęs) ... -->
   </div>
 
+  <!-- Pridedame translate.js failą -->
+  <script src="translate.js"></script>
+  
   <script>
-    // Vertimų sistema
-    const translations = {
-      en: {
-        "login-title": "Login",
-        "email": "Email",
-        "password": "Password",
-        "login-button": "Login",
-        "or": "or",
-        "google-login": "Sign in with Google"
-      },
-      lt: {
-        "login-title": "Prisijungimas",
-        "email": "El. paštas",
-        "password": "Slaptažodis",
-        "login-button": "Prisijungti",
-        "or": "arba",
-        "google-login": "Prisijungti su Google"
-      }
-    };
+    const BACKEND_URL = "https://travcen.onrender.com";
 
-    // Kalbos nustatymo funkcija
-    function setLanguage(lang) {
-      if (!translations[lang]) return;
-      
-      document.getElementById('login-title').textContent = translations[lang]['login-title'];
-      document.getElementById('email').placeholder = translations[lang]['email'];
-      document.getElementById('password').placeholder = translations[lang]['password'];
-      document.getElementById('login-button').textContent = translations[lang]['login-button'];
-      document.querySelector('.divider').textContent = translations[lang]['or'];
-      document.querySelector('#google-login span').textContent = translations[lang]['google-login'];
-      
+    // Nustatome išsaugotą kalbą
+    const savedLang = localStorage.getItem('selectedLanguage') || 'lt';
+    document.getElementById('language-selector').value = savedLang;
+
+    // Kalbos keitimas
+    document.getElementById('language-selector').addEventListener('change', function(e) {
+      const lang = e.target.value;
       localStorage.setItem('selectedLanguage', lang);
-      document.documentElement.lang = lang;
-    }
-
-    // Prisijungimo funkcijos
-    function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
       
-      // Čia būtų tikra prisijungimo logika
-      console.log('Login attempt:', email, password);
-      alert('Login functionality would be implemented here');
-    }
-
-    function handleGoogleLogin() {
-      // Google prisijungimo logika
-      console.log('Google login initiated');
-      window.location.href = 'https://travcen.onrender.com/auth/google';
-    }
-
-    // Inicializacija
-    document.addEventListener('DOMContentLoaded', () => {
-      // Nustatome kalbą
-      const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-      document.getElementById('language-selector').value = savedLang;
-      setLanguage(savedLang);
-      
-      // Kalbos keitimas
-      document.getElementById('language-selector').addEventListener('change', function() {
-        setLanguage(this.value);
-      });
-      
-      // Formos pateikimas
-      document.getElementById('login-form').addEventListener('submit', handleLogin);
-      
-      // Google mygtukas
-      document.getElementById('google-login').addEventListener('click', handleGoogleLogin);
+      // Jei naudojate translate.js, šią eilutę galite pašalinti
+      if (typeof setLanguage === 'function') {
+        setLanguage(lang);
+      } else {
+        applyTranslations(lang); // Atsarginis variantas
+      }
     });
+
+    function redirectToGoogle() {
+      window.location.href = `${BACKEND_URL}/auth/google`;
+    }
+
+    // Prisijungimo forma (nepakitęs)
+    document.getElementById("login-form").addEventListener("submit", async function(e) {
+      // ... (likusi forma nepakitusi)
+    });
+
+    // Atsarginė vertimų funkcija (tik jei nenaudojate translate.js)
+    function applyTranslations(lang) {
+      const translations = {
+        en: {
+          "login-title": "Login",
+          "email-placeholder": "Email",
+          "password-placeholder": "Password",
+          "login-button": "Login",
+          "or-text": "or",
+          "google-login": "Sign in with Google"
+        },
+        lt: {
+          "login-title": "Prisijungimas",
+          "email-placeholder": "El. paštas",
+          "password-placeholder": "Slaptažodis",
+          "login-button": "Prisijungti",
+          "or-text": "arba",
+          "google-login": "Prisijungti per Google"
+        }
+      };
+
+      if (!translations[lang]) return;
+
+      document.getElementById('login-title').textContent = translations[lang]['login-title'];
+      document.getElementById('email').placeholder = translations[lang]['email-placeholder'];
+      document.getElementById('password').placeholder = translations[lang]['password-placeholder'];
+      document.getElementById('login-button').textContent = translations[lang]['login-button'];
+      document.querySelector('.divider').textContent = translations[lang]['or-text'];
+      document.querySelector('.google-login span').textContent = translations[lang]['google-login'];
+    }
+
+    // Pradinis vertimas
+    if (typeof setLanguage === 'function') {
+      setLanguage(savedLang);
+    } else {
+      applyTranslations(savedLang);
+    }
   </script>
 </body>
 </html>
