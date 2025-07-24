@@ -281,7 +281,7 @@ no: {
   "modal-submit": "Send inn",
   "login-google": "Logg inn med Google",
   "login-facebook": "Logg inn med Facebook"
-}
+},
 
   };
 
