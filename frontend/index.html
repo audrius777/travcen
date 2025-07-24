@@ -16,7 +16,7 @@
 <body>
   <div class="top-bar">
     <div class="language-selector">
-      <select onchange="window.setLanguage(this)">
+      <select id="language-selector">
         <option value="en">English</option>
         <option value="fr">Français</option>
         <option value="es">Español</option>
@@ -30,8 +30,8 @@
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google</button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook</button>
+      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> <span id="google-login-text">Sign in with Google</span></button>
+      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> <span id="facebook-login-text">Sign in with Facebook</span></button>
     </div>
   </div>
 
@@ -55,7 +55,7 @@
       <option value="price-low">Price: Low to High</option>
       <option value="price-high">Price: High to Low</option>
     </select>
-    <button id="search-btn" onclick="filterCards()">Search</button>
+    <button id="search-btn">Search</button>
   </div>
 
   <div class="ads ads-left">Ad Left</div>
@@ -79,7 +79,7 @@
       <a id="footer-faq" href="#">FAQ</a> |
       <a id="footer-privacy" href="#">Privacy Policy</a> |
       <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a>
+      <a href="#" id="footer-partner">Become a Partner</a>
     </div>
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
@@ -89,15 +89,31 @@
   <div id="partner-modal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
-      <h2>Partner Registration</h2>
+      <h2 id="modal-title">Partner Registration</h2>
       <form>
-        <input type="text" placeholder="Company Name" required /><br/>
-        <input type="url" placeholder="Website URL" required /><br/>
-        <input type="email" placeholder="Contact Email" required /><br/>
-        <textarea placeholder="Short Description" rows="4"></textarea><br/>
-        <button type="submit">Submit</button>
+        <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
+        <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
+        <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
+        <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
+        <button type="submit" id="modal-submit">Submit</button>
       </form>
     </div>
   </div>
+
+  <script src="translate.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const languageSelector = document.getElementById('language-selector');
+      if (languageSelector) {
+        const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+        languageSelector.value = savedLang;
+        languageSelector.addEventListener('change', (e) => {
+          if (typeof setLanguage === 'function') {
+            setLanguage(e.target.value);
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
