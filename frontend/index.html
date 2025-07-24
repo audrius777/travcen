@@ -1,103 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-KKDRG05LKT');
-  </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TravCen - Travel Offers Hub</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravCen - Travel Offers</title>
+  <style>
+    /* Pagrindiniai stiliai */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+    }
+    
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .content {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    
+    /* Paieškos sekcija */
+    .search-section {
+      display: flex;
+      gap: 10px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    
+    .search-section input,
+    .search-section select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      min-width: 200px;
+    }
+    
+    #search-btn {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    /* Rezultatų kortelės */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .offer-card {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .offer-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    
+    .offer-details {
+      padding: 15px;
+    }
+    
+    /* Partnerio modalas */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 25px;
+      width: 50%;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .close {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <!-- Viršutinė juosta -->
   <div class="top-bar">
     <div class="language-selector">
-      <select onchange="window.setLanguage(this)">
+      <select id="language-selector">
         <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-        <option value="de">Deutsch</option>
-        <option value="zh">中文</option>
-        <option value="ko">한국어</option>
-        <option value="da">Dansk</option>
-        <option value="sv">Svenska</option>
-        <option value="no">Norsk</option>
         <option value="lt">Lietuvių</option>
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> Sign in with Google</button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> Sign in with Facebook</button>
+      <button id="login-btn">
+        <img src="https://img.icons8.com/color/20/000000/google-logo.png" alt="Google">
+        <span>Sign in</span>
+      </button>
     </div>
   </div>
 
-  <header>
-    <h1 id="site-title">TravCen</h1>
-    <p id="welcome-text">All travel offers in one place</p>
-  </header>
+  <!-- Pagrindinis turinys -->
+  <div class="content">
+    <header>
+      <h1 id="site-title">TravCen</h1>
+      <p id="welcome-text">All travel offers in one place</p>
+    </header>
 
-  <div class="search-section">
-    <input type="text" id="departure" placeholder="Departure location" />
-    <input type="text" id="destination" placeholder="Destination" />
-    <select id="trip-type">
-      <option value="">Trip type</option>
-      <option value="leisure">Leisure</option>
-      <option value="adventure">Adventure</option>
-      <option value="cultural">Cultural</option>
-      <option value="last-minute">Last Minute</option>
-    </select>
-    <select id="price-sort">
-      <option value="">Sort by price</option>
-      <option value="price-low">Price: Low to High</option>
-      <option value="price-high">Price: High to Low</option>
-    </select>
-    <button id="search-btn" onclick="filterCards()">Search</button>
+    <!-- Paieškos sekcija -->
+    <div class="search-section">
+      <input type="text" id="departure" placeholder="Departure">
+      <input type="text" id="destination" placeholder="Destination">
+      <select id="trip-type">
+        <option value="">All types</option>
+        <option value="leisure">Leisure</option>
+        <option value="adventure">Adventure</option>
+      </select>
+      <button id="search-btn">Search</button>
+    </div>
+
+    <!-- Rezultatų kortelės -->
+    <div class="results-grid" id="results-container">
+      <div class="offer-card">
+        <img src="https://source.unsplash.com/random/280x180/?greece" alt="Greece">
+        <div class="offer-details">
+          <h3>Greece from Vilnius</h3>
+          <p>Price: €299</p>
+          <button class="view-offer">View Offer</button>
+        </div>
+      </div>
+      <div class="offer-card">
+        <img src="https://source.unsplash.com/random/280x180/?spain" alt="Spain">
+        <div class="offer-details">
+          <h3>Spain from Kaunas</h3>
+          <p>Price: €349</p>
+          <button class="view-offer">View Offer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partnerio registracijos nuoroda -->
+    <div class="partner-link">
+      <a href="#" id="show-partner-modal">Become our partner</a>
+    </div>
   </div>
 
-  <div class="ads ads-left">Ad Left</div>
-  <div class="ads ads-right">Ad Right</div>
-
-  <div class="results" id="card-list">
-    <div class="card" data-from="Vilnius" data-to="Greece" data-price="299">
-      <img src="https://source.unsplash.com/280x180/?beach" />
-      <h3>Greece from Vilnius</h3>
-      <p>Price: €299</p>
-    </div>
-    <div class="card" data-from="Kaunas" data-to="Alps" data-price="499">
-      <img src="https://source.unsplash.com/280x180/?mountains" />
-      <h3>Alps from Kaunas</h3>
-      <p>Price: €499</p>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div class="info">
-      <a id="footer-faq" href="#">FAQ</a> |
-      <a id="footer-privacy" href="#">Privacy Policy</a> |
-      <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" onclick="document.getElementById('partner-modal').style.display='block'">Become a Partner</a>
-    </div>
-    <p class="disclaimer" id="footer-disclaimer">
-      <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
-    </p>
-  </div>
-
+  <!-- Partnerio registracijos modalas -->
   <div id="partner-modal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
+      <span class="close">&times;</span>
       <h2>Partner Registration</h2>
-      <form>
-        <input type="text" placeholder="Company Name" required /><br/>
-        <input type="url" placeholder="Website URL" required /><br/>
-        <input type="email" placeholder="Contact Email" required /><br/>
-        <textarea placeholder="Short Description" rows="4"></textarea><br/>
-        <button type="submit">Submit</button>
+      <form id="partner-form">
+        <input type="text" placeholder="Company Name" required>
+        <input type="email" placeholder="Contact Email" required>
+        <input type="url" placeholder="Website URL">
+        <textarea placeholder="Description" rows="4"></textarea>
+        <button type="submit">Submit Application</button>
       </form>
     </div>
   </div>
+
+  <script>
+    // Vertimų sistema
+    const translations = {
+      en: {
+        "site-title": "TravCen",
+        "welcome-text": "All travel offers in one place",
+        "departure": "Departure",
+        "destination": "Destination",
+        "search-btn": "Search",
+        "signin": "Sign in",
+        "partner-title": "Partner Registration",
+        "partner-btn": "Submit Application"
+      },
+      lt: {
+        "site-title": "TravCen",
+        "welcome-text": "Visos kelionių pasiūlymos vienoje vietoje",
+        "departure": "Išvykimo vieta",
+        "destination": "Kelionės tikslas",
+        "search-btn": "Ieškoti",
+        "signin": "Prisijungti",
+        "partner-title": "Partnerio registracija",
+        "partner-btn": "Pateikti paraišką"
+      }
+    };
+
+    // Kalbos nustatymo funkcija
+    function setLanguage(lang) {
+      if (!translations[lang]) return;
+      
+      document.getElementById('site-title').textContent = translations[lang]['site-title'];
+      document.getElementById('welcome-text').textContent = translations[lang]['welcome-text'];
+      document.getElementById('departure').placeholder = translations[lang]['departure'];
+      document.getElementById('destination').placeholder = translations[lang]['destination'];
+      document.getElementById('search-btn').textContent = translations[lang]['search-btn'];
+      document.querySelector('#login-btn span').textContent = translations[lang]['signin'];
+      document.querySelector('#partner-modal h2').textContent = translations[lang]['partner-title'];
+      document.querySelector('#partner-form button').textContent = translations[lang]['partner-btn'];
+      
+      localStorage.setItem('selectedLanguage', lang);
+      document.documentElement.lang = lang;
+    }
+
+    // Modalų valdymas
+    function setupModals() {
+      const modal = document.getElementById('partner-modal');
+      const btn = document.getElementById('show-partner-modal');
+      const closeBtn = document.querySelector('.close');
+      
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'block';
+      });
+      
+      closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+
+    // Paieškos funkcionalumas
+    function setupSearch() {
+      document.getElementById('search-btn').addEventListener('click', () => {
+        const departure = document.getElementById('departure').value;
+        const destination = document.getElementById('destination').value;
+        const type = document.getElementById('trip-type').value;
+        
+        console.log('Searching for:', departure, destination, type);
+        // Čia būtų tikra paieškos logika
+      });
+    }
+
+    // Inicializacija
+    document.addEventListener('DOMContentLoaded', () => {
+      // Nustatome kalbą
+      const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+      document.getElementById('language-selector').value = savedLang;
+      setLanguage(savedLang);
+      
+      // Kalbos keitimas
+      document.getElementById('language-selector').addEventListener('change', function() {
+        setLanguage(this.value);
+      });
+      
+      // Modalų sąranka
+      setupModals();
+      
+      // Paieškos funkcionalumas
+      setupSearch();
+      
+      // Prisijungimo mygtukas
+      document.getElementById('login-btn').addEventListener('click', () => {
+        window.location.href = '/login.html';
+      });
+    });
+  </script>
 </body>
 </html>
