@@ -1,19 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Kalbos pasirinkimas - naudojamas bendras translations iš translate.js
-  const languageSelector = document.getElementById("language-selector");
-  if (languageSelector) {
-    languageSelector.addEventListener("change", (event) => {
-      const selectedLang = event.target.value;
-      window.setLanguage(selectedLang); // Kreipiamės į globalią funkciją
-    });
-
-    // Nustatome išsaugotą kalbą
-    const savedLang = localStorage.getItem("selectedLanguage") || "lt";
-    languageSelector.value = savedLang;
-    applyTranslations(savedLang); // Pritaikome vertimus
-  }
-
-  // Modal lango valdymas (likusi dalis nepakinta)
+  // 1. Modalų valdymas (nepriklauso nuo kalbos)
   const modal = document.getElementById("partner-modal");
   const partnerLink = document.getElementById("partner-link");
   const closeBtn = document.querySelector(".close");
@@ -37,13 +23,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Paieškos funkcija (nepakitusi)
+  // 2. Paieškos funkcija (nepriklauso nuo kalbos)
   const searchBtn = document.getElementById("search-btn");
   if (searchBtn) {
     searchBtn.addEventListener("click", filterCards);
   }
 
-  // Prisijungimo mygtukai (nepakitusi)
+  // 3. Prisijungimo mygtukai (nepriklauso nuo kalbos)
   document.getElementById("login-google")?.addEventListener("click", () => {
     alert("Google login would be implemented here");
   });
@@ -53,52 +39,41 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Atnaujinta: naudojamas window.translations iš translate.js
-function applyTranslations(lang) {
-  if (!window.translations || !window.translations[lang]) return;
-
-  const t = window.translations[lang]; // Globalus vertimų objektas
-
-  // Atnaujinami elementai (sutvarkyta, kad nebūtų dubliavimosi)
-  const elements = {
-    "site-title": document.getElementById("site-title"),
-    "welcome-text": document.getElementById("welcome-text"),
-    "departure-placeholder": document.getElementById("departure"),
-    "destination-placeholder": document.getElementById("destination"),
-    "trip-type-default": document.querySelector("#trip-type option[value='']"),
-    "trip-type-leisure": document.querySelector("#trip-type option[value='leisure']"),
-    "trip-type-adventure": document.querySelector("#trip-type option[value='adventure']"),
-    "trip-type-cultural": document.querySelector("#trip-type option[value='cultural']"),
-    "trip-type-last-minute": document.querySelector("#trip-type option[value='last-minute']"),
-    "price-sort-default": document.querySelector("#price-sort option[value='']"),
-    "price-sort-low": document.querySelector("#price-sort option[value='price-low']"),
-    "price-sort-high": document.querySelector("#price-sort option[value='price-high']"),
-    "search-btn": document.getElementById("search-btn"),
-    "footer-faq": document.getElementById("footer-faq"),
-    "footer-privacy": document.getElementById("footer-privacy"),
-    "footer-contact": document.getElementById("footer-contact"),
-    "footer-partner": document.getElementById("partner-link"),
-    "footer-disclaimer": document.getElementById("footer-disclaimer"),
-    "modal-title": document.querySelector("#partner-modal h2"),
-    "modal-company": document.querySelector("#partner-form input[type='text']"),
-    "modal-website": document.querySelector("#partner-form input[type='url']"),
-    "modal-email": document.querySelector("#partner-form input[type='email']"),
-    "modal-description": document.querySelector("#partner-form textarea"),
-    "modal-submit": document.querySelector("#partner-form button[type='submit']")
-  };
-
-  for (const [key, element] of Object.entries(elements)) {
-    if (element && t[key]) {
-      if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
-        element.placeholder = t[key];
-      } else {
-        element.textContent = t[key];
-      }
-    }
-  }
-}
-
-// Likusi filterCards() funkcija lieka nepakitusi
+// 4. Paieškos funkcija (liko nepakitusi)
 function filterCards() {
-  // ... (tokia pati kaip ir anksčiau)
+  const departure = document.getElementById("departure").value.toLowerCase();
+  const destination = document.getElementById("destination").value.toLowerCase();
+  const tripType = document.getElementById("trip-type").value;
+  const priceSort = document.getElementById("price-sort").value;
+
+  const cards = Array.from(document.querySelectorAll(".card"));
+  
+  // Filtravimas
+  const filteredCards = cards.filter(card => {
+    const cardDeparture = card.dataset.departure.toLowerCase();
+    const cardDestination = card.dataset.destination.toLowerCase();
+    const cardType = card.dataset.type;
+    
+    const matchesDeparture = !departure || cardDeparture.includes(departure);
+    const matchesDestination = !destination || cardDestination.includes(destination);
+    const matchesType = !tripType || cardType === tripType;
+    
+    return matchesDeparture && matchesDestination && matchesType;
+  });
+
+  // Rikiavimas
+  if (priceSort === "price-low") {
+    filteredCards.sort((a, b) => parseInt(a.dataset.price) - parseInt(b.dataset.price));
+  } else if (priceSort === "price-high") {
+    filteredCards.sort((a, b) => parseInt(b.dataset.price) - parseInt(a.dataset.price));
+  }
+
+  // Atvaizdavimas
+  cards.forEach(card => {
+    card.style.display = "none";
+  });
+
+  filteredCards.forEach(card => {
+    card.style.display = "block";
+  });
 }
