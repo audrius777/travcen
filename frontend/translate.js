@@ -360,7 +360,7 @@ no: {
   const supportedLangs = ['en', 'lt', 'fr', 'es', 'de', 'zh', 'ko', 'da', 'sv', 'no'];
   const browserLang = navigator.language.slice(0, 2);
   const savedLang = localStorage.getItem('selectedLanguage') || 
-                   (supportedLangs.includes(browserLang) ? browserLang : 'en';
+                   (supportedLangs.includes(browserLang) ? browserLang : 'en');
 
   const languageSelector = document.querySelector('.language-selector select');
   if (languageSelector) {
