@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google Analytics - pridėtas event tracking -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-KKDRG05LKT', {
-      'page_title': 'TravCen Admin',
-      'page_path': '/admin'
-    });
+    gtag('config', 'G-KKDRG05LKT');
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TravCen - Admin Panel</title>
+  <title>TravCen - Travel Offers Hub</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -22,163 +18,101 @@
     <div class="language-selector">
       <select id="language-selector">
         <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="zh">中文</option>
+        <option value="ko">한국어</option>
+        <option value="da">Dansk</option>
+        <option value="sv">Svenska</option>
+        <option value="no">Norsk</option>
         <option value="lt">Lietuvių</option>
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png" alt="Google logo"/> Sign in with Google</button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png" alt="Facebook logo"/> Sign in with Facebook</button>
+      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> <span id="google-login-text">Sign in with Google</span></button>
+      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> <span id="facebook-login-text">Sign in with Facebook</span></button>
     </div>
   </div>
 
   <header>
-    <h1 id="site-title">TravCen Admin</h1>
-    <p id="welcome-text">Manage travel offers</p>
+    <h1 id="site-title">TravCen</h1>
+    <p id="welcome-text">All travel offers in one place</p>
   </header>
-
-  <div class="admin-controls">
-    <button id="add-offer">Add New Offer</button>
-    <button id="refresh-data">Refresh Data</button>
-    <button id="export-data">Export to CSV</button>
-  </div>
 
   <div class="search-section">
     <input type="text" id="departure" placeholder="Departure location" />
     <input type="text" id="destination" placeholder="Destination" />
     <select id="trip-type">
-      <option value="">All types</option>
+      <option value="">Trip type</option>
       <option value="leisure">Leisure</option>
       <option value="adventure">Adventure</option>
       <option value="cultural">Cultural</option>
+      <option value="last-minute">Last Minute</option>
     </select>
     <select id="price-sort">
-      <option value="">Sort by</option>
+      <option value="">Sort by price</option>
       <option value="price-low">Price: Low to High</option>
       <option value="price-high">Price: High to Low</option>
     </select>
     <button id="search-btn">Search</button>
   </div>
 
+  <div class="ads ads-left">Ad Left</div>
+  <div class="ads ads-right">Ad Right</div>
+
   <div class="results" id="card-list">
-    <div class="card" data-departure="Vilnius" data-destination="Greece" data-type="leisure" data-price="299" data-id="1">
-      <img src="https://source.unsplash.com/280x180/?beach" alt="Greece beach"/>
+    <div class="card" data-from="Vilnius" data-to="Greece" data-price="299">
+      <img src="https://source.unsplash.com/280x180/?beach" />
       <h3>Greece from Vilnius</h3>
       <p>Price: €299</p>
-      <div class="admin-actions">
-        <button class="edit-btn">Edit</button>
-        <button class="delete-btn">Delete</button>
-      </div>
     </div>
-    <div class="card" data-departure="Kaunas" data-destination="Alps" data-type="adventure" data-price="499" data-id="2">
-      <img src="https://source.unsplash.com/280x180/?mountains" alt="Alps mountains"/>
+    <div class="card" data-from="Kaunas" data-to="Alps" data-price="499">
+      <img src="https://source.unsplash.com/280x180/?mountains" />
       <h3>Alps from Kaunas</h3>
       <p>Price: €499</p>
-      <div class="admin-actions">
-        <button class="edit-btn">Edit</button>
-        <button class="delete-btn">Delete</button>
-      </div>
     </div>
   </div>
 
-  <div class="stats-panel">
-    <div class="stat-card">
-      <h4>Total Offers</h4>
-      <p id="total-offers">24</p>
-    </div>
-    <div class="stat-card">
-      <h4>Active Partners</h4>
-      <p id="active-partners">18</p>
-    </div>
-    <div class="stat-card">
-      <h4>This Month</h4>
-      <p id="monthly-sales">€12,450</p>
-    </div>
-  </div>
-
-  <footer class="footer">
+  <div class="footer">
     <div class="info">
       <a id="footer-faq" href="#">FAQ</a> |
       <a id="footer-privacy" href="#">Privacy Policy</a> |
       <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" id="partner-link">Become a Partner</a>
+      <a href="#" id="footer-partner">Become a Partner</a>
     </div>
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
     </p>
-  </footer>
+  </div>
 
-  <!-- Partner Modal -->
   <div id="partner-modal" class="modal">
     <div class="modal-content">
-      <span class="close">&times;</span>
+      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
       <h2 id="modal-title">Partner Registration</h2>
-      <form id="partner-form">
-        <input type="text" id="company-name" placeholder="Company Name" required /><br/>
-        <input type="url" id="website-url" placeholder="Website URL" required /><br/>
-        <input type="email" id="contact-email" placeholder="Contact Email" required /><br/>
-        <textarea id="description" placeholder="Short Description" rows="4" required></textarea><br/>
+      <form>
+        <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
+        <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
+        <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
+        <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
         <button type="submit" id="modal-submit">Submit</button>
       </form>
     </div>
   </div>
 
-  <!-- Offer Modal -->
-  <div id="offer-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Edit Travel Offer</h2>
-      <form id="offer-form">
-        <input type="text" id="edit-departure" placeholder="Departure" required>
-        <input type="text" id="edit-destination" placeholder="Destination" required>
-        <select id="edit-type" required>
-          <option value="leisure">Leisure</option>
-          <option value="adventure">Adventure</option>
-          <option value="cultural">Cultural</option>
-        </select>
-        <input type="number" id="edit-price" placeholder="Price" required>
-        <input type="url" id="edit-image" placeholder="Image URL">
-        <button type="submit">Save Changes</button>
-      </form>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
+  <script src="translate.js"></script>
   <script>
-    // Admin-specific JavaScript
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize admin functionality
-      const editButtons = document.querySelectorAll('.edit-btn');
-      const deleteButtons = document.querySelectorAll('.delete-btn');
-      
-      editButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const card = e.target.closest('.card');
-          document.getElementById('offer-modal').style.display = 'block';
-          // Fill form with card data
-          document.getElementById('edit-departure').value = card.dataset.departure;
-          document.getElementById('edit-destination').value = card.dataset.destination;
-          document.getElementById('edit-type').value = card.dataset.type;
-          document.getElementById('edit-price').value = card.dataset.price;
-        });
-      });
-      
-      deleteButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          if (confirm('Are you sure you want to delete this offer?')) {
-            e.target.closest('.card').remove();
-            updateStats();
+      const languageSelector = document.getElementById('language-selector');
+      if (languageSelector) {
+        const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+        languageSelector.value = savedLang;
+        languageSelector.addEventListener('change', (e) => {
+          if (typeof setLanguage === 'function') {
+            setLanguage(e.target.value);
           }
         });
-      });
-      
-      function updateStats() {
-        document.getElementById('total-offers').textContent = 
-          document.querySelectorAll('.card').length;
       }
-    });
-  </script>
-</body>
-</html>
     });
   </script>
 </body>
