@@ -3,7 +3,15 @@ const fs = require('fs');
 
 // Configuration constants
 const PARTNERS_DIR = path.join(__dirname, '../partners');
-const MAX_CONCURRENT_REQUESTS = 5; // Limit concurrent partner API calls
+const MAX_CONCURRENT_REQUESTS = 5;
+
+// Sorting configuration
+const SORT_OPTIONS = {
+  PRICE_ASC: 'price-asc',
+  PRICE_DESC: 'price-desc',
+  DATE_ASC: 'date-asc',
+  DATE_DESC: 'date-desc'
+};
 
 // Improved safeFetch with timeout and logging
 const safeFetch = async (fn, label) => {
@@ -18,7 +26,7 @@ const safeFetch = async (fn, label) => {
     return offers;
   } catch (err) {
     console.error(`❌ Error loading partner "${label}":`, err.message);
-    return []; // Return empty array to prevent breaking aggregation
+    return [];
   }
 };
 
@@ -38,27 +46,85 @@ const loadPartnerModules = async () => {
   }
 };
 
+// Sorting function
+const sortOffers = (offers, sortBy) => {
+  if (!sortBy) return offers;
+
+  switch(sortBy) {
+    case SORT_OPTIONS.PRICE_ASC:
+      return offers.sort((a, b) => (a.price_eur || 0) - (b.price_eur || 0));
+    case SORT_OPTIONS.PRICE_DESC:
+      return offers.sort((a, b) => (b.price_eur || 0) - (a.price_eur || 0));
+    case SORT_OPTIONS.DATE_ASC:
+      return offers.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    case SORT_OPTIONS.DATE_DESC:
+      return offers.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    default:
+      return offers;
+  }
+};
+
+// Filtering function
+const filterOffers = (offers, filters) => {
+  if (!filters) return offers;
+
+  return offers.filter(offer => {
+    // Filter by departure
+    if (filters.departure && 
+        !offer.from.toLowerCase().includes(filters.departure.toLowerCase())) {
+      return false;
+    }
+
+    // Filter by destination
+    if (filters.destination && 
+        !offer.to.toLowerCase().includes(filters.destination.toLowerCase())) {
+      return false;
+    }
+
+    // Filter by trip type
+    if (filters.tripType && offer.type !== filters.tripType) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
 // Improved aggregation with concurrency control
-module.exports = async function aggregateOffers() {
+module.exports = async function aggregateOffers(options = {}) {
+  const { sortBy, filters } = options;
   const partners = await loadPartnerModules();
   
-  // Process in batches to avoid overloading
+  // Process in batches
   const batches = [];
   for (let i = 0; i < partners.length; i += MAX_CONCURRENT_REQUESTS) {
-    const batch = partners.slice(i, i + MAX_CONCURRENT_REQUESTS);
-    batches.push(batch);
+    batches.push(partners.slice(i, i + MAX_CONCURRENT_REQUESTS));
   }
 
   let allOffers = [];
   for (const batch of batches) {
     const batchOffers = await Promise.all(
-      batch.map(partner => 
-        safeFetch(partner.module, partner.name)
-      )
+      batch.map(partner => safeFetch(partner.module, partner.name))
     );
     allOffers = allOffers.concat(batchOffers.flat());
   }
 
-  console.log(`ℹ️ Total ${allOffers.length} offers aggregated from ${partners.length} partners`);
-  return allOffers;
+  // Apply filters
+  const filteredOffers = filterOffers(allOffers, filters);
+
+  // Apply sorting
+  const sortedOffers = sortOffers(filteredOffers, sortBy);
+
+  console.log(`ℹ️ Total ${filteredOffers.length} offers (from ${allOffers.length} raw) after filtering from ${partners.length} partners`);
+  
+  return {
+    offers: sortedOffers,
+    meta: {
+      total: allOffers.length,
+      filtered: filteredOffers.length,
+      partners: partners.length,
+      sort: sortBy,
+      filters
+    }
+  };
 };
