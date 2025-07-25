@@ -1,27 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Modalų valdymas (nepriklauso nuo kalbos)
-  const modal = document.getElementById("partner-modal");
+  // 1. Modalų valdymas (nepriklauso nuo kalbos) - ATNAUJINTA VERSIJA
+  const partnerModal = new ModalManager("partner-modal");
   const partnerLink = document.getElementById("partner-link");
-  const closeBtn = document.querySelector(".close");
-
+  
   if (partnerLink) {
     partnerLink.addEventListener("click", (e) => {
       e.preventDefault();
-      modal.style.display = "block";
+      partnerModal.open();
     });
   }
-
-  if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      modal.style.display = "none";
-    });
-  }
-
-  window.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.style.display = "none";
-    }
-  });
 
   // 2. Paieškos funkcija (nepriklauso nuo kalbos)
   const searchBtn = document.getElementById("search-btn");
@@ -72,6 +59,11 @@ function filterCards() {
   cards.forEach(card => {
     card.style.display = "none";
   });
+
+  filteredCards.forEach(card => {
+    card.style.display = "block";
+  });
+}
 
   filteredCards.forEach(card => {
     card.style.display = "block";
