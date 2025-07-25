@@ -98,13 +98,16 @@
     </div>
     <div class="auth-buttons">
       <button id="logout-btn">Atsijungti</button>
+      <div id="auth-loading" style="display: none;">
+        Tikrinama prisijungimo būsena...
+      </div>
     </div>
   </div>
 
   <div class="admin-container">
     <div class="admin-header">
       <h1 class="admin-title">🛡️ Partnerių sąrašas</h1>
-      <button class="refresh-btn" onclick="loadPartnerStatus()">
+      <button class="refresh-btn" id="refresh-btn">
         <span>Atnaujinti</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M23 4v6h-6M1 20v-6h6"></path>
@@ -133,10 +136,13 @@
     </table>
   </div>
 
+  <!-- Load configuration first -->
+  <script src="config.js"></script>
   <script>
-    const BACKEND_URL = "https://travcen.onrender.com";
     const PARTNERS_TABLE = document.getElementById("partners-table").querySelector("tbody");
     const LOGOUT_BTN = document.getElementById("logout-btn");
+    const REFRESH_BTN = document.getElementById("refresh-btn");
+    const AUTH_LOADING = document.getElementById("auth-loading");
 
     // Formatavimo funkcijos
     function formatDate(dateString) {
@@ -146,7 +152,7 @@
     }
 
     function getStatusClass(status) {
-      switch(status.toLowerCase()) {
+      switch(status?.toLowerCase()) {
         case 'aktyvus': return 'status-active';
         case 'neaktyvus': return 'status-inactive';
         case 'laukiama': return 'status-pending';
@@ -166,8 +172,10 @@
       `;
 
       try {
+        showAuthLoading(true);
+        
         // Patikrinam ar vartotojas prisijungęs
-        const userRes = await fetch(`${BACKEND_URL}/api/user`, {
+        const userRes = await fetch(`${window.APP_CONFIG.API_BASE_URL}${window.APP_CONFIG.API_ENDPOINTS.USER}`, {
           credentials: "include"
         });
         
@@ -176,18 +184,12 @@
         const userData = await userRes.json();
 
         if (!userData.loggedIn || !userData.isAdmin) {
-          PARTNERS_TABLE.innerHTML = `
-            <tr>
-              <td colspan="4" class="error-message">
-                🔒 Prieiga uždrausta. Tik administratoriams.
-              </td>
-            </tr>
-          `;
+          showError('🔒 Prieiga uždrausta. Tik administratoriams.');
           return;
         }
 
         // Gaunam partnerių duomenis
-        const res = await fetch(`${BACKEND_URL}/api/partner-status`, {
+        const res = await fetch(`${window.APP_CONFIG.API_BASE_URL}${window.APP_CONFIG.API_ENDPOINTS.PARTNER_STATUS}`, {
           credentials: "include"
         });
 
@@ -196,44 +198,40 @@
         const statuses = await res.json();
 
         if (!Array.isArray(statuses) || statuses.length === 0) {
-          PARTNERS_TABLE.innerHTML = `
-            <tr>
-              <td colspan="4">Nerasta jokių partnerių</td>
-            </tr>
-          `;
+          showInfo('Nerasta jokių partnerių');
           return;
         }
 
         // Atvaizduojam duomenis
-        PARTNERS_TABLE.innerHTML = statuses.map(p => `
-          <tr>
-            <td>${p.company || 'Nenurodyta'}</td>
-            <td class="${getStatusClass(p.status)}">
-              ${p.status || 'Nežinoma būsena'}
-            </td>
-            <td>${formatDate(p.lastUpdated)}</td>
-            <td>
-              <button class="action-btn view-btn" data-id="${p.id}">Peržiūrėti</button>
-              <button class="action-btn edit-btn" data-id="${p.id}">Redaguoti</button>
-            </td>
-          </tr>
-        `).join('');
-
-        // Pridedam event listenerius veiksmų mygtukams
-        document.querySelectorAll('.action-btn').forEach(btn => {
-          btn.addEventListener('click', handleAction);
-        });
+        renderPartnerTable(statuses);
 
       } catch (err) {
         console.error("Klaida:", err);
-        PARTNERS_TABLE.innerHTML = `
-          <tr>
-            <td colspan="4" class="error-message">
-              ❌ Klaida kraunant duomenis: ${err.message}
-            </td>
-          </tr>
-        `;
+        showError(`❌ Klaida kraunant duomenis: ${err.message}`);
+      } finally {
+        showAuthLoading(false);
       }
+    }
+
+    function renderPartnerTable(partners) {
+      PARTNERS_TABLE.innerHTML = partners.map(p => `
+        <tr>
+          <td>${p.company || 'Nenurodyta'}</td>
+          <td class="${getStatusClass(p.status)}">
+            ${p.status || 'Nežinoma būsena'}
+          </td>
+          <td>${formatDate(p.lastUpdated)}</td>
+          <td>
+            <button class="action-btn view-btn" data-id="${p.id}">Peržiūrėti</button>
+            <button class="action-btn edit-btn" data-id="${p.id}">Redaguoti</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Pridedam event listenerius veiksmų mygtukams
+      document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('click', handleAction);
+      });
     }
 
     // Veiksmų apdorojimas
@@ -242,18 +240,16 @@
       const action = e.target.classList.contains('view-btn') ? 'view' : 'edit';
       
       if (action === 'view') {
-        // Peržiūros logika
         console.log(`Peržiūrima partnerio ID: ${partnerId}`);
       } else {
-        // Redagavimo logika
         console.log(`Redaguojama partnerio ID: ${partnerId}`);
       }
     }
 
     // Atsijungimo logika
-    LOGOUT_BTN.addEventListener('click', async () => {
+    async function logout() {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/logout`, {
+        const res = await fetch(`${window.APP_CONFIG.API_BASE_URL}${window.APP_CONFIG.API_ENDPOINTS.LOGOUT}`, {
           method: 'POST',
           credentials: "include"
         });
@@ -261,16 +257,58 @@
         if (res.ok) {
           window.location.href = 'login.html';
         } else {
-          alert('Atsijungti nepavyko');
+          throw new Error('Atsijungti nepavyko');
         }
       } catch (err) {
         console.error('Atsijungimo klaida:', err);
         alert('Įvyko klaida bandant atsijungti');
       }
-    });
+    }
+
+    // UI helpers
+    function showAuthLoading(show) {
+      if (AUTH_LOADING) AUTH_LOADING.style.display = show ? 'block' : 'none';
+      if (REFRESH_BTN) REFRESH_BTN.disabled = show;
+    }
+
+    function showError(message) {
+      PARTNERS_TABLE.innerHTML = `
+        <tr>
+          <td colspan="4" class="error-message">
+            ${message}
+          </td>
+        </tr>
+      `;
+    }
+
+    function showInfo(message) {
+      PARTNERS_TABLE.innerHTML = `
+        <tr>
+          <td colspan="4">${message}</td>
+        </tr>
+      `;
+    }
+
+    // Event listeners
+    LOGOUT_BTN.addEventListener('click', logout);
+    REFRESH_BTN.addEventListener('click', loadPartnerStatus);
 
     // Pradinis duomenų įkėlimas
-    document.addEventListener('DOMContentLoaded', loadPartnerStatus);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize language selector
+      const languageSelector = document.getElementById('language-selector');
+      if (languageSelector) {
+        const savedLang = localStorage.getItem('selectedLanguage') || 'lt';
+        languageSelector.value = savedLang;
+        languageSelector.addEventListener('change', (e) => {
+          if (typeof setLanguage === 'function') {
+            setLanguage(e.target.value);
+          }
+        });
+      }
+
+      loadPartnerStatus();
+    });
   </script>
 </body>
 </html>
