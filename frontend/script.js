@@ -20,6 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Load initial data
     currentOffers = await loadOffers();
+    // Automatiškai surūšiuojam korteles pagal numatytąjį rūšiavimo būdą (kainą didėjimo tvarka)
+    currentOffers = sortOffers(currentOffers, 'price-low');
     renderCards(currentOffers);
 
   } catch (error) {
