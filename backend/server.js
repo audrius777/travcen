@@ -11,6 +11,8 @@ const crypto = require('crypto');
 const cors = require('cors');
 const MongoStore = require('connect-mongo');
 const { validationResult } = require('express-validator');
+const kaunoKeliones = require('./partners/kauno_kelions');
+const vilniausKeliones = require('./partners/vilniaus_keliones');
 
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
@@ -20,8 +22,8 @@ async function connectToDatabase() {
       socketTimeoutMS: 45000,
       retryWrites: true,
       w: 'majority',
-      maxPoolSize: 10, // Maksimalus ryšių skaičius
-      minPoolSize: 2   // Minimalus ryšių skaičius
+      maxPoolSize: 10,
+      minPoolSize: 2
     });
     console.log('Prisijungta prie MongoDB Atlas');
     
@@ -90,7 +92,7 @@ const limiter = rateLimit({
   message: 'Per daug užklausų iš šio IP, bandykite vėliau',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.ip === '::ffff:127.0.0.1' // Praleisti localhost
+  skip: (req) => req.ip === '::ffff:127.0.0.1'
 });
 
 app.use(limiter);
@@ -122,7 +124,7 @@ const sessionConfig = {
     crypto: {
       secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
     },
-    touchAfter: 24 * 3600 // Atnaujinti tik kartą per dieną
+    touchAfter: 24 * 3600
   })
 };
 
@@ -342,6 +344,28 @@ router.get('/partners', async (req, res) => {
   }
 });
 
+// Kelionių pasiūlymai
+router.get('/offers', async (req, res) => {
+  try {
+    const [kaunoOffers, vilniausOffers] = await Promise.all([
+      kaunoKeliones(),
+      vilniausKeliones()
+    ]);
+    
+    // Filtruojame testinius pasiūlymus
+    const allOffers = [...kaunoOffers, ...vilniausOffers]
+      .filter(offer => !offer.isTest);
+    
+    res.json({ offers: allOffers });
+  } catch (error) {
+    console.error('Kelionių pasiūlymų gavimo klaida:', error);
+    res.status(500).json({ 
+      error: 'Nepavyko gauti kelionių pasiūlymų',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
+  }
+});
+
 router.post('/partner', csrfProtection, async (req, res) => {
   if (!req.isAuthenticated() || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Nepakankamos teisės' });
@@ -388,6 +412,7 @@ app.get('/', (req, res) => {
         health: '/api/health',
         user: '/api/user',
         partners: '/api/partners',
+        offers: '/api/offers',
         logout: '/api/logout'
       }
     },
