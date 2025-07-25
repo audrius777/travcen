@@ -88,7 +88,7 @@
 
   <div id="partner-modal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
+      <span class="close">&times;</span>
       <h2 id="modal-title">Partner Registration</h2>
       <form>
         <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
@@ -101,8 +101,23 @@
   </div>
 
   <script src="translate.js"></script>
+  <script src="modal.js"></script>
+  <script src="script.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Inicializuojame modalą
+      const partnerModal = new ModalManager('partner-modal');
+      
+      // Partnerio nuorodos valdymas
+      const partnerLink = document.getElementById('footer-partner');
+      if (partnerLink) {
+        partnerLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          partnerModal.open();
+        });
+      }
+
+      // Kalbos pasirinkimas
       const languageSelector = document.getElementById('language-selector');
       if (languageSelector) {
         const savedLang = localStorage.getItem('selectedLanguage') || 'en';
