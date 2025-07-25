@@ -1,116 +1,194 @@
+import config from './config.js';
+import ModalManager from './modal.js';
+
+// Global state
+let currentOffers = [];
+
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Modalų valdymas
-  const partnerModal = new ModalManager("partner-modal");
-  const partnerLink = document.getElementById("partner-link");
-  
-  if (partnerLink) {
-    partnerLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      partnerModal.open();
-    });
+  try {
+    // Initialize UI components
+    initModals();
+    initSearch();
+    initAuth();
+
+    // Check authentication and load data
+    const authStatus = await checkAuthStatus();
+    if (!authStatus.loggedIn) {
+      redirectToLogin();
+      return;
+    }
+
+    // Load initial data
+    currentOffers = await loadOffers();
+    renderCards(currentOffers);
+
+  } catch (error) {
+    console.error('Initialization error:', error);
+    showError('Application initialization failed');
   }
-
-  // 2. Paieškos funkcija
-  const searchBtn = document.getElementById("search-btn");
-  if (searchBtn) {
-    searchBtn.addEventListener("click", filterCards);
-  }
-
-  // 3. Prisijungimo mygtukai
-  document.getElementById("login-google")?.addEventListener("click", () => {
-    alert("Google login would be implemented here");
-  });
-
-  document.getElementById("login-facebook")?.addEventListener("click", () => {
-    alert("Facebook login would be implemented here");
-  });
-
-  // Pradinis duomenų įkėlimas
-  await loadInitialOffers();
 });
 
-// 4. Pradinių pasiūlymų įkėlimas
-async function loadInitialOffers() {
+// Initialization functions
+function initModals() {
+  const partnerModal = new ModalManager("partner-modal");
+  document.getElementById("partner-link")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    partnerModal.open();
+  });
+}
+
+function initSearch() {
+  document.getElementById("search-btn")?.addEventListener("click", () => {
+    filterAndSortCards(currentOffers);
+  });
+}
+
+function initAuth() {
+  document.getElementById("logout-btn")?.addEventListener("click", logout);
+}
+
+// API functions
+async function checkAuthStatus() {
   try {
-    const response = await fetch('/api/offers');
-    if (!response.ok) throw new Error('Failed to load offers');
-    
-    const { offers } = await response.json();
-    renderCards(offers);
+    const response = await fetch(`${config.API_BASE_URL}${config.API_ENDPOINTS.USER}`, {
+      credentials: 'include'
+    });
+    if (!response.ok) throw new Error('Auth check failed');
+    return await response.json();
   } catch (error) {
-    console.error('Error loading offers:', error);
-    // Rodyti klaidos pranešimą vartotojui
-    document.getElementById('card-list').innerHTML = `
-      <div class="error-message">
-        Failed to load offers. Please try again later.
-      </div>
-    `;
+    console.error('Auth check error:', error);
+    throw error;
   }
 }
 
-// 5. Atnaujinta paieškos funkcija
-function filterCards() {
-  const departure = document.getElementById("departure").value.toLowerCase();
-  const destination = document.getElementById("destination").value.toLowerCase();
-  const tripType = document.getElementById("trip-type").value;
-  const priceSort = document.getElementById("price-sort").value;
+async function loadOffers() {
+  try {
+    showLoading(true);
+    const response = await fetch(`${config.API_BASE_URL}${config.API_ENDPOINTS.OFFERS}`, {
+      credentials: 'include'
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const { offers } = await response.json();
+    return offers;
+  } catch (error) {
+    console.error('Load offers error:', error);
+    showError('Failed to load offers');
+    return [];
+  } finally {
+    showLoading(false);
+  }
+}
 
-  const cards = Array.from(document.querySelectorAll(".card"));
-  
-  // Filtravimas
-  const filteredCards = cards.filter(card => {
-    const cardDeparture = card.dataset.departure.toLowerCase();
-    const cardDestination = card.dataset.destination.toLowerCase();
-    const cardType = card.dataset.type;
+async function logout() {
+  try {
+    const response = await fetch(`${config.API_BASE_URL}${config.API_ENDPOINTS.LOGOUT}`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (response.ok) {
+      redirectToLogin();
+    } else {
+      throw new Error('Logout failed');
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
+    showError('Logout failed. Please try again.');
+  }
+}
+
+// Data processing functions
+function filterAndSortCards(offers) {
+  try {
+    const filters = getCurrentFilters();
+    const sortedBy = document.getElementById("price-sort").value;
     
-    const matchesDeparture = !departure || cardDeparture.includes(departure);
-    const matchesDestination = !destination || cardDestination.includes(destination);
-    const matchesType = !tripType || cardType === tripType;
+    const filtered = filterOffers(offers, filters);
+    const sorted = sortOffers(filtered, sortedBy);
+    
+    renderCards(sorted);
+  } catch (error) {
+    console.error('Filter/sort error:', error);
+    showError('Failed to process offers');
+  }
+}
+
+function getCurrentFilters() {
+  return {
+    departure: document.getElementById("departure").value.toLowerCase(),
+    destination: document.getElementById("destination").value.toLowerCase(),
+    tripType: document.getElementById("trip-type").value
+  };
+}
+
+function filterOffers(offers, filters) {
+  return offers.filter(offer => {
+    const matchesDeparture = !filters.departure || 
+      offer.from.toLowerCase().includes(filters.departure);
+    const matchesDestination = !filters.destination || 
+      offer.to.toLowerCase().includes(filters.destination);
+    const matchesType = !filters.tripType || 
+      offer.type === filters.tripType;
     
     return matchesDeparture && matchesDestination && matchesType;
   });
-
-  // Rikiavimas pagal price_eur
-  if (priceSort === "price-low") {
-    filteredCards.sort((a, b) => parseFloat(a.dataset.priceEur) - parseFloat(b.dataset.priceEur));
-  } else if (priceSort === "price-high") {
-    filteredCards.sort((a, b) => parseFloat(b.dataset.priceEur) - parseFloat(a.dataset.priceEur));
-  }
-
-  renderFilteredCards(filteredCards);
 }
 
-// 6. Kortelių atvaizdavimo funkcijos
+function sortOffers(offers, sortBy) {
+  const sorted = [...offers];
+  switch(sortBy) {
+    case 'price-low':
+      return sorted.sort((a, b) => (a.price_eur || 0) - (b.price_eur || 0));
+    case 'price-high':
+      return sorted.sort((a, b) => (b.price_eur || 0) - (a.price_eur || 0));
+    default:
+      return sorted;
+  }
+}
+
+// UI rendering functions
 function renderCards(offers) {
   const cardList = document.getElementById("card-list");
-  cardList.innerHTML = offers.map(offer => createCardHTML(offer)).join('');
-}
+  if (!cardList) return;
 
-function renderFilteredCards(cards) {
-  const allCards = document.querySelectorAll(".card");
-  allCards.forEach(card => card.style.display = "none");
-  cards.forEach(card => card.style.display = "block");
-}
+  if (offers.length === 0) {
+    cardList.innerHTML = '<div class="no-results">No offers found</div>';
+    return;
+  }
 
-function createCardHTML(offer) {
-  const priceDisplay = offer.price_eur !== null ? 
-    `€${offer.price_eur.toFixed(2)}` : 
-    `${offer.original_price} ${offer.original_currency}`;
-  
-  const notice = offer.conversion_notice ? 
-    `<div class="conversion-notice">${offer.conversion_notice}</div>` : '';
-
-  return `
+  cardList.innerHTML = offers.map(offer => `
     <div class="card" 
          data-departure="${offer.from}" 
          data-destination="${offer.to}"
          data-type="${offer.type}"
          data-price-eur="${offer.price_eur || 0}">
-      <img src="${offer.image || 'https://source.unsplash.com/280x180/?travel'}" />
+      <img src="${offer.image || config.DEFAULT_IMAGE}" alt="${offer.title}" />
       <h3>${offer.title}</h3>
-      <p>Price: ${priceDisplay}</p>
-      ${notice}
-      <a href="${offer.url}" target="_blank" class="offer-link">View Offer</a>
+      <div class="price">
+        ${offer.price_eur !== null ? 
+          `€${offer.price_eur.toFixed(2)}` : 
+          `${offer.original_price} ${offer.original_currency}`}
+      </div>
+      ${offer.conversion_notice ? 
+        `<div class="conversion-notice">${offer.conversion_notice}</div>` : ''}
+      <a href="${offer.url}" target="_blank" class="offer-link">View Details</a>
     </div>
-  `;
+  `).join('');
+}
+
+// Utility functions
+function showLoading(show) {
+  const loader = document.getElementById('loading-indicator');
+  if (loader) loader.style.display = show ? 'block' : 'none';
+}
+
+function showError(message) {
+  const errorContainer = document.getElementById('error-container');
+  if (errorContainer) {
+    errorContainer.textContent = message;
+    errorContainer.style.display = 'block';
+  }
+}
+
+function redirectToLogin() {
+  window.location.href = 'login.html';
 }
