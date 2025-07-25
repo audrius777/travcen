@@ -23,7 +23,9 @@ const safeFetch = async (fn, label) => {
     const offers = await Promise.race([fn(), timeoutPromise]);
     
     console.log(`✅ Successfully loaded ${offers.length} offers from ${label}`);
-    return offers;
+    
+    // Pridedame pradinį rūšiavimą pagal kainą (nuo didžiausios) jau gavus pasiūlymus
+    return offers.sort((a, b) => (b.price_eur || 0) - (a.price_eur || 0));
   } catch (err) {
     console.error(`❌ Error loading partner "${label}":`, err.message);
     return [];
@@ -48,7 +50,10 @@ const loadPartnerModules = async () => {
 
 // Sorting function
 const sortOffers = (offers, sortBy) => {
-  if (!sortBy) return offers;
+  if (!sortBy) {
+    // Default sorting: by price descending if no sort specified
+    return offers.sort((a, b) => (b.price_eur || 0) - (a.price_eur || 0));
+  }
 
   switch(sortBy) {
     case SORT_OPTIONS.PRICE_ASC:
@@ -60,7 +65,8 @@ const sortOffers = (offers, sortBy) => {
     case SORT_OPTIONS.DATE_DESC:
       return offers.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     default:
-      return offers;
+      // Fallback to default sorting
+      return offers.sort((a, b) => (b.price_eur || 0) - (a.price_eur || 0));
   }
 };
 
@@ -71,13 +77,13 @@ const filterOffers = (offers, filters) => {
   return offers.filter(offer => {
     // Filter by departure
     if (filters.departure && 
-        !offer.from.toLowerCase().includes(filters.departure.toLowerCase())) {
+        !offer.from?.toLowerCase().includes(filters.departure.toLowerCase())) {
       return false;
     }
 
     // Filter by destination
     if (filters.destination && 
-        !offer.to.toLowerCase().includes(filters.destination.toLowerCase())) {
+        !offer.to?.toLowerCase().includes(filters.destination.toLowerCase())) {
       return false;
     }
 
@@ -106,13 +112,13 @@ module.exports = async function aggregateOffers(options = {}) {
     const batchOffers = await Promise.all(
       batch.map(partner => safeFetch(partner.module, partner.name))
     );
-    allOffers = allOffers.concat(batchOffers.flat());
+    allOffers = [...allOffers, ...batchOffers.flat()];
   }
 
   // Apply filters
   const filteredOffers = filterOffers(allOffers, filters);
 
-  // Apply sorting
+  // Apply sorting - now includes default sorting if no sort specified
   const sortedOffers = sortOffers(filteredOffers, sortBy);
 
   console.log(`ℹ️ Total ${filteredOffers.length} offers (from ${allOffers.length} raw) after filtering from ${partners.length} partners`);
@@ -123,7 +129,7 @@ module.exports = async function aggregateOffers(options = {}) {
       total: allOffers.length,
       filtered: filteredOffers.length,
       partners: partners.length,
-      sort: sortBy,
+      sort: sortBy || 'price-desc', // Nurodome numatytąjį rūšiavimą
       filters
     }
   };
