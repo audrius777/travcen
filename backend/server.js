@@ -11,8 +11,12 @@ const crypto = require('crypto');
 const cors = require('cors');
 const MongoStore = require('connect-mongo');
 const { validationResult } = require('express-validator');
-const kaunoKeliones = require('./partners/kauno_kelions');
-const vilniausKeliones = require('./partners/vilniaus_keliones');
+const axios = require('axios');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const fs = require('fs');
+const { parse } = require('csv-parse');
 
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
@@ -170,11 +174,31 @@ const partnerSchema = new mongoose.Schema({
   description: { type: String, maxlength: 500, trim: true },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   expiresAt: { type: Date, index: { expires: 0 } },
+  apiUrl: String,
+  apiKey: String,
+  sheetId: String,
+  syncMethod: { 
+    type: String, 
+    enum: ['api', 'csv', 'sheet', 'manual'], 
+    default: 'manual' 
+  },
+  lastSync: Date,
+  createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const kelionesSchema = new mongoose.Schema({
+  partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
+  pavadinimas: { type: String, required: true },
+  aprasymas: String,
+  kaina: { type: Number, required: true },
+  miestas: { type: String, enum: ['Vilnius', 'Kaunas', 'Klaipėda', 'Kitas'], required: true },
+  isTest: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
+const Kelione = mongoose.model('Kelione', kelionesSchema);
 
 // 5. Passport konfigūracija
 passport.serializeUser((user, done) => {
@@ -344,23 +368,172 @@ router.get('/partners', async (req, res) => {
   }
 });
 
-// Kelionių pasiūlymai
+// Automatinis duomenų gavimas iš partnerio API
+router.post('/sync-partner/:partnerId', async (req, res) => {
+  if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Nepakankamos teisės' });
+  }
+
+  try {
+    const partner = await Partner.findById(req.params.partnerId);
+    if (!partner) {
+      return res.status(404).json({ error: 'Partneris nerastas' });
+    }
+
+    const response = await axios.get(partner.apiUrl, {
+      headers: { 'Authorization': `Bearer ${partner.apiKey}` }
+    });
+
+    await Kelione.deleteMany({ partnerId: partner._id });
+
+    const newKeliones = await Kelione.insertMany(
+      response.data.map(item => ({
+        ...item,
+        partnerId: partner._id,
+        miestas: item.miestas || 'Kitas'
+      }))
+    );
+
+    // Atnaujiname partnerio paskutinės sinchronizacijos datą
+    await Partner.findByIdAndUpdate(partner._id, { lastSync: new Date() });
+
+    res.json({
+      success: true,
+      imported: newKeliones.length,
+      partner: partner.company
+    });
+  } catch (error) {
+    console.error('Sync klaida:', error);
+    res.status(500).json({ 
+      error: 'Nepavyko sinchronizuoti duomenų',
+      details: error.message 
+    });
+  }
+});
+
+// CSV failo importavimas
+router.post('/import-csv/:partnerId', upload.single('csv'), async (req, res) => {
+  if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Nepakankamos teisės' });
+  }
+
+  try {
+    const results = [];
+
+    fs.createReadStream(req.file.path)
+      .pipe(parse({ columns: true }))
+      .on('data', (data) => results.push(data))
+      .on('end', async () => {
+        const partner = await Partner.findById(req.params.partnerId);
+        if (!partner) {
+          fs.unlinkSync(req.file.path);
+          return res.status(404).json({ error: 'Partneris nerastas' });
+        }
+
+        await Kelione.deleteMany({ partnerId: partner._id });
+        const imported = await Kelione.insertMany(
+          results.map(item => ({
+            pavadinimas: item.pavadinimas,
+            aprasymas: item.aprasymas,
+            kaina: parseFloat(item.kaina),
+            miestas: item.miestas || 'Kitas',
+            partnerId: partner._id
+          }))
+        );
+
+        // Atnaujiname partnerio informaciją
+        await Partner.findByIdAndUpdate(partner._id, { 
+          lastSync: new Date(),
+          syncMethod: 'csv'
+        });
+
+        fs.unlinkSync(req.file.path);
+        res.json({ 
+          success: true, 
+          imported: imported.length 
+        });
+      });
+  } catch (error) {
+    if (req.file?.path) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: 'CSV importo klaida', details: error.message });
+  }
+});
+
+// Google Sheets integracija
+router.post('/sync-sheet/:partnerId', async (req, res) => {
+  if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Nepakankamos teisės' });
+  }
+
+  try {
+    const { sheetId } = req.body;
+    const partner = await Partner.findById(req.params.partnerId);
+    if (!partner) {
+      return res.status(404).json({ error: 'Partneris nerastas' });
+    }
+
+    const doc = new GoogleSpreadsheet(sheetId);
+    await doc.useServiceAccountAuth({
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    });
+    
+    await doc.loadInfo();
+    const sheet = doc.sheetsByIndex[0];
+    const rows = await sheet.getRows();
+
+    const keliones = rows.map(row => ({
+      pavadinimas: row.get('pavadinimas'),
+      aprasymas: row.get('aprasymas'),
+      kaina: parseFloat(row.get('kaina')),
+      miestas: row.get('miestas') || 'Kitas',
+      partnerId: partner._id
+    }));
+
+    await Kelione.deleteMany({ partnerId: partner._id });
+    const result = await Kelione.insertMany(keliones);
+
+    // Atnaujiname partnerio informaciją
+    await Partner.findByIdAndUpdate(partner._id, { 
+      sheetId,
+      lastSync: new Date(),
+      syncMethod: 'sheet'
+    });
+
+    res.json({ 
+      success: true, 
+      imported: result.length 
+    });
+  } catch (error) {
+    console.error('Google Sheets klaida:', error);
+    res.status(500).json({ 
+      error: 'Nepavyko sinchronizuoti iš Google Sheets',
+      details: error.message 
+    });
+  }
+});
+
+// Kelionių pasiūlymai (atnaujinta versija)
 router.get('/offers', async (req, res) => {
   try {
-    const [kaunoOffers, vilniausOffers] = await Promise.all([
-      kaunoKeliones(),
-      vilniausKeliones()
-    ]);
+    const { miestas, rusiavimas, kryptis } = req.query;
     
-    // Filtruojame testinius pasiūlymus
-    const allOffers = [...kaunoOffers, ...vilniausOffers]
-      .filter(offer => !offer.isTest);
+    const query = { isTest: false };
+    if (miestas) query.miestas = miestas;
+
+    const sort = {};
+    if (rusiavimas === 'kaina') sort.kaina = kryptis === 'mazejimo' ? -1 : 1;
+    if (rusiavimas === 'pavadinimas') sort.pavadinimas = kryptis === 'mazejimo' ? -1 : 1;
+
+    const keliones = await Kelione.find(query)
+      .sort(sort)
+      .populate('partnerId', 'company url');
     
-    res.json({ offers: allOffers });
+    res.json({ offers: keliones });
   } catch (error) {
-    console.error('Kelionių pasiūlymų gavimo klaida:', error);
+    console.error('Kelionių gavimo klaida:', error);
     res.status(500).json({ 
-      error: 'Nepavyko gauti kelionių pasiūlymų',
+      error: 'Nepavyko gauti kelionių sąrašo',
       ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
@@ -413,7 +586,12 @@ app.get('/', (req, res) => {
         user: '/api/user',
         partners: '/api/partners',
         offers: '/api/offers',
-        logout: '/api/logout'
+        logout: '/api/logout',
+        sync: {
+          partner: '/api/sync-partner/:partnerId',
+          csv: '/api/import-csv/:partnerId',
+          sheet: '/api/sync-sheet/:partnerId'
+        }
       }
     },
     serverTime: new Date().toISOString()
