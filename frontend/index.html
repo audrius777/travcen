@@ -11,7 +11,224 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TravCen - Travel Offers Hub</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Pagrindiniai stiliai */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .language-selector select {
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .auth-buttons button {
+      padding: 8px 15px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    #login-google {
+      background-color: #fff;
+      border: 1px solid #ddd;
+    }
+
+    #login-facebook {
+      background-color: #1877f2;
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 0;
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: white;
+    }
+
+    .search-section {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      background-color: #fff;
+      margin: 20px auto;
+      max-width: 1000px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .search-section input, 
+    .search-section select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      min-width: 200px;
+    }
+
+    #search-btn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 280px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .card h3 {
+      margin: 15px 15px 5px;
+    }
+
+    .card p {
+      margin: 0 15px 15px;
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .ads {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 120px;
+      height: 600px;
+      background-color: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+    }
+
+    .ads-left {
+      left: 10px;
+    }
+
+    .ads-right {
+      right: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #333;
+      color: white;
+      margin-top: 40px;
+    }
+
+    .footer a {
+      color: #6e8efb;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .disclaimer {
+      font-size: 0.9em;
+      margin-top: 15px;
+      color: #ccc;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 500px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Įkrovimo indikatoriaus stiliai */
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 40px 0;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #6e8efb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   <div class="top-bar">
@@ -62,15 +279,10 @@
   <div class="ads ads-right">Ad Right</div>
 
   <div class="results" id="card-list">
-    <div class="card" data-from="Vilnius" data-to="Greece" data-price="299">
-      <img src="https://source.unsplash.com/280x180/?beach" />
-      <h3>Greece from Vilnius</h3>
-      <p>Price: €299</p>
-    </div>
-    <div class="card" data-from="Kaunas" data-to="Alps" data-price="499">
-      <img src="https://source.unsplash.com/280x180/?mountains" />
-      <h3>Alps from Kaunas</h3>
-      <p>Price: €499</p>
+    <!-- Čia bus įkeltos kortelės dinamiškai -->
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading travel offers...</p>
     </div>
   </div>
 
@@ -113,6 +325,15 @@
           }
         });
       }
+
+      // Simuliame duomenų įkėlimą (realioje aplikacijoje čia būtų API kvietimas)
+      setTimeout(() => {
+        const cardList = document.getElementById('card-list');
+        cardList.innerHTML = ''; // Išvalome įkrovimo indikatorių
+        
+        // Čia būtų dinamiškai generuojamos kortelės iš API duomenų
+        // Kol kas paliekame tuščią, kad galėtumėte pridėti savo API integraciją
+      }, 2000);
     });
   </script>
 </body>
