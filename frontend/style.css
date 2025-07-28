@@ -327,6 +327,57 @@ body.partner-page .card::after {
   color: #333;
 }
 
+/* Privacy Policy Modal Specific Styles */
+.privacy-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 10px;
+  line-height: 1.6;
+}
+
+.privacy-content h3 {
+  color: #0066cc;
+  margin: 1.5rem 0 0.8rem;
+  font-size: 1.2rem;
+}
+
+.privacy-content ul {
+  margin: 0.8rem 0;
+  padding-left: 1.5rem;
+}
+
+.privacy-content li {
+  margin-bottom: 0.5rem;
+}
+
+.privacy-content a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.privacy-content a:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar styling */
+.privacy-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.privacy-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.privacy-content::-webkit-scrollbar-thumb {
+  background: #0066cc;
+  border-radius: 4px;
+}
+
+.privacy-content::-webkit-scrollbar-thumb:hover {
+  background: #0052a3;
+}
+
 /* Partnerių filtrai */
 .partner-filters {
   display: flex;
@@ -374,6 +425,12 @@ body.partner-page .card::after {
     flex-direction: column;
     align-items: stretch;
   }
+
+  .modal-content {
+    margin: 15% auto;
+    padding: 1.5rem;
+    max-width: 90%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -383,7 +440,11 @@ body.partner-page .card::after {
   
   .modal-content {
     margin: 20% auto;
-    padding: 1.5rem;
+    padding: 1.2rem;
+  }
+
+  .privacy-content {
+    max-height: 50vh;
   }
 }
 
