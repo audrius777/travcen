@@ -1,8 +1,12 @@
-l
 <!DOCTYPE html>
 <html lang="lt">
 <head>
-  <!-- ... (likusi head dalis nepakitusi) ... -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prisijungimas</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Sign-In API -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="login-container">
@@ -11,14 +15,40 @@ l
       <option value="lt">Lietuvių</option>
     </select>
 
-    <!-- ... (likęs HTML nepakitęs) ... -->
+    <h1 id="login-title">Prisijungimas</h1>
+    
+    <form id="login-form">
+      <input type="email" id="email" placeholder="El. paštas" required>
+      <input type="password" id="password" placeholder="Slaptažodis" required>
+      <button type="submit" id="login-button">Prisijungti</button>
+    </form>
+
+    <div class="divider">arba</div>
+
+    <!-- Google Sign-In Button -->
+    <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID"
+         data-context="signin"
+         data-ux_mode="redirect"
+         data-login_uri="https://travcen-backendas.onrender.com/auth/google/callback"
+         data-auto_prompt="false">
+    </div>
+
+    <div class="g_id_signin"
+         data-type="standard"
+         data-shape="rectangular"
+         data-theme="outline"
+         data-text="signin_with"
+         data-size="large"
+         data-logo_alignment="left">
+    </div>
+
+    <div id="error-message" class="error"></div>
   </div>
 
-  <!-- Pridedame translate.js failą -->
-  <script src="translate.js"></script>
-  
   <script>
-    const BACKEND_URL = "https://travcen.onrender.com";
+    const BACKEND_URL = "https://travcen-backendas.onrender.com";
+    const FRONTEND_URL = "https://travcen.com";
 
     // Nustatome išsaugotą kalbą
     const savedLang = localStorage.getItem('selectedLanguage') || 'lt';
@@ -28,42 +58,62 @@ l
     document.getElementById('language-selector').addEventListener('change', function(e) {
       const lang = e.target.value;
       localStorage.setItem('selectedLanguage', lang);
-      
-      // Jei naudojate translate.js, šią eilutę galite pašalinti
-      if (typeof setLanguage === 'function') {
-        setLanguage(lang);
-      } else {
-        applyTranslations(lang); // Atsarginis variantas
-      }
+      applyTranslations(lang);
     });
 
-    function redirectToGoogle() {
+    // Google prisijungimo funkcija
+    function handleGoogleSignIn() {
       window.location.href = `${BACKEND_URL}/auth/google`;
     }
 
-    // Prisijungimo forma (nepakitęs)
+    // Prisijungimo forma
     document.getElementById("login-form").addEventListener("submit", async function(e) {
-      // ... (likusi forma nepakitusi)
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errorElement = document.getElementById('error-message');
+
+      // Validacija
+      if (!email || !password) {
+        errorElement.textContent = "Prašome užpildyti visus laukus";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+          window.location.href = FRONTEND_URL;
+        } else {
+          const error = await response.json();
+          errorElement.textContent = error.message || "Prisijungimo klaida";
+        }
+      } catch (error) {
+        errorElement.textContent = "Serverio klaida. Bandykite vėliau.";
+      }
     });
 
-    // Atsarginė vertimų funkcija (tik jei nenaudojate translate.js)
+    // Vertimų funkcija
     function applyTranslations(lang) {
       const translations = {
         en: {
           "login-title": "Login",
           "email-placeholder": "Email",
           "password-placeholder": "Password",
-          "login-button": "Login",
-          "or-text": "or",
-          "google-login": "Sign in with Google"
+          "login-button": "Login"
         },
         lt: {
           "login-title": "Prisijungimas",
           "email-placeholder": "El. paštas",
           "password-placeholder": "Slaptažodis",
-          "login-button": "Prisijungti",
-          "or-text": "arba",
-          "google-login": "Prisijungti per Google"
+          "login-button": "Prisijungti"
         }
       };
 
@@ -73,16 +123,10 @@ l
       document.getElementById('email').placeholder = translations[lang]['email-placeholder'];
       document.getElementById('password').placeholder = translations[lang]['password-placeholder'];
       document.getElementById('login-button').textContent = translations[lang]['login-button'];
-      document.querySelector('.divider').textContent = translations[lang]['or-text'];
-      document.querySelector('.google-login span').textContent = translations[lang]['google-login'];
     }
 
     // Pradinis vertimas
-    if (typeof setLanguage === 'function') {
-      setLanguage(savedLang);
-    } else {
-      applyTranslations(savedLang);
-    }
+    applyTranslations(savedLang);
   </script>
 </body>
 </html>
