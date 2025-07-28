@@ -114,6 +114,68 @@
     </div>
   </div>
 
+  <!-- Privacy Policy Modal -->
+  <div id="privacy-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Privacy Policy</h2>
+      <div class="privacy-content">
+        <h3>1. Information Collection</h3>
+        <p>We collect information when you:</p>
+        <ul>
+          <li>Register on our site</li>
+          <li>Use our search services</li>
+          <li>Contact us through forms</li>
+          <li>Use third-party authentication (Google, Facebook)</li>
+        </ul>
+        
+        <h3>2. Data Usage</h3>
+        <p>Your information helps us to:</p>
+        <ul>
+          <li>Personalize your experience</li>
+          <li>Improve our website</li>
+          <li>Process transactions</li>
+          <li>Send periodic emails</li>
+        </ul>
+        
+        <h3>3. Data Protection</h3>
+        <p>We implement security measures including:</p>
+        <ul>
+          <li>Secure server infrastructure</li>
+          <li>Data encryption</li>
+          <li>Regular security audits</li>
+        </ul>
+        
+        <h3>4. Cookies</h3>
+        <p>We use cookies to:</p>
+        <ul>
+          <li>Remember user preferences</li>
+          <li>Track site analytics</li>
+          <li>Improve service quality</li>
+        </ul>
+        <p>You can disable cookies in your browser settings.</p>
+        
+        <h3>5. Third-Party Services</h3>
+        <p>We use Google Analytics and social media integrations that have their own privacy policies.</p>
+        
+        <h3>6. Your Rights</h3>
+        <p>You have the right to:</p>
+        <ul>
+          <li>Access your personal data</li>
+          <li>Request correction or deletion</li>
+          <li>Withdraw consent</li>
+          <li>Lodge complaints</li>
+        </ul>
+        
+        <h3>7. Policy Changes</h3>
+        <p>We may update this policy. Significant changes will be notified via email or site notice.</p>
+        
+        <p><strong>Effective Date:</strong> January 1, 2023</p>
+        <p><strong>Last Updated:</strong> June 15, 2023</p>
+      </div>
+    </div>
+  </div>
+
   <script src="translate.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -149,6 +211,30 @@
       window.addEventListener('click', (e) => {
         if (e.target === aboutModal) {
           aboutModal.style.display = 'none';
+        }
+      });
+
+      // Privacy Policy modal functionality
+      const privacyLink = document.getElementById('footer-privacy');
+      const privacyModal = document.getElementById('privacy-modal');
+      const privacyClose = document.querySelector('#privacy-modal .close');
+
+      if (privacyLink) {
+        privacyLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          privacyModal.style.display = 'block';
+        });
+      }
+
+      if (privacyClose) {
+        privacyClose.addEventListener('click', () => {
+          privacyModal.style.display = 'none';
+        });
+      }
+
+      window.addEventListener('click', (e) => {
+        if (e.target === privacyModal) {
+          privacyModal.style.display = 'none';
         }
       });
     });
