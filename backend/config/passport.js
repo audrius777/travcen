@@ -1,6 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User = require("./models/user"); // Importuojame User modelį
+const User = require("./models/user"); // Importuojame User modelį iš server.js
 require("dotenv").config();
 
 // Serializacija/deserializacija su MongoDB
@@ -10,7 +10,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
+    const user = await User.findById(id).select('-__v');
     done(null, user);
   } catch (error) {
     done(error, null);
@@ -23,10 +23,10 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
+      callbackURL: `${process.env.BASE_URL}/auth/google/callback`, // Pilnas URL
       scope: ["profile", "email"],
       passReqToCallback: true,
-      proxy: true, // Svarbu naudojant proxy/load balancer
+      proxy: true, // Reikalingas naudojant proxy/load balancer
       state: true // Saugumo sumetimais
     },
     async (req, accessToken, refreshToken, profile, done) => {
@@ -36,19 +36,18 @@ passport.use(
           throw new Error("Google paskyboje nerastas el. paštas");
         }
 
-        // Ieškome ar atnaujiname vartotoją duomenų bazėje
+        // Vartotojo paieška/sukūrimas duomenų bazėje
         let user = await User.findOne({ 
           $or: [
             { googleId: profile.id },
-            { email: email }
+            { email: email.toLowerCase() }
           ]
         });
 
         if (!user) {
-          // Sukuriame naują vartotoją
           user = await User.create({
             googleId: profile.id,
-            email: email,
+            email: email.toLowerCase(),
             name: profile.displayName,
             avatar: profile.photos?.[0]?.value,
             provider: "google",
