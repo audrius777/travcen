@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1. Modalų valdymas
   const modal = document.getElementById("partner-modal");
   const partnerLink = document.getElementById("partner-link");
-  const closeBtn = document.querySelector(".close");
+  const closeBtns = document.querySelectorAll(".close");
 
   if (partnerLink) {
     partnerLink.addEventListener("click", (e) => {
@@ -11,15 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      modal.style.display = "none";
+  // Close buttons for all modals
+  closeBtns.forEach(btn => {
+    btn.addEventListener("click", function() {
+      this.closest('.modal').style.display = "none";
     });
-  }
+  });
 
   window.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.style.display = "none";
+    if (e.target.classList.contains('modal')) {
+      e.target.style.display = "none";
     }
   });
 
@@ -46,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // 5. About Us modal functionality
   const aboutLink = document.getElementById("footer-about");
   const aboutModal = document.getElementById("about-modal");
-  const aboutClose = document.querySelector(".about-close");
 
   if (aboutLink) {
     aboutLink.addEventListener("click", (e) => {
@@ -55,20 +55,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (aboutClose) {
-    aboutClose.addEventListener("click", () => {
-      aboutModal.style.display = "none";
+  // 6. Privacy Policy modal functionality
+  const privacyLink = document.getElementById("footer-privacy");
+  const privacyModal = document.getElementById("privacy-modal");
+
+  if (privacyLink) {
+    privacyLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      privacyModal.style.display = "block";
     });
   }
-
-  window.addEventListener("click", (e) => {
-    if (e.target === aboutModal) {
-      aboutModal.style.display = "none";
-    }
-  });
 });
 
-// 4. Paieškos funkcija (liko nepakitusi)
+// Paieškos funkcija
 function filterCards() {
   const departure = document.getElementById("departure").value.toLowerCase();
   const destination = document.getElementById("destination").value.toLowerCase();
@@ -79,8 +78,8 @@ function filterCards() {
   
   // Filtravimas
   const filteredCards = cards.filter(card => {
-    const cardDeparture = card.dataset.departure.toLowerCase();
-    const cardDestination = card.dataset.destination.toLowerCase();
+    const cardDeparture = card.dataset.from.toLowerCase();
+    const cardDestination = card.dataset.to.toLowerCase();
     const cardType = card.dataset.type;
     
     const matchesDeparture = !departure || cardDeparture.includes(departure);
