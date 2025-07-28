@@ -359,22 +359,65 @@ body.partner-page .card::after {
   text-decoration: underline;
 }
 
+/* FAQ Modal Styles */
+.faq-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.faq-item {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.faq-item h3 {
+  color: #0066cc;
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+}
+
+.faq-item p {
+  line-height: 1.6;
+  color: #333;
+}
+
+.faq-content a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.faq-content a:hover {
+  text-decoration: underline;
+}
+
 /* Scrollbar styling */
-.privacy-content::-webkit-scrollbar {
+.privacy-content::-webkit-scrollbar,
+.faq-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.privacy-content::-webkit-scrollbar-track {
+.privacy-content::-webkit-scrollbar-track,
+.faq-content::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
-.privacy-content::-webkit-scrollbar-thumb {
+.privacy-content::-webkit-scrollbar-thumb,
+.faq-content::-webkit-scrollbar-thumb {
   background: #0066cc;
   border-radius: 4px;
 }
 
-.privacy-content::-webkit-scrollbar-thumb:hover {
+.privacy-content::-webkit-scrollbar-thumb:hover,
+.faq-content::-webkit-scrollbar-thumb:hover {
   background: #0052a3;
 }
 
@@ -443,8 +486,13 @@ body.partner-page .card::after {
     padding: 1.2rem;
   }
 
-  .privacy-content {
+  .privacy-content,
+  .faq-content {
     max-height: 50vh;
+  }
+  
+  .faq-item h3 {
+    font-size: 1rem;
   }
 }
 
