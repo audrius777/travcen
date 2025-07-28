@@ -1,13 +1,111 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ... ESAMAS KODAS LIEKA TOKS PATS ...
+  // 1. Modalų valdymas
+  const modal = document.getElementById("partner-modal");
+  const partnerLink = document.getElementById("partner-link");
+  const closeBtn = document.querySelector(".close");
+
+  if (partnerLink) {
+    partnerLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      modal.style.display = "block";
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  }
+
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+
+  // 2. Paieškos funkcija
+  const searchBtn = document.getElementById("search-btn");
+  if (searchBtn) {
+    searchBtn.addEventListener("click", filterCards);
+  }
+
+  // 3. Prisijungimo mygtukai
+  document.getElementById("login-google")?.addEventListener("click", () => {
+    alert("Google login would be implemented here");
+  });
+
+  document.getElementById("login-facebook")?.addEventListener("click", () => {
+    alert("Facebook login would be implemented here");
+  });
 
   // 4. Partnerių puslapio specifinė logika
   if (document.body.classList.contains('partner-page')) {
     initPartnerPage();
   }
+
+  // 5. About Us modal functionality
+  const aboutLink = document.getElementById("footer-about");
+  const aboutModal = document.getElementById("about-modal");
+  const aboutClose = document.querySelector(".about-close");
+
+  if (aboutLink) {
+    aboutLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      aboutModal.style.display = "block";
+    });
+  }
+
+  if (aboutClose) {
+    aboutClose.addEventListener("click", () => {
+      aboutModal.style.display = "none";
+    });
+  }
+
+  window.addEventListener("click", (e) => {
+    if (e.target === aboutModal) {
+      aboutModal.style.display = "none";
+    }
+  });
 });
 
-// ... ESAMA filterCards() FUNKCIJA LIEKA TOKS PATI ...
+// 4. Paieškos funkcija (liko nepakitusi)
+function filterCards() {
+  const departure = document.getElementById("departure").value.toLowerCase();
+  const destination = document.getElementById("destination").value.toLowerCase();
+  const tripType = document.getElementById("trip-type").value;
+  const priceSort = document.getElementById("price-sort").value;
+
+  const cards = Array.from(document.querySelectorAll(".card"));
+  
+  // Filtravimas
+  const filteredCards = cards.filter(card => {
+    const cardDeparture = card.dataset.departure.toLowerCase();
+    const cardDestination = card.dataset.destination.toLowerCase();
+    const cardType = card.dataset.type;
+    
+    const matchesDeparture = !departure || cardDeparture.includes(departure);
+    const matchesDestination = !destination || cardDestination.includes(destination);
+    const matchesType = !tripType || cardType === tripType;
+    
+    return matchesDeparture && matchesDestination && matchesType;
+  });
+
+  // Rikiavimas
+  if (priceSort === "price-low") {
+    filteredCards.sort((a, b) => parseInt(a.dataset.price) - parseInt(b.dataset.price));
+  } else if (priceSort === "price-high") {
+    filteredCards.sort((a, b) => parseInt(b.dataset.price) - parseInt(a.dataset.price));
+  }
+
+  // Atvaizdavimas
+  cards.forEach(card => {
+    card.style.display = "none";
+  });
+
+  filteredCards.forEach(card => {
+    card.style.display = "block";
+  });
+}
 
 /*  PAPILDOMOS FUNKCIJOS PARTNERIŲ PUSLAPIUI  */
 function initPartnerPage() {
