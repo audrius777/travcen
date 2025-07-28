@@ -79,7 +79,8 @@
       <a id="footer-faq" href="#">FAQ</a> |
       <a id="footer-privacy" href="#">Privacy Policy</a> |
       <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" id="footer-partner">Become a Partner</a>
+      <a href="#" id="footer-partner">Become a Partner</a> |
+      <a href="#" id="footer-about">About Us</a>
     </div>
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
@@ -100,6 +101,19 @@
     </div>
   </div>
 
+  <!-- About Us Modal -->
+  <div id="about-modal" class="about-modal">
+    <div class="about-content">
+      <span class="about-close">&times;</span>
+      <h2>About TravCen</h2>
+      <p>TravCen is a smart travel search platform that brings together offers from multiple travel agencies into one convenient place.</p>
+      <p>We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.</p>
+      <p>Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
+      <p>Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
+      <p>Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
+    </div>
+  </div>
+
   <script src="translate.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -113,6 +127,30 @@
           }
         });
       }
+
+      // About Us modal functionality
+      const aboutLink = document.getElementById('footer-about');
+      const aboutModal = document.getElementById('about-modal');
+      const aboutClose = document.querySelector('.about-close');
+
+      if (aboutLink) {
+        aboutLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          aboutModal.style.display = 'block';
+        });
+      }
+
+      if (aboutClose) {
+        aboutClose.addEventListener('click', () => {
+          aboutModal.style.display = 'none';
+        });
+      }
+
+      window.addEventListener('click', (e) => {
+        if (e.target === aboutModal) {
+          aboutModal.style.display = 'none';
+        }
+      });
     });
   </script>
 </body>
