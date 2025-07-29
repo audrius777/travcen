@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -8,6 +9,10 @@
     gtag('js', new Date());
     gtag('config', 'G-KKDRG05LKT');
   </script>
+  
+  <!-- Google Sign-In API -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TravCen - Travel Offers Hub</title>
@@ -84,6 +89,13 @@
       text-decoration: underline;
     }
 
+    /* Google Sign-In Button Container */
+    .auth-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     /* Scrollbar styling */
     .privacy-content::-webkit-scrollbar,
     .faq-content::-webkit-scrollbar {
@@ -110,6 +122,10 @@
     @media (max-width: 768px) {
       .faq-content {
         max-height: 60vh;
+      }
+      
+      .auth-buttons {
+        flex-direction: column;
       }
     }
 
@@ -141,8 +157,23 @@
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> <span id="google-login-text">Sign in with Google</span></button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> <span id="facebook-login-text">Sign in with Facebook</span></button>
+      <!-- Google Sign-In Configuration -->
+      <div id="g_id_onload"
+           data-client_id="334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com"
+           data-context="signin"
+           data-ux_mode="redirect"
+           data-login_uri="https://travcen-backendas.onrender.com/auth/google/callback"
+           data-auto_prompt="false">
+      </div>
+      
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="rectangular"
+           data-theme="outline"
+           data-text="signin_with"
+           data-size="medium"
+           data-logo_alignment="left">
+      </div>
     </div>
   </div>
 
@@ -198,6 +229,7 @@
     </p>
   </div>
 
+  <!-- Partner Modal -->
   <div id="partner-modal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
@@ -392,6 +424,17 @@
       setupModal('footer-privacy', 'privacy-modal');
       setupModal('footer-partner', 'partner-modal');
       setupModal('footer-faq', 'faq-modal');
+
+      // Google Sign-In initialization check
+      if (typeof google !== 'undefined') {
+        google.accounts.id.initialize({
+          client_id: '334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com',
+          callback: (response) => {
+            console.log('Google authentication response:', response);
+            // Handle the authentication response if needed
+          }
+        });
+      }
     });
   </script>
 </body>
