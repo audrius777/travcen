@@ -187,7 +187,12 @@ passport.use(new GoogleStrategy({
     const email = profile.emails?.[0]?.value;
     if (!email) throw new Error('Google paskyboje nerastas el. paštas');
 
-    let user = await User.findOne({ $or: [{ googleId: profile.id }, { email }]);
+    let user = await User.findOne({ 
+      $or: [
+        { googleId: profile.id },
+        { email }
+      ]
+    });
     
     if (!user) {
       user = await User.create({
