@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prisijungimas</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Google Sign-In API -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="login-container">
@@ -25,23 +23,10 @@
 
     <div class="divider">arba</div>
 
-    <!-- Google Sign-In Button -->
-    <div id="g_id_onload"
-         data-client_id="334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com"
-         data-context="signin"
-         data-ux_mode="redirect"
-         data-login_uri="https://travcen-backendas.onrender.com/auth/google/callback"
-         data-auto_prompt="false">
-    </div>
-
-    <div class="g_id_signin"
-         data-type="standard"
-         data-shape="rectangular"
-         data-theme="outline"
-         data-text="signin_with"
-         data-size="large"
-         data-logo_alignment="left">
-    </div>
+    <!-- Google Prisijungimo Mygtukas (veikia per redirect į backend) -->
+    <a href="https://travcen-backendas.onrender.com/auth/google">
+      <button class="google-login-button">Prisijungti su Google</button>
+    </a>
 
     <div id="error-message" class="error"></div>
   </div>
