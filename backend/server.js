@@ -107,10 +107,10 @@ const sessionConfig = {
   name: 'travcen.sid',
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true, // Visada true, nes naudojame HTTPS
+    sameSite: 'none', // Būtina cross-domain autentifikacijai
     maxAge: 24 * 60 * 60 * 1000,
-    domain: process.env.COOKIE_DOMAIN,
+    domain: '.travcen-backendas.onrender.com', // Su tašku pradžioje
     path: '/',
     signed: true
   },
@@ -121,14 +121,9 @@ const sessionConfig = {
     autoRemove: 'native',
     crypto: {
       secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
-    },
-    touchAfter: 24 * 3600 // Atnaujinti tik kartą per dieną
+    }
   })
 };
-
-app.use(session(sessionConfig));
-app.use(passport.initialize());
-app.use(passport.session());
 
 // 4. Mongoose modeliai
 const userSchema = new mongoose.Schema({
@@ -175,39 +170,24 @@ const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 
 // 5. Passport konfigūracija
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id).select('-__v');
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-});
-
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
+  callbackURL: "https://travcen-backendas.onrender.com/auth/google/callback", // Fiksuotas URL
   passReqToCallback: true,
   proxy: true,
-  state: true
+  state: true,
+  scope: ['profile', 'email'],
+  prompt: 'select_account',
+  accessType: 'offline'
 }, async (req, accessToken, refreshToken, profile, done) => {
   try {
+    console.log('Gautas Google profilis:', profile.id); // Log'as patikrinimui
+    
     const email = profile.emails?.[0]?.value;
-    if (!email) {
-      return done(new Error('Google paskyboje nerastas el. paštas'));
-    }
+    if (!email) throw new Error('Google paskyboje nerastas el. paštas');
 
-    let user = await User.findOne({ 
-      $or: [
-        { googleId: profile.id },
-        { email }
-      ]
-    });
+    let user = await User.findOne({ $or: [{ googleId: profile.id }, { email }]);
     
     if (!user) {
       user = await User.create({
@@ -221,8 +201,10 @@ passport.use(new GoogleStrategy({
       await user.save();
     }
     
+    console.log('Autentifikuotas vartotojas:', user.email); // Patikrinimui
     done(null, user);
   } catch (err) {
+    console.error('Google autentifikacijos klaida:', err);
     done(err);
   }
 }));
@@ -241,31 +223,31 @@ const csrfProtection = csrf({
 
 // CSRF middleware
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api') || 
-      req.path.startsWith('/auth') || 
-      req.path === '/' || 
-      req.path === '/favicon.ico' ||
-      req.path.startsWith('/static')) {
+  if (req.path.startsWith('/auth') || 
+      req.path === '/health' || 
+      req.path === '/favicon.ico') {
     return next();
   }
   return csrfProtection(req, res, next);
 });
 
 // 7. Autentifikacijos maršrutai
-app.get('/auth/google',
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'],
-    prompt: 'select_account',
-    accessType: 'offline',
-    session: true
-  })
-);
-
-app.get('/auth/google/callback',
+app.get('/auth/google', (req, res, next) => {
+  console.log('Pradedamas Google OAuth flow'); // Debug log
   passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account'
+  })(req, res, next);
+});
+
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { 
     failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed`,
-    successRedirect: process.env.FRONTEND_URL || '/'
-  })
+    successRedirect: process.env.FRONTEND_URL
+  }),
+  (req, res) => {
+    console.log('Sėkmingai prisijungta:', req.user?.email); // Patikrinimui
+  }
 );
 
 // 8. API maršrutai
