@@ -1,11 +1,11 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User = require("./models/user"); // Importuojame User modelį iš server.js
+const User = require("./models/user");
 require("dotenv").config();
 
-// Serializacija/deserializacija su MongoDB
+// Serializacija/deserializacija
 passport.serializeUser((user, done) => {
-  done(null, user.id); // Saugome tik user ID sesijoje
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -17,17 +17,17 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google Strategy su pilna konfigūracija
+// Google Strategy
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BASE_URL}/auth/google/callback`, // Pilnas URL
+      callbackURL: "https://travcen-backendas.onrender.com/auth/google/callback", // Fiksuotas URL (be process.env)
       scope: ["profile", "email"],
       passReqToCallback: true,
-      proxy: true, // Reikalingas naudojant proxy/load balancer
-      state: true // Saugumo sumetimais
+      proxy: true,
+      state: true
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
@@ -36,7 +36,6 @@ passport.use(
           throw new Error("Google paskyboje nerastas el. paštas");
         }
 
-        // Vartotojo paieška/sukūrimas duomenų bazėje
         let user = await User.findOne({ 
           $or: [
             { googleId: profile.id },
@@ -54,7 +53,6 @@ passport.use(
             role: email === process.env.ADMIN_EMAIL ? "admin" : "user"
           });
         } else if (!user.googleId) {
-          // Atnaujiname egzistuojantį vartotoją
           user.googleId = profile.id;
           user.avatar = profile.photos?.[0]?.value;
           await user.save();
