@@ -27,10 +27,10 @@
 
     <!-- Google Sign-In Button -->
     <div id="g_id_onload"
-         data-client_id="<jūsų_google_client_id>"  <!-- Pakeista iš YOUR_GOOGLE_CLIENT_ID -->
+         data-client_id="334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com"
          data-context="signin"
          data-ux_mode="redirect"
-         data-login_uri="<process.env.BASE_URL>/auth/google/callback"  <!-- Pakeista, kad sutaptų su passport.js -->
+         data-login_uri="https://travcen-backendas.onrender.com/auth/google/callback"
          data-auto_prompt="false">
     </div>
 
@@ -60,11 +60,6 @@
       localStorage.setItem('selectedLanguage', lang);
       applyTranslations(lang);
     });
-
-    // Google prisijungimo funkcija
-    function handleGoogleSignIn() {
-      window.location.href = `${BACKEND_URL}/auth/google`;
-    }
 
     // Prisijungimo forma
     document.getElementById("login-form").addEventListener("submit", async function(e) {
