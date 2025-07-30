@@ -30,17 +30,17 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     /* Atnaujinti fono stiliai */
-body {
-  background: url('https://medpoint.ee/wp-content/uploads/2022/11/beautiful-tropical-beaches-sea-with-blue-background-beach-bright-blue-sky-background-copying-space-panorama_524876-608-800x356.webp') no-repeat center center fixed;
-  background-size: cover;
-  background-attachment: fixed;
-  background-position: center;
-  background-repeat: no-repeat;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  width: 100%;
-}
+    body {
+      background: url('https://medpoint.ee/wp-content/uploads/2022/11/beautiful-tropical-beaches-sea-with-blue-background-beach-bright-blue-sky-background-copying-space-panorama_524876-608-800x356.webp') no-repeat center center fixed;
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+    }
     
     /* Atsarginis fono stilius, jei pirminis nepavyksta */
     @supports not (background-attachment: fixed) {
@@ -252,8 +252,8 @@ body {
       <div id="g_id_onload"
            data-client_id="334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com"
            data-context="signin"
-           data-ux_mode="redirect"
-           data-login_uri="https://travcen-backendas.onrender.com/auth/google/callback"
+           data-ux_mode="popup"
+           data-callback="handleGoogleSignIn"
            data-auto_prompt="false">
       </div>
     </div>
@@ -508,26 +508,45 @@ body {
       setupModal('footer-partner', 'partner-modal');
       setupModal('footer-faq', 'faq-modal');
 
-      // Google Sign-In
+      // Google Sign-In Handler
+      function handleGoogleSignIn(response) {
+        const authToken = response.credential;
+        
+        // Send token to backend for verification
+        fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: authToken })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Successful login - redirect or update UI
+            window.location.href = data.redirect || '/dashboard';
+          } else {
+            console.error('Google login failed:', data.error);
+            alert('Login failed. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Google login error:', error);
+          alert('An error occurred during login.');
+        });
+      }
+
+      // Google Sign-In Button
       document.getElementById('login-google').addEventListener('click', function() {
-        // Initialize if not already initialized
+        // Initialize Google client if not already initialized
         if (typeof google !== 'undefined') {
-          google.accounts.id.initialize({
-            client_id: '334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com',
-            callback: (response) => {
-              console.log('Google authentication response:', response);
-              // Handle the authentication response
-              window.location.href = 'https://travcen-backendas.onrender.com/auth/google/callback';
-            }
-          });
           google.accounts.id.prompt();
         } else {
           console.error('Google API not loaded');
+          // Fallback to traditional redirect
           window.location.href = 'https://travcen-backendas.onrender.com/auth/google';
         }
       });
 
-      // Facebook Login
+      // Facebook Login (existing functionality preserved)
       document.getElementById('login-facebook').addEventListener('click', function() {
         window.location.href = 'https://travcen-backendas.onrender.com/auth/facebook';
       });
