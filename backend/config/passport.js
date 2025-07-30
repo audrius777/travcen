@@ -1,9 +1,15 @@
 const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const { OAuth2Client } = require('google-auth-library');
 const User = require("./models/user");
 require("dotenv").config();
 
-// Serializacija/deserializacija
+// Inicializuojame Google klientą
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET
+);
+
+// Serializacija/deserializacija (paliekama nepakitusi)
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -17,13 +23,27 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google Strategy
+// Google tokeno patvirtinimo funkcija (nauja)
+exports.verifyGoogleToken = async (token) => {
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    return ticket.getPayload();
+  } catch (error) {
+    console.error('Google token verification failed:', error);
+    throw error;
+  }
+};
+
+// Google Strategy (paliekama suderinamumui, bet rekomenduojama naudoti tik token-based auth)
 passport.use(
-  new GoogleStrategy(
+  new (require("passport-google-oauth20").Strategy)(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "https://travcen-backendas.onrender.com/auth/google/callback", // Fiksuotas URL (be process.env)
+      callbackURL: "https://travcen-backendas.onrender.com/auth/google/callback",
       scope: ["profile", "email"],
       passReqToCallback: true,
       proxy: true,
