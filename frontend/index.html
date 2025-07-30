@@ -4,12 +4,11 @@
   <!-- Atnaujintas Content Security Policy Meta Tag -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://apis.google.com https://accounts.google.com https://www.google.com;
+    script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' data: https://*.icons8.com https://source.unsplash.com https://medpoint.ee;
     font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com;
     connect-src 'self' https://travcen-backendas.onrender.com;
-    frame-src https://accounts.google.com;
   ">
 
   <!-- Google Analytics -->
@@ -20,9 +19,6 @@
     gtag('js', new Date());
     gtag('config', 'G-KKDRG05LKT');
   </script>
-  
-  <!-- Google Sign-In API -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -240,22 +236,13 @@
     <div class="auth-buttons">
       <button id="login-google">
         <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google"/>
-        <span id="google-login-text">Sign in with Google</span>
+        <span id="google-login-text">Continue as Guest</span>
       </button>
       
       <button id="login-facebook">
         <img src="https://img.icons8.com/color/24/000000/facebook-new.png" alt="Facebook"/>
         <span id="facebook-login-text">Sign in with Facebook</span>
       </button>
-      
-      <!-- Hidden Google Sign-In Configuration -->
-      <div id="g_id_onload"
-           data-client_id="334159315485-suancedmrncl0itqrgvr00e88265jibu.apps.googleusercontent.com"
-           data-context="signin"
-           data-ux_mode="popup"
-           data-callback="handleGoogleSignIn"
-           data-auto_prompt="false">
-      </div>
     </div>
   </div>
 
@@ -508,45 +495,26 @@
       setupModal('footer-partner', 'partner-modal');
       setupModal('footer-faq', 'faq-modal');
 
-      // Google Sign-In Handler
-      function handleGoogleSignIn(response) {
-        const authToken = response.credential;
-        
-        // Send token to backend for verification
-        fetch('/api/auth/google', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: authToken })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Successful login - redirect or update UI
-            window.location.href = data.redirect || '/dashboard';
+      // Guest login functionality
+      document.getElementById('login-google').addEventListener('click', async function() {
+        try {
+          const response = await fetch('/api/auth/guest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            window.location.href = '/';
           } else {
-            console.error('Google login failed:', data.error);
-            alert('Login failed. Please try again.');
+            console.error('Guest login failed');
           }
-        })
-        .catch(error => {
-          console.error('Google login error:', error);
-          alert('An error occurred during login.');
-        });
-      }
-
-      // Google Sign-In Button
-      document.getElementById('login-google').addEventListener('click', function() {
-        // Initialize Google client if not already initialized
-        if (typeof google !== 'undefined') {
-          google.accounts.id.prompt();
-        } else {
-          console.error('Google API not loaded');
-          // Fallback to traditional redirect
-          window.location.href = 'https://travcen-backendas.onrender.com/auth/google';
+        } catch (error) {
+          console.error('Guest login error:', error);
         }
       });
 
-      // Facebook Login (existing functionality preserved)
+      // Facebook Login
       document.getElementById('login-facebook').addEventListener('click', function() {
         window.location.href = 'https://travcen-backendas.onrender.com/auth/facebook';
       });
