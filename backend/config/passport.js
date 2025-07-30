@@ -1,5 +1,6 @@
 const passport = require("passport");
 const { OAuth2Client } = require('google-auth-library');
+const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const User = require("./models/user");
 require("dotenv").config();
 
@@ -22,6 +23,45 @@ passport.deserializeUser(async (id, done) => {
     done(error, null);
   }
 });
+
+// Svečio strategija
+passport.use('guest', new JwtStrategy(
+  {
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: process.env.JWT_SECRET,
+    passReqToCallback: true
+  },
+  (req, jwtPayload, done) => {
+    try {
+      if (jwtPayload.role === 'guest') {
+        // Sukuriame minimalų vartotojo objektą svečiui
+        const guestUser = {
+          role: 'guest',
+          sessionType: 'guest',
+          createdAt: jwtPayload.createdAt
+        };
+        return done(null, guestUser);
+      }
+      return done(null, false);
+    } catch (error) {
+      return done(error, false);
+    }
+  }
+));
+
+// Middleware svečių tikrinimui
+exports.allowGuest = (req, res, next) => {
+  passport.authenticate('guest', { session: false }, (err, user, info) => {
+    if (err) {
+      return res.status(500).json({ error: 'Serverio klaida' });
+    }
+    if (!user) {
+      return res.status(401).json({ error: 'Negalima prieiga' });
+    }
+    req.user = user;
+    next();
+  })(req, res, next);
+};
 
 // Google tokeno patvirtinimo funkcija
 exports.verifyGoogleToken = async (token) => {
@@ -55,7 +95,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/google/callback",
-      scope: ['email'], // Minimalūs scope'ai
+      scope: ['email'],
       prompt: 'select_account',
       accessType: 'online',
       passReqToCallback: true,
