@@ -30,16 +30,17 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     /* Atnaujinti fono stiliai */
-    body {
-      background: url('https://medpoint.ee/wp-content/uploads/2022/11/beautiful-tropical-beaches-sea-with-blue-background-beach-bright-blue-sky-background-copying-space-panorama_524876-608-800x356.webp') no-repeat center center fixed !important;
-      background-size: cover;
-      background-attachment: fixed;
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+body {
+  background: url('https://medpoint.ee/wp-content/uploads/2022/11/beautiful-tropical-beaches-sea-with-blue-background-beach-bright-blue-sky-background-copying-space-panorama_524876-608-800x356.webp') no-repeat center center fixed;
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+}
     
     /* Atsarginis fono stilius, jei pirminis nepavyksta */
     @supports not (background-attachment: fixed) {
