@@ -6,14 +6,15 @@ const { validateSession } = require("../middleware/auth");
 const { verifyGoogleToken } = require("../passport");
 const User = require("../models/user");
 
-// Atnaujinta konfigūracija su tiksliu callbackURL
+// Optimizuota konfigūracija
 const AUTH_CONFIG = {
   google: {
-    scope: ["profile", "email"],
+    scope: ["email"], // Sumažinta scope'ų sąrašą
     failureRedirect: `${process.env.FRONTEND_URL}/prisijungimas?klaida=autentifikacija`,
     successRedirect: process.env.FRONTEND_URL,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL, // Įtrauktas callbackURL
-    prompt: "select_account"
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    prompt: "select_account",
+    accessType: "online"
   },
   facebook: {
     scope: ["email"],
@@ -22,7 +23,7 @@ const AUTH_CONFIG = {
   }
 };
 
-// Patobulintas Google prisijungimo endpoint'as (token-based)
+// Patobulintas Google token-based endpoint'as
 router.post("/auth/google/token", async (req, res) => {
   try {
     logAuthEvent("google_token_autentifikacija_pradeta", { ip: req.ip });
@@ -32,23 +33,23 @@ router.post("/auth/google/token", async (req, res) => {
     }
 
     const payload = await verifyGoogleToken(req.body.token);
-    const email = payload.email;
     
-    if (!email) {
-      throw new Error("Google paskyboje nerastas el. paštas");
+    if (!payload.email_verified) {
+      throw new Error("Google el. paštas nepatvirtintas");
     }
 
+    const email = payload.email.toLowerCase();
     let user = await User.findOne({ 
       $or: [
         { googleId: payload.sub },
-        { email: email.toLowerCase() }
+        { email: email }
       ]
     });
 
     if (!user) {
       user = await User.create({
         googleId: payload.sub,
-        email: email.toLowerCase(),
+        email: email,
         name: payload.name || email.split('@')[0],
         avatar: payload.picture || null,
         provider: "google",
@@ -97,12 +98,14 @@ router.post("/auth/google/token", async (req, res) => {
   }
 });
 
-// Atnaujinti Google maršrutai su tiksliu callbackURL
+// Atnaujinti Google OAuth maršrutai
 router.get("/auth/google", (req, res, next) => {
   logAuthEvent("google_oauth_pradeta", { ip: req.ip });
   passport.authenticate("google", {
-    ...AUTH_CONFIG.google,
-    callbackURL: AUTH_CONFIG.google.callbackURL // Užtikrinamas tinkamas callbackURL
+    scope: AUTH_CONFIG.google.scope,
+    prompt: AUTH_CONFIG.google.prompt,
+    accessType: AUTH_CONFIG.google.accessType,
+    callbackURL: AUTH_CONFIG.google.callbackURL
   })(req, res, next);
 });
 
@@ -119,12 +122,37 @@ router.get("/auth/google/callback",
 
 // Facebook maršrutai (nepakeisti)
 router.get("/facebook", (req, res, next) => {
-  // ... (likusi implementacija)
+  logAuthEvent("facebook_autentifikacija_pradeta", { ip: req.ip });
+  passport.authenticate("facebook", {
+    scope: AUTH_CONFIG.facebook.scope,
+    callbackURL: process.env.FACEBOOK_CALLBACK_URL
+  })(req, res, next);
 });
 
-// Atsijungimo maršrutas (nepakeistas)
+router.get("/facebook/callback", 
+  passport.authenticate("facebook", { 
+    failureRedirect: AUTH_CONFIG.facebook.failureRedirect,
+    session: true
+  }),
+  (req, res) => {
+    logAuthEvent("facebook_autentifikacija_pavyko", { userId: req.user.id });
+    res.redirect(AUTH_CONFIG.facebook.successRedirect);
+  }
+);
+
+// Atsijungimo maršrutas
 router.get("/atsijungti", validateSession, (req, res) => {
-  // ... (likusi implementacija)
+  req.logout((err) => {
+    if (err) {
+      logAuthEvent("atsijungimo_klaida", { 
+        userId: req.user?.id,
+        error: err.message 
+      });
+      return res.status(500).json({ success: false });
+    }
+    logAuthEvent("atsijungimas_pavyko", { userId: req.user?.id });
+    res.redirect(process.env.FRONTEND_URL);
+  });
 });
 
 module.exports = router;
