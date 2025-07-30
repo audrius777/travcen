@@ -9,7 +9,7 @@ const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_SECRET
 );
 
-// Serializacija/deserializacija (paliekama nepakitusi)
+// Serializacija/deserializacija
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -23,28 +23,41 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google tokeno patvirtinimo funkcija (nauja)
+// Google tokeno patvirtinimo funkcija
 exports.verifyGoogleToken = async (token) => {
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-    return ticket.getPayload();
+    const payload = ticket.getPayload();
+    
+    if (!payload.email_verified) {
+      throw new Error("Google el. paštas nepatvirtintas");
+    }
+
+    return {
+      sub: payload.sub,
+      email: payload.email,
+      name: payload.name || payload.email.split('@')[0],
+      picture: payload.picture || null
+    };
   } catch (error) {
-    console.error('Google token verification failed:', error);
-    throw error;
+    console.error('Google tokeno patvirtinimo klaida:', error);
+    throw new Error("Neteisingas Google tokenas");
   }
 };
 
-// Google Strategy (paliekama suderinamumui, bet rekomenduojama naudoti tik token-based auth)
+// Google Strategy (OAuth2)
 passport.use(
   new (require("passport-google-oauth20").Strategy)(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "https://travcen-backendas.onrender.com/auth/google/callback",
-      scope: ["profile", "email"],
+      callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/google/callback",
+      scope: ['email'], // Minimalūs scope'ai
+      prompt: 'select_account',
+      accessType: 'online',
       passReqToCallback: true,
       proxy: true,
       state: true
@@ -67,20 +80,69 @@ passport.use(
           user = await User.create({
             googleId: profile.id,
             email: email.toLowerCase(),
-            name: profile.displayName,
-            avatar: profile.photos?.[0]?.value,
+            name: profile.displayName || email.split('@')[0],
+            avatar: profile.photos?.[0]?.value || null,
             provider: "google",
             role: email === process.env.ADMIN_EMAIL ? "admin" : "user"
           });
         } else if (!user.googleId) {
           user.googleId = profile.id;
-          user.avatar = profile.photos?.[0]?.value;
+          user.avatar = profile.photos?.[0]?.value || user.avatar;
           await user.save();
         }
 
         done(null, user);
       } catch (error) {
         console.error("Google autentifikacijos klaida:", error);
+        done(error, null);
+      }
+    }
+  )
+);
+
+// Facebook Strategy (paliekamas nepakeistas)
+passport.use(
+  new (require("passport-facebook").Strategy)(
+    {
+      clientID: process.env.FACEBOOK_APP_ID,
+      clientSecret: process.env.FACEBOOK_APP_SECRET,
+      callbackURL: process.env.FACEBOOK_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/facebook/callback",
+      profileFields: ['id', 'emails', 'name', 'displayName', 'photos'],
+      passReqToCallback: true,
+      proxy: true
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
+      try {
+        const email = profile.emails?.[0]?.value;
+        if (!email) {
+          throw new Error("Facebook paskyboje nerastas el. paštas");
+        }
+
+        let user = await User.findOne({ 
+          $or: [
+            { facebookId: profile.id },
+            { email: email.toLowerCase() }
+          ]
+        });
+
+        if (!user) {
+          user = await User.create({
+            facebookId: profile.id,
+            email: email.toLowerCase(),
+            name: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`,
+            avatar: profile.photos?.[0]?.value || null,
+            provider: "facebook",
+            role: email === process.env.ADMIN_EMAIL ? "admin" : "user"
+          });
+        } else if (!user.facebookId) {
+          user.facebookId = profile.id;
+          user.avatar = profile.photos?.[0]?.value || user.avatar;
+          await user.save();
+        }
+
+        done(null, user);
+      } catch (error) {
+        console.error("Facebook autentifikacijos klaida:", error);
         done(error, null);
       }
     }
