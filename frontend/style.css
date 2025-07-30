@@ -8,9 +8,8 @@
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
-  background: url('https://medpoint.ee/wp-content/uploads/2022/11/beautiful-tropical-beaches-sea-with-blue-background-beach-bright-blue-sky-background-copying-space-panorama_524876-608-800x356.webp') no-repeat center center fixed;
+  background: url('https://source.unsplash.com/random/1920x1080/?beach,sea,water') no-repeat center center fixed;
   background-size: cover;
-  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
