@@ -3,15 +3,15 @@ const passport = require("passport");
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { logAuthEvent } = require("../utils/logger");
-const { validateSession } = require("../middleware/auth");
+const { validateSession, validateGuestSession } = require("../middleware/auth");
 const { verifyGoogleToken } = require("../passport");
 const User = require("../models/user");
 
-// Optimizuota konfigūracija
+// Auth konfigūracija
 const AUTH_CONFIG = {
   google: {
     scope: ["email"],
-    failureRedirect: `${process.env.FRONTEND_URL}/prisijungimas?klaida=autentifikacija`,
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth`,
     successRedirect: process.env.FRONTEND_URL,
     callbackURL: process.env.GOOGLE_CALLBACK_URL,
     prompt: "select_account",
@@ -19,68 +19,95 @@ const AUTH_CONFIG = {
   },
   facebook: {
     scope: ["email"],
-    failureRedirect: `${process.env.FRONTEND_URL}/prisijungimas?klaida=autentifikacija`,
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth`,
     successRedirect: process.env.FRONTEND_URL
   },
   guest: {
-    sessionDuration: '24h' // Svečio sesijos trukmė
+    sessionDuration: '24h',
+    permissions: ['browse', 'search', 'view_offers']
   }
 };
 
-// Naujas svečio prisijungimo endpoint'as
+// Svečio prisijungimo endpoint'as
 router.post("/auth/guest", async (req, res) => {
   try {
-    logAuthEvent("guest_session_created", { ip: req.ip });
+    const guestId = `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     
-    // Sukuriame laikiną JWT tokeną svečiui
+    logAuthEvent("guest_session_created", { 
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      guestId: guestId
+    });
+    
     const guestToken = jwt.sign(
       { 
+        guestId: guestId,
         role: 'guest',
         createdAt: new Date(),
-        sessionType: 'guest'
+        sessionType: 'guest',
+        permissions: AUTH_CONFIG.guest.permissions
       },
       process.env.JWT_SECRET,
-      { expiresIn: AUTH_CONFIG.guest.sessionDuration }
+      { 
+        expiresIn: AUTH_CONFIG.guest.sessionDuration,
+        issuer: 'travcen-guest-auth'
+      }
     );
 
-    // Nustatome saugų cookie
+    // Nustatome cookies
     res.cookie('authToken', guestToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 valandos
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
     });
 
     return res.json({ 
       success: true,
-      redirectUrl: AUTH_CONFIG.google.successRedirect // Naudojame tą patį redirect URL kaip ir Google
+      guestId: guestId,
+      token: guestToken,
+      expiresIn: AUTH_CONFIG.guest.sessionDuration,
+      redirectUrl: AUTH_CONFIG.google.successRedirect,
+      permissions: AUTH_CONFIG.guest.permissions
     });
 
   } catch (error) {
     logAuthEvent("guest_session_failed", { 
       error: error.message,
-      ip: req.ip
+      ip: req.ip,
+      timestamp: new Date().toISOString()
     });
+    
     return res.status(500).json({ 
       success: false, 
-      error: 'Nepavyko sukurti svečio sesijos' 
+      error: 'Failed to create guest session',
+      systemError: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
 
-// Patobulintas Google token-based endpoint'as (liko nepakitęs)
+// Google token-based prisijungimas
 router.post("/auth/google/token", async (req, res) => {
   try {
-    logAuthEvent("google_token_autentifikacija_pradeta", { ip: req.ip });
-    
+    // Patikriname svečio sesiją
+    if (req.cookies.authToken) {
+      const existing = jwt.decode(req.cookies.authToken);
+      if (existing?.role === 'guest') {
+        logAuthEvent("guest_upgrade_attempt", {
+          guestId: existing.guestId,
+          ip: req.ip
+        });
+      }
+    }
+
     if (!req.body.token) {
-      throw new Error("Trūksta autentifikacijos tokeno");
+      throw new Error("Missing authentication token");
     }
 
     const payload = await verifyGoogleToken(req.body.token);
     
     if (!payload.email_verified) {
-      throw new Error("Google el. paštas nepatvirtintas");
+      throw new Error("Google email not verified");
     }
 
     const email = payload.email.toLowerCase();
@@ -108,17 +135,20 @@ router.post("/auth/google/token", async (req, res) => {
 
     req.login(user, (err) => {
       if (err) {
-        logAuthEvent("google_token_autentifikacija_klaida", { 
+        logAuthEvent("google_auth_error", { 
           error: err.message,
           email: email
         });
         return res.status(401).json({ 
           success: false, 
-          error: "Vartotojo sesijos klaida" 
+          error: "User session error" 
         });
       }
       
-      logAuthEvent("google_token_autentifikacija_pavyko", { userId: user.id });
+      // Išvalome svečio cookie
+      res.clearCookie('authToken');
+      
+      logAuthEvent("google_auth_success", { userId: user.id });
       res.json({ 
         success: true, 
         user: {
@@ -131,19 +161,112 @@ router.post("/auth/google/token", async (req, res) => {
       });
     });
   } catch (error) {
-    logAuthEvent("google_token_autentifikacija_klaida", { 
+    logAuthEvent("google_auth_failed", { 
       error: error.message,
       token: req.body.token ? "provided" : "missing"
     });
     res.status(401).json({ 
       success: false, 
-      error: "Autentifikacija nepavyko",
+      error: "Authentication failed",
       details: process.env.NODE_ENV === 'development' ? error.message : null
     });
   }
 });
 
-// Likusi autentifikacijos logika (Google OAuth, Facebook) lieka nepakita
-// ... (visas kitas kodas iš originalaus auth.js failo)
+// Partnerio nukreipimo endpoint'as
+router.post("/api/redirect-partner", 
+  validateGuestSession, 
+  async (req, res) => {
+    try {
+      const { partnerId, offerId } = req.body;
+      
+      if (!partnerId || !offerId) {
+        throw new Error("Missing partner or offer ID");
+      }
+
+      logAuthEvent("partner_redirect", {
+        guestId: req.guestSession?.id || 'unknown',
+        partnerId,
+        offerId,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      return res.json({
+        success: true,
+        redirectUrl: `https://partner-${partnerId}.com/offers/${offerId}?ref=travcen&guestId=${req.guestSession?.id || ''}`
+      });
+
+    } catch (error) {
+      logAuthEvent("partner_redirect_error", {
+        error: error.message,
+        partnerId: req.body.partnerId,
+        ip: req.ip
+      });
+      return res.status(400).json({
+        success: false,
+        error: "Failed to generate redirect URL"
+      });
+    }
+  }
+);
+
+// Google OAuth maršrutai (liko nepakeisti)
+router.get("/auth/google", (req, res, next) => {
+  logAuthEvent("google_oauth_started", { ip: req.ip });
+  passport.authenticate("google", {
+    scope: AUTH_CONFIG.google.scope,
+    prompt: AUTH_CONFIG.google.prompt,
+    accessType: AUTH_CONFIG.google.accessType,
+    callbackURL: AUTH_CONFIG.google.callbackURL
+  })(req, res, next);
+});
+
+router.get("/auth/google/callback", 
+  passport.authenticate("google", { 
+    failureRedirect: AUTH_CONFIG.google.failureRedirect,
+    session: true
+  }),
+  (req, res) => {
+    logAuthEvent("google_oauth_success", { userId: req.user.id });
+    res.redirect(AUTH_CONFIG.google.successRedirect);
+  }
+);
+
+// Facebook maršrutai (liko nepakeisti)
+router.get("/auth/facebook", (req, res, next) => {
+  logAuthEvent("facebook_auth_started", { ip: req.ip });
+  passport.authenticate("facebook", {
+    scope: AUTH_CONFIG.facebook.scope,
+    callbackURL: process.env.FACEBOOK_CALLBACK_URL
+  })(req, res, next);
+});
+
+router.get("/auth/facebook/callback", 
+  passport.authenticate("facebook", { 
+    failureRedirect: AUTH_CONFIG.facebook.failureRedirect,
+    session: true
+  }),
+  (req, res) => {
+    logAuthEvent("facebook_auth_success", { userId: req.user.id });
+    res.redirect(AUTH_CONFIG.facebook.successRedirect);
+  }
+);
+
+// Atsijungimo maršrutas
+router.get("/auth/logout", validateSession, (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      logAuthEvent("logout_error", { 
+        userId: req.user?.id,
+        error: err.message 
+      });
+      return res.status(500).json({ success: false });
+    }
+    logAuthEvent("logout_success", { userId: req.user?.id });
+    res.clearCookie('authToken');
+    res.redirect(process.env.FRONTEND_URL);
+  });
+});
 
 module.exports = router;
