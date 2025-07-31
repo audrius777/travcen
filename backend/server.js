@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -11,6 +12,8 @@ const crypto = require('crypto');
 const cors = require('cors');
 const MongoStore = require('connect-mongo');
 const { validationResult } = require('express-validator');
+const authRoutes = require('./routes/auth');
+const offerRoutes = require('./routes/offers');
 
 // 1. Database Configuration
 async function connectToDatabase() {
@@ -21,7 +24,8 @@ async function connectToDatabase() {
       retryWrites: true,
       w: 'majority',
       maxPoolSize: 10,
-      minPoolSize: 2
+      minPoolSize: 2,
+      connectTimeoutMS: 30000
     });
     console.log('Connected to MongoDB Atlas');
     
@@ -47,14 +51,19 @@ async function connectToDatabase() {
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// CORS Configuration
+// Enhanced CORS Configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
+  origin: [
+    process.env.FRONTEND_URL,
+    'https://travcen.vercel.app',
+    'http://localhost:3000'
+  ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-  exposedHeaders: ['X-CSRF-Token'],
-  optionsSuccessStatus: 200
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
+  exposedHeaders: ['X-CSRF-Token', 'X-Request-ID'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 };
 
 app.use(cors(corsOptions));
@@ -64,12 +73,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com", "https://www.googletagmanager.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
-      connectSrc: ["'self'", process.env.MONGODB_URI, process.env.FRONTEND_URL],
+      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com", "https://*.facebook.com"],
+      connectSrc: ["'self'", process.env.MONGODB_URI, process.env.FRONTEND_URL, "https://travcen-backendas.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      frameSrc: ["'self'", "https://accounts.google.com"],
+      frameSrc: ["'self'", "https://accounts.google.com", "https://www.facebook.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
@@ -80,26 +89,46 @@ app.use(helmet({
     preload: true
   },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  frameguard: { action: 'deny' }
+  frameguard: { action: 'deny' },
+  xssFilter: true,
+  noSniff: true,
+  hidePoweredBy: true
 }));
 
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP',
+// Rate Limiting Configuration
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.ip === '::ffff:127.0.0.1'
+  skip: (req) => req.ip === '::ffff:127.0.0.1' || req.path === '/health'
 });
 
-app.use(limiter);
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50,
+  message: 'Too many authentication attempts, please try again later',
+  standardHeaders: true
+});
 
-// Body Parsers
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use('/api', apiLimiter);
+app.use('/auth', authLimiter);
 
-// 3. Session Configuration
+// Body Parsers with enhanced security
+app.use(express.json({
+  limit: '10kb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10kb',
+  parameterLimit: 10
+}));
+
+// 3. Session Configuration with enhanced security
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -107,9 +136,9 @@ const sessionConfig = {
   name: 'travcen.sid',
   cookie: {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
     domain: process.env.COOKIE_DOMAIN || '.travcen-backendas.onrender.com',
     path: '/',
     signed: true
@@ -117,12 +146,14 @@ const sessionConfig = {
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
     collectionName: 'sessions',
-    ttl: 24 * 60 * 60,
+    ttl: 24 * 60 * 60, // 24 hours
     autoRemove: 'native',
     crypto: {
       secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
-    }
-  })
+    },
+    touchAfter: 12 * 3600 // 12 hours
+  }),
+  rolling: true
 };
 
 // Initialize Session and Passport
@@ -130,9 +161,10 @@ app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// 4. Mongoose Models
+// 4. Mongoose Models with enhanced validation
 const userSchema = new mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true },
+  facebookId: { type: String, unique: true, sparse: true },
   email: { 
     type: String, 
     unique: true, 
@@ -142,13 +174,19 @@ const userSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid email`
     }
   },
-  name: { type: String, required: true, trim: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+  name: { type: String, required: true, trim: true, minlength: 2 },
+  avatar: { type: String },
+  role: { type: String, enum: ['user', 'admin', 'partner'], default: 'user' },
+  lastLogin: { type: Date },
+  loginCount: { type: Number, default: 0 }
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
 
 const partnerSchema = new mongoose.Schema({
-  company: { type: String, required: true, trim: true },
+  company: { type: String, required: true, trim: true, minlength: 2 },
   url: { 
     type: String, 
     required: true, 
@@ -166,43 +204,53 @@ const partnerSchema = new mongoose.Schema({
     }
   },
   description: { type: String, maxlength: 500, trim: true },
-  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  status: { type: String, enum: ['active', 'inactive', 'pending'], default: 'pending' },
   expiresAt: { type: Date, index: { expires: 0 } },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+  apiKey: { type: String, unique: true, sparse: true },
+  contactPerson: { type: String }
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true }
+});
 
 const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 
-// 5. Passport Configuration
+// 5. Enhanced Passport Configuration
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  done(null, {
+    id: user.id,
+    role: user.role,
+    lastLogin: user.lastLogin
+  });
 });
 
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (serializedUser, done) => {
   try {
-    const user = await User.findById(id).select('-__v');
+    const user = await User.findById(serializedUser.id)
+      .select('-__v -loginCount')
+      .lean();
     done(null, user);
   } catch (err) {
     done(err);
   }
 });
 
+// Google Strategy with enhanced error handling
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://travcen-backendas.onrender.com/auth/google/callback",
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/google/callback",
   passReqToCallback: true,
   proxy: true,
   state: true,
   scope: ['profile', 'email'],
   prompt: 'select_account',
-  accessType: 'offline'
+  accessType: 'offline',
+  userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
 }, async (req, accessToken, refreshToken, profile, done) => {
   try {
-    console.log('Received Google profile:', profile.id);
-    
-    const email = profile.emails?.[0]?.value;
+    const email = profile.emails?.[0]?.value?.toLowerCase();
     if (!email) throw new Error('No email found in Google profile');
 
     let user = await User.findOne({ 
@@ -217,239 +265,225 @@ passport.use(new GoogleStrategy({
         googleId: profile.id,
         email,
         name: profile.displayName,
-        role: email === process.env.ADMIN_EMAIL ? 'admin' : 'user'
+        avatar: profile.photos?.[0]?.value,
+        role: email === process.env.ADMIN_EMAIL ? 'admin' : 'user',
+        lastLogin: new Date()
       });
-    } else if (!user.googleId) {
-      user.googleId = profile.id;
+    } else {
+      if (!user.googleId) user.googleId = profile.id;
+      if (!user.avatar) user.avatar = profile.photos?.[0]?.value;
+      user.lastLogin = new Date();
+      user.loginCount = (user.loginCount || 0) + 1;
       await user.save();
     }
     
-    console.log('Authenticated user:', user.email);
     done(null, user);
   } catch (err) {
     console.error('Google authentication error:', err);
-    done(err);
+    done(err, null, {
+      message: 'Authentication failed',
+      provider: 'google',
+      error: err.message
+    });
   }
 }));
 
-// 6. CSRF Protection
+// Facebook Strategy
+passport.use(new FacebookStrategy({
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.FACEBOOK_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/facebook/callback",
+  profileFields: ['id', 'emails', 'name', 'displayName', 'photos'],
+  enableProof: true,
+  passReqToCallback: true
+}, async (req, accessToken, refreshToken, profile, done) => {
+  try {
+    const email = profile.emails?.[0]?.value?.toLowerCase();
+    if (!email) throw new Error('No email found in Facebook profile');
+
+    let user = await User.findOne({ 
+      $or: [
+        { facebookId: profile.id },
+        { email: email }
+      ]
+    });
+    
+    if (!user) {
+      user = await User.create({
+        facebookId: profile.id,
+        email,
+        name: profile.displayName || `${profile.name?.givenName} ${profile.name?.familyName}`,
+        avatar: profile.photos?.[0]?.value,
+        role: 'user',
+        lastLogin: new Date()
+      });
+    } else {
+      if (!user.facebookId) user.facebookId = profile.id;
+      if (!user.avatar) user.avatar = profile.photos?.[0]?.value;
+      user.lastLogin = new Date();
+      user.loginCount = (user.loginCount || 0) + 1;
+      await user.save();
+    }
+    
+    done(null, user);
+  } catch (err) {
+    console.error('Facebook authentication error:', err);
+    done(err, null, {
+      message: 'Authentication failed',
+      provider: 'facebook',
+      error: err.message
+    });
+  }
+}));
+
+// 6. CSRF Protection with exclusions
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     signed: true,
     domain: process.env.COOKIE_DOMAIN || '.travcen-backendas.onrender.com',
     path: '/'
+  },
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+  value: (req) => {
+    return req.headers['x-csrf-token'] || req.body._csrf;
   }
 });
 
-// CSRF Middleware
+// Apply CSRF protection selectively
 app.use((req, res, next) => {
-  if (req.path.startsWith('/auth') || 
-      req.path.startsWith('/api') || 
-      req.path === '/health' || 
-      req.path === '/' ||
-      req.path === '/favicon.ico') {
+  const excludedPaths = [
+    '/auth',
+    '/api/health',
+    '/api/auth/guest',
+    '/favicon.ico'
+  ];
+  
+  if (excludedPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
   return csrfProtection(req, res, next);
 });
 
-// 7. Authentication Routes
-app.get('/auth/google', (req, res, next) => {
-  console.log('Initiating Google OAuth flow');
-  passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    prompt: 'select_account'
-  })(req, res, next);
-});
+// 7. Route Configuration
+app.use('/auth', authRoutes);
+app.use('/api/offers', offerRoutes);
 
-app.get('/auth/google/callback', 
-  passport.authenticate('google', { 
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed`,
-    successRedirect: process.env.FRONTEND_URL
-  }),
-  (req, res) => {
-    console.log('Successfully logged in:', req.user?.email);
-  }
-);
-
-// 8. API Routes
-const router = express.Router();
-
-// Health Check
-router.get('/health', (req, res) => {
+// Health Check Endpoint
+app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    timestamp: new Date().toISOString()
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    memoryUsage: process.memoryUsage(),
+    env: process.env.NODE_ENV || 'development'
   });
 });
 
-// CSRF Token
-router.get('/csrf-token', csrfProtection, (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
-
-// User Data
-router.get('/user', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ 
-      loggedIn: true,
-      user: {
-        id: req.user._id,
-        email: req.user.email,
-        name: req.user.name,
-        role: req.user.role
-      }
-    });
-  } else {
-    res.status(401).json({ loggedIn: false });
-  }
-});
-
-// Logout
-router.post('/logout', (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout error' });
-    }
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Session destruction error:', err);
-      }
-      res.clearCookie('travcen.sid', {
-        domain: process.env.COOKIE_DOMAIN || '.travcen-backendas.onrender.com',
-        path: '/'
-      });
-      res.json({ success: true });
-    });
-  });
-});
-
-// Partners Management
-router.get('/partners', async (req, res) => {
-  try {
-    const partners = await Partner.find({ 
-      status: 'active',
-      $or: [
-        { expiresAt: { $exists: false } },
-        { expiresAt: { $gt: new Date() } }
-      ]
-    }).select('-__v').lean();
-    res.json(partners);
-  } catch (err) {
-    console.error('Partners retrieval error:', err);
-    res.status(500).json({ error: 'Failed to get partners list' });
-  }
-});
-
-router.post('/partner', csrfProtection, async (req, res) => {
-  if (!req.isAuthenticated() || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Insufficient permissions' });
-  }
-
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const partnerData = {
-      ...req.body,
-      expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined
-    };
-
-    const partner = await Partner.create(partnerData);
-    res.status(201).json(partner);
-  } catch (err) {
-    console.error('Partner creation error:', err);
-    if (err.code === 11000) {
-      return res.status(400).json({ error: 'Partner with this email already exists' });
-    }
-    res.status(400).json({ error: err.message });
-  }
-});
-
-app.use('/api', router);
-
-// 9. Main Route
-app.get('/', (req, res) => {
+// Main API Route
+app.get('/api', (req, res) => {
   res.json({
-    status: 'online',
     service: 'Travcen Backend API',
-    version: '1.0.0',
+    version: '1.1.0',
+    status: 'operational',
     environment: process.env.NODE_ENV || 'development',
-    documentation: 'https://github.com/your-repo/docs',
     availableEndpoints: {
       auth: {
         google: '/auth/google',
-        callback: '/auth/google/callback'
+        facebook: '/auth/facebook',
+        guest: '/api/auth/guest'
       },
       api: {
-        health: '/api/health',
+        health: '/health',
         user: '/api/user',
-        partners: '/api/partners',
-        logout: '/api/logout'
+        offers: '/api/offers',
+        partners: '/api/partners'
       }
     },
-    serverTime: new Date().toISOString()
+    documentation: process.env.API_DOCS_URL || 'https://docs.travcen.com'
   });
 });
 
-// 10. Error Handling
+// 8. Enhanced Error Handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  
-  if (err.name === 'MongoServerError') {
-    return res.status(400).json({ 
-      error: 'Database operation error',
-      details: err.message 
-    });
-  }
-  
-  if (err.name === 'ValidationError') {
-    const errors = {};
-    Object.keys(err.errors).forEach(key => {
-      errors[key] = err.errors[key].message;
-    });
-    return res.status(400).json({ 
-      error: 'Validation error',
-      details: errors 
-    });
-  }
-  
-  if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).json({ 
-      error: 'Invalid CSRF token',
-      solution: 'Please refresh the page and try again'
-    });
-  }
-  
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  console.error(`[${new Date().toISOString()}] Error:`, {
+    path: req.path,
+    method: req.method,
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    ip: req.ip,
+    userAgent: req.headers['user-agent']
   });
+
+  const errorResponse = {
+    error: err.message || 'Internal Server Error',
+    status: err.status || 500,
+    timestamp: new Date().toISOString()
+  };
+
+  if (err.name === 'ValidationError') {
+    errorResponse.details = {};
+    Object.keys(err.errors).forEach(key => {
+      errorResponse.details[key] = err.errors[key].message;
+    });
+    return res.status(400).json(errorResponse);
+  }
+
+  if (err.name === 'MongoServerError') {
+    errorResponse.type = 'database_error';
+    if (err.code === 11000) {
+      errorResponse.details = 'Duplicate key error';
+    }
+    return res.status(400).json(errorResponse);
+  }
+
+  if (err.code === 'EBADCSRFTOKEN') {
+    errorResponse.solution = 'Refresh the page and try again';
+    return res.status(403).json(errorResponse);
+  }
+
+  res.status(errorResponse.status).json(errorResponse);
 });
 
-// 11. Server Startup
+// 9. Server Startup with graceful shutdown
 async function startServer() {
-  await connectToDatabase();
-  
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`API available at /api endpoints`);
-    console.log(`Google authentication available at /auth/google`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
+  try {
+    await connectToDatabase();
+    
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received. Shutting down gracefully...');
+      server.close(() => {
+        mongoose.connection.close(false, () => {
+          console.log('MongoDB connection closed');
+          process.exit(0);
+        });
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('SIGINT received. Shutting down gracefully...');
+      server.close(() => {
+        mongoose.connection.close(false, () => {
+          console.log('MongoDB connection closed');
+          process.exit(0);
+        });
+      });
+    });
+
+  } catch (err) {
+    console.error('Server startup error:', err);
+    process.exit(1);
+  }
 }
 
-startServer().catch(err => {
-  console.error('Server startup error:', err);
-  process.exit(1);
-});
+startServer();
