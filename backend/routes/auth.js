@@ -29,7 +29,7 @@ const AUTH_CONFIG = {
 };
 
 // Svečio prisijungimo endpoint'as
-router.post("/auth/guest", async (req, res) => {
+router.post("/guest", async (req, res) => {
   try {
     const guestId = `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     
@@ -86,20 +86,9 @@ router.post("/auth/guest", async (req, res) => {
   }
 });
 
-// Google token-based prisijungimas
-router.post("/api/auth/guest", async (req, res) => {
+// Google prisijungimas per API
+router.post("/google", async (req, res) => {
   try {
-    // Patikriname svečio sesiją
-    if (req.cookies.authToken) {
-      const existing = jwt.decode(req.cookies.authToken);
-      if (existing?.role === 'guest') {
-        logAuthEvent("guest_upgrade_attempt", {
-          guestId: existing.guestId,
-          ip: req.ip
-        });
-      }
-    }
-
     if (!req.body.token) {
       throw new Error("Missing authentication token");
     }
@@ -174,7 +163,7 @@ router.post("/api/auth/guest", async (req, res) => {
 });
 
 // Partnerio nukreipimo endpoint'as
-router.post("/api/redirect-partner", 
+router.post("/redirect-partner", 
   validateGuestSession, 
   async (req, res) => {
     try {
@@ -211,8 +200,8 @@ router.post("/api/redirect-partner",
   }
 );
 
-// Google OAuth maršrutai (liko nepakeisti)
-router.get("/auth/google", (req, res, next) => {
+// Google OAuth maršrutai
+router.get("/google", (req, res, next) => {
   logAuthEvent("google_oauth_started", { ip: req.ip });
   passport.authenticate("google", {
     scope: AUTH_CONFIG.google.scope,
@@ -222,7 +211,7 @@ router.get("/auth/google", (req, res, next) => {
   })(req, res, next);
 });
 
-router.get("/auth/google/callback", 
+router.get("/google/callback", 
   passport.authenticate("google", { 
     failureRedirect: AUTH_CONFIG.google.failureRedirect,
     session: true
@@ -233,8 +222,8 @@ router.get("/auth/google/callback",
   }
 );
 
-// Facebook maršrutai (liko nepakeisti)
-router.get("/auth/facebook", (req, res, next) => {
+// Facebook maršrutai
+router.get("/facebook", (req, res, next) => {
   logAuthEvent("facebook_auth_started", { ip: req.ip });
   passport.authenticate("facebook", {
     scope: AUTH_CONFIG.facebook.scope,
@@ -242,7 +231,7 @@ router.get("/auth/facebook", (req, res, next) => {
   })(req, res, next);
 });
 
-router.get("/auth/facebook/callback", 
+router.get("/facebook/callback", 
   passport.authenticate("facebook", { 
     failureRedirect: AUTH_CONFIG.facebook.failureRedirect,
     session: true
@@ -254,7 +243,7 @@ router.get("/auth/facebook/callback",
 );
 
 // Atsijungimo maršrutas
-router.get("/auth/logout", validateSession, (req, res) => {
+router.get("/logout", validateSession, (req, res) => {
   req.logout((err) => {
     if (err) {
       logAuthEvent("logout_error", { 
