@@ -67,8 +67,7 @@ const corsOptions = {
     
     if (allowedOrigins.some(allowedOrigin => 
       origin === allowedOrigin || 
-      origin.startsWith(allowedOrigin.replace('https://', 'http://')) ||
-      origin.startsWith(allowedOrigin.replace('http://', 'https://'))
+      origin.replace(/^https?:\/\//, '') === allowedOrigin.replace(/^https?:\/\//, '')
     )) {
       return callback(null, true);
     }
@@ -505,4 +504,4 @@ async function startServer() {
   }
 }
 
-startServer();tartServer();
+startServer();
