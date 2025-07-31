@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com;
+  script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com;
   connect-src 'self' https://travcen-backendas.onrender.com https://www.google-analytics.com https://region1.google-analytics.com;
   img-src 'self' data: https://*.icons8.com https://source.unsplash.com https://medpoint.ee https://www.google-analytics.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -22,6 +22,7 @@
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TravCen - Find the best travel offers from multiple agencies in one place">
   <title>TravCen - Travel Offers Hub</title>
   <link rel="stylesheet" href="style.css" />
   <style>
@@ -141,9 +142,10 @@
       border-color: #d9d9d9;
     }
 
-    #login-google:hover {
+    #login-google:hover, #login-google:focus {
       background: #f5f5f5;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      outline: none;
     }
 
     #login-facebook {
@@ -151,9 +153,10 @@
       color: white;
     }
 
-    #login-facebook:hover {
+    #login-facebook:hover, #login-facebook:focus {
       background: #166fe5;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      outline: none;
     }
 
     #login-google img, #login-facebook img {
@@ -185,6 +188,45 @@
       background: #0052a3;
     }
 
+    /* Loading state */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0,102,204,.3);
+      border-radius: 50%;
+      border-top-color: #0066cc;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Cookie consent banner */
+    .cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #333;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .cookie-banner button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
     @media (max-width: 768px) {
       .faq-content {
         max-height: 60vh;
@@ -198,6 +240,12 @@
       #login-google, #login-facebook {
         width: 100%;
         justify-content: center;
+      }
+
+      .cookie-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
       }
     }
 
@@ -218,9 +266,15 @@
   </style>
 </head>
 <body>
+  <!-- Cookie Consent Banner -->
+  <div id="cookie-banner" class="cookie-banner" style="display: none;">
+    <p>We use cookies to enhance your experience. By continuing to browse, you agree to our use of cookies.</p>
+    <button id="accept-cookies">Accept</button>
+  </div>
+
   <div class="top-bar">
     <div class="language-selector">
-      <select id="language-selector">
+      <select id="language-selector" aria-label="Select language">
         <option value="en">English</option>
         <option value="fr">Français</option>
         <option value="es">Español</option>
@@ -234,13 +288,13 @@
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google">
-        <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google"/>
+      <button id="login-google" aria-label="Continue as guest">
+        <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="" aria-hidden="true"/>
         <span id="google-login-text">Continue as Guest</span>
       </button>
       
-      <button id="login-facebook">
-        <img src="https://img.icons8.com/color/24/000000/facebook-new.png" alt="Facebook"/>
+      <button id="login-facebook" aria-label="Sign in with Facebook">
+        <img src="https://img.icons8.com/color/24/000000/facebook-new.png" alt="" aria-hidden="true"/>
         <span id="facebook-login-text">Sign in with Facebook</span>
       </button>
     </div>
@@ -252,16 +306,16 @@
   </header>
 
   <div class="search-section">
-    <input type="text" id="departure" placeholder="Departure location" />
-    <input type="text" id="destination" placeholder="Destination" />
-    <select id="trip-type">
+    <input type="text" id="departure" placeholder="Departure location" aria-label="Departure location"/>
+    <input type="text" id="destination" placeholder="Destination" aria-label="Destination"/>
+    <select id="trip-type" aria-label="Trip type">
       <option value="">Trip type</option>
       <option value="leisure">Leisure</option>
       <option value="adventure">Adventure</option>
       <option value="cultural">Cultural</option>
       <option value="last-minute">Last Minute</option>
     </select>
-    <select id="price-sort">
+    <select id="price-sort" aria-label="Sort by price">
       <option value="">Sort by price</option>
       <option value="price-low">Price: Low to High</option>
       <option value="price-high">Price: High to Low</option>
@@ -269,17 +323,17 @@
     <button id="search-btn">Search</button>
   </div>
 
-  <div class="ads ads-left">Ad Left</div>
-  <div class="ads ads-right">Ad Right</div>
+  <div class="ads ads-left" aria-hidden="true">Ad Left</div>
+  <div class="ads ads-right" aria-hidden="true">Ad Right</div>
 
   <div class="results" id="card-list">
     <div class="card" data-from="Vilnius" data-to="Greece" data-price="299">
-      <img src="https://source.unsplash.com/280x180/?beach" />
+      <img src="https://source.unsplash.com/280x180/?beach" loading="lazy" width="280" height="180" alt="Beach in Greece"/>
       <h3>Greece from Vilnius</h3>
       <p>Price: €299</p>
     </div>
     <div class="card" data-from="Kaunas" data-to="Alps" data-price="499">
-      <img src="https://source.unsplash.com/280x180/?mountains" />
+      <img src="https://source.unsplash.com/280x180/?mountains" loading="lazy" width="280" height="180" alt="Mountains in Alps"/>
       <h3>Alps from Kaunas</h3>
       <p>Price: €499</p>
     </div>
@@ -287,11 +341,11 @@
 
   <div class="footer">
     <div class="info">
-      <a id="footer-faq" href="#">FAQ</a> |
-      <a id="footer-privacy" href="#">Privacy Policy</a> |
-      <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" id="footer-partner">Become a Partner</a> |
-      <a href="#" id="footer-about">About Us</a>
+      <a id="footer-faq" href="#" aria-label="Frequently asked questions">FAQ</a> |
+      <a id="footer-privacy" href="#" aria-label="Privacy policy">Privacy Policy</a> |
+      <a id="footer-contact" href="#" aria-label="Contact us">Contact</a> |
+      <a href="#" id="footer-partner" aria-label="Become a partner">Become a Partner</a> |
+      <a href="#" id="footer-about" aria-label="About us">About Us</a>
     </div>
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
@@ -299,38 +353,39 @@
   </div>
 
   <!-- Partner Modal -->
-  <div id="partner-modal" class="modal">
+  <div id="partner-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="partner-modal-title" hidden>
     <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2 id="modal-title">Partner Registration</h2>
-      <form>
-        <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
-        <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
-        <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
+      <span class="close" role="button" aria-label="Close modal">&times;</span>
+      <h2 id="partner-modal-title">Partner Registration</h2>
+      <form id="partner-form">
+        <input type="text" id="modal-company" placeholder="Company Name" required aria-required="true"/><br/>
+        <input type="url" id="modal-website" placeholder="Website URL" required aria-required="true"/><br/>
+        <input type="email" id="modal-email" placeholder="Contact Email" required aria-required="true"/><br/>
         <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
         <button type="submit" id="modal-submit">Submit</button>
+        <div id="form-feedback" style="display: none;"></div>
       </form>
     </div>
   </div>
 
   <!-- About Us Modal -->
-  <div id="about-modal" class="modal">
+  <div id="about-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" hidden>
     <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>About TravCen</h2>
+      <span class="close" role="button" aria-label="Close modal">&times;</span>
+      <h2 id="about-modal-title">About TravCen</h2>
       <p>TravCen is a smart travel search platform that brings together offers from multiple travel agencies into one convenient place.</p>
       <p>We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.</p>
       <p>Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
       <p>Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
-      <p>Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
+      <p>Have questions or want to collaborate?<br>📬 Contact us at <a href="mailto:info@travcen.com">info@travcen.com</a></p>
     </div>
   </div>
 
   <!-- Privacy Policy Modal -->
-  <div id="privacy-modal" class="modal">
+  <div id="privacy-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title" hidden>
     <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Privacy Policy</h2>
+      <span class="close" role="button" aria-label="Close modal">&times;</span>
+      <h2 id="privacy-modal-title">Privacy Policy</h2>
       <div class="privacy-content">
         <p><em>Last updated: 2025-07-24</em></p>
         
@@ -394,10 +449,10 @@
   </div>
 
   <!-- FAQ Modal -->
-  <div id="faq-modal" class="modal">
+  <div id="faq-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" hidden>
     <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Frequently Asked Questions</h2>
+      <span class="close" role="button" aria-label="Close modal">&times;</span>
+      <h2 id="faq-modal-title">Frequently Asked Questions</h2>
       <div class="faq-content">
         <div class="faq-item">
           <h3>❓ What is TravCen?</h3>
@@ -451,6 +506,17 @@
   <script src="script.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Check cookie consent
+      if (!localStorage.getItem('cookieConsent')) {
+        document.getElementById('cookie-banner').style.display = 'flex';
+      }
+
+      // Cookie consent handler
+      document.getElementById('accept-cookies').addEventListener('click', () => {
+        localStorage.setItem('cookieConsent', 'true');
+        document.getElementById('cookie-banner').style.display = 'none';
+      });
+
       // Language selector
       const languageSelector = document.getElementById('language-selector');
       if (languageSelector) {
@@ -472,19 +538,25 @@
         if (trigger) {
           trigger.addEventListener('click', (e) => {
             e.preventDefault();
-            modal.style.display = 'block';
+            modal.hidden = false;
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
           });
         }
 
         if (closeBtn) {
           closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
           });
         }
 
         window.addEventListener('click', (e) => {
           if (e.target === modal) {
-            modal.style.display = 'none';
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
           }
         });
       };
@@ -495,8 +567,46 @@
       setupModal('footer-partner', 'partner-modal');
       setupModal('footer-faq', 'faq-modal');
 
+      // Partner form validation
+      const partnerForm = document.getElementById('partner-form');
+      if (partnerForm) {
+        partnerForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const submitBtn = document.getElementById('modal-submit');
+          const originalText = submitBtn.textContent;
+          const feedback = document.getElementById('form-feedback');
+          
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="loading"></span> Processing...';
+          feedback.style.display = 'none';
+          
+          try {
+            // Simulate form submission
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            feedback.textContent = 'Thank you for your submission! We will contact you soon.';
+            feedback.style.color = 'green';
+            feedback.style.display = 'block';
+            partnerForm.reset();
+          } catch (error) {
+            feedback.textContent = 'An error occurred. Please try again later.';
+            feedback.style.color = 'red';
+            feedback.style.display = 'block';
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          }
+        });
+      }
+
       // Guest login functionality
       document.getElementById('login-google').addEventListener('click', async function() {
+        const button = this;
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = '<span class="loading"></span> Loading...';
+        
         try {
           const response = await fetch('/api/auth/guest', {
             method: 'POST',
@@ -508,14 +618,24 @@
             window.location.href = '/';
           } else {
             console.error('Guest login failed');
+            alert('Guest login failed. Please try again.');
           }
         } catch (error) {
           console.error('Guest login error:', error);
+          alert('An error occurred. Please check your connection and try again.');
+        } finally {
+          button.disabled = false;
+          button.innerHTML = originalText;
         }
       });
 
       // Facebook Login
       document.getElementById('login-facebook').addEventListener('click', function() {
+        const button = this;
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = '<span class="loading"></span> Redirecting...';
         window.location.href = 'https://travcen-backendas.onrender.com/auth/facebook';
       });
     });
