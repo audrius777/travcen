@@ -51,7 +51,7 @@ async function connectToDatabase() {
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Enhanced CORS Configuration
+// Enhanced CORS Configuration with dynamic origin checking
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'https://travcen.com',
@@ -65,22 +65,24 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.some(allowed => 
-      origin === allowed || origin.startsWith(allowed))
-    ) {
+    if (allowedOrigins.some(allowedOrigin => 
+      origin === allowedOrigin || 
+      origin.startsWith(allowedOrigin.replace('https://', 'http://')) ||
+      origin.startsWith(allowedOrigin.replace('http://', 'https://'))
+    )) {
       return callback(null, true);
     }
     
-    const error = 'CORS policy does not allow access from the specified Origin';
-    return callback(new Error(error), false);
+    const msg = 'CORS policy: this origin is not allowed';
+    return callback(new Error(msg), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
   exposedHeaders: ['X-CSRF-Token', 'X-Request-ID'],
-  optionsSuccessStatus: 200,
-  maxAge: 86400,
-  preflightContinue: false
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
@@ -93,7 +95,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com", "https://www.googletagmanager.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https://*.googleusercontent.com", "https://*.facebook.com"],
-      connectSrc: ["'self'", process.env.MONGODB_URI, ...allowedOrigins],
+      connectSrc: ["'self'", process.env.MONGODB_URI, ...allowedOrigins, "https://travcen-backendas.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       frameSrc: ["'self'", "https://accounts.google.com", "https://www.facebook.com"],
       objectSrc: ["'none'"],
@@ -145,7 +147,7 @@ app.use(express.urlencoded({
   parameterLimit: 10
 }));
 
-// 3. Session Configuration
+// 3. Session Configuration with enhanced security
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -173,11 +175,12 @@ const sessionConfig = {
   rolling: true
 };
 
+// Initialize Session and Passport
 app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// 4. Mongoose Models
+// 4. Mongoose Models with enhanced validation
 const userSchema = new mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true },
   facebookId: { type: String, unique: true, sparse: true },
@@ -232,7 +235,7 @@ const partnerSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 
-// 5. Passport Configuration
+// 5. Enhanced Passport Configuration
 passport.serializeUser((user, done) => {
   done(null, {
     id: user.id,
@@ -252,7 +255,7 @@ passport.deserializeUser(async (serializedUser, done) => {
   }
 });
 
-// Google Authentication
+// Google Strategy with enhanced error handling
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -304,7 +307,7 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// Facebook Authentication
+// Facebook Strategy
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
@@ -352,7 +355,7 @@ passport.use(new FacebookStrategy({
   }
 }));
 
-// 6. CSRF Protection
+// 6. CSRF Protection with exclusions
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
@@ -368,6 +371,7 @@ const csrfProtection = csrf({
   }
 });
 
+// Apply CSRF protection selectively
 app.use((req, res, next) => {
   const excludedPaths = [
     '/auth',
@@ -382,7 +386,7 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 7. Routes
+// 7. Route Configuration
 app.use('/auth', authRoutes);
 app.use('/api/offers', offerRoutes);
 
@@ -422,7 +426,7 @@ app.get('/api', (req, res) => {
   });
 });
 
-// 8. Error Handling
+// 8. Enhanced Error Handling
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Error:`, {
     path: req.path,
@@ -463,7 +467,7 @@ app.use((err, req, res, next) => {
   res.status(errorResponse.status).json(errorResponse);
 });
 
-// 9. Server Startup
+// 9. Server Startup with graceful shutdown
 async function startServer() {
   try {
     await connectToDatabase();
@@ -501,4 +505,4 @@ async function startServer() {
   }
 }
 
-startServer();
+startServer();tartServer();
