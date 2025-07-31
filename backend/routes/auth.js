@@ -87,7 +87,7 @@ router.post("/auth/guest", async (req, res) => {
 });
 
 // Google token-based prisijungimas
-router.post("/auth/google/token", async (req, res) => {
+router.post("/api/auth/guest", async (req, res) => {
   try {
     // Patikriname svečio sesiją
     if (req.cookies.authToken) {
