@@ -445,59 +445,52 @@
   </div>
 
   <!-- FAQ Modal -->
-  <div id="faq-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" hidden>
-    <div class="modal-content">
-      <span class="close" role="button" aria-label="Close modal">&times;</span>
-      <h2 id="faq-modal-title">Frequently Asked Questions</h2>
-      <div class="faq-content">
-        <div class="faq-item">
-          <h3>❓ What is TravCen?</h3>
-          <p>TravCen is a travel search platform that brings together offers from multiple travel agencies in one place. We help users compare and find the best vacation deals quickly and easily.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ Do I book my trip directly with TravCen?</h3>
-          <p>No. TravCen acts as an intermediary platform. When you find a suitable offer, you will be redirected to the partner's website to complete the booking.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ Is TravCen free to use?</h3>
-          <p>Yes, TravCen is 100% free for users. We do not charge any service fees or commissions.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ Can I trust the travel partners listed on TravCen?</h3>
-          <p>We carefully select our partners and only list offers from trusted travel agencies and providers. However, the final responsibility for the service lies with the provider.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ Do I need to create an account to search for travel offers?</h3>
-          <p>No, you can browse and search without creating an account. If we offer login features in the future, they will provide additional benefits.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ How often are offers updated?</h3>
-          <p>Offers are updated regularly by our travel partners. However, we recommend checking the partner's website for the most up-to-date availability and prices.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ What should I do if I have a problem with my booking?</h3>
-          <p>Since bookings are completed on the partner's website, you should contact the provider directly. TravCen cannot modify or manage bookings.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ Can I become a travel partner and list my offers on TravCen?</h3>
-          <p>Yes! Visit the Become a Partner section in the footer and submit your company details via the partner registration form.</p>
-        </div>
-        
-        <div class="faq-item">
-          <h3>❓ How can I contact TravCen?</h3>
-          <p>For any general inquiries, suggestions, or partnership opportunities, you can email us at <a href="mailto:info@travcen.com">info@travcen.com</a>.</p>
-        </div>
+<div id="faq-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" hidden>
+  <div class="modal-content">
+    <span class="close" role="button" aria-label="Close modal" onclick="document.getElementById('faq-modal').setAttribute('hidden', 'true')">&times;</span>
+    <h2 id="faq-modal-title">Frequently Asked Questions</h2>
+    <div class="faq-content">
+      <div class="faq-item">
+        <h3>❓ What is TravCen?</h3>
+        <p>TravCen is a travel search platform that brings together offers from multiple travel agencies in one place.</p>
       </div>
+      <div class="faq-item">
+        <h3>❓ Do I book my trip directly with TravCen?</h3>
+        <p>No. TravCen acts as an intermediary platform. When you find a suitable offer, you will be redirected to the partner's website.</p>
+      </div>
+      <div class="faq-item">
+        <h3>❓ Is TravCen free to use?</h3>
+        <p>Yes, TravCen is 100% free for users. We do not charge any service fees.</p>
+      </div>
+      <!-- Add other FAQ items here if needed -->
     </div>
   </div>
+</div>
+
 <script>
+// Funkcija FAQ atidarymui
+function openFaqModal() {
+  document.getElementById('faq-modal').removeAttribute('hidden');
+}
+
+// Automatiškai pririšame event listenerį prie FAQ nuorodos
+document.addEventListener('DOMContentLoaded', function() {
+  const faqLink = document.getElementById('footer-faq');
+  if (faqLink) {
+    faqLink.onclick = function(e) {
+      e.preventDefault();
+      openFaqModal();
+    };
+  }
+
+  // Uždarymas ESC mygtuku
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.getElementById('faq-modal').setAttribute('hidden', 'true');
+    }
+  });
+});
+</script>
   <script src="translate.js"></script>
   <script src="script.js"></script>
   <script src="/js/main.js"></script>
