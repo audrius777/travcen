@@ -223,44 +223,6 @@
       cursor: pointer;
     }
 
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1001;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 5% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 800px;
-      border-radius: 8px;
-      position: relative;
-    }
-
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .close:hover,
-    .close:focus {
-      color: black;
-      text-decoration: none;
-    }
-
     @media (max-width: 768px) {
       .faq-content {
         max-height: 60vh;
@@ -280,11 +242,6 @@
         flex-direction: column;
         text-align: center;
         gap: 10px;
-      }
-
-      .modal-content {
-        width: 90%;
-        margin: 10% auto;
       }
     }
 
@@ -380,7 +337,7 @@
 
   <div class="footer">
     <div class="info">
-      <a id="footer-faq" href="#" aria-label="Frequently asked questions">FAQ</a> |
+      <a id="footer-faq" href="#" onclick="openFaqModal(event); return false;" aria-label="Frequently asked questions">FAQ</a> |
       <a id="footer-privacy" href="#" aria-label="Privacy policy">Privacy Policy</a> |
       <a id="footer-contact" href="#" aria-label="Contact us">Contact</a> |
       <a href="#" id="footer-partner" aria-label="Become a partner">Become a Partner</a> |
@@ -392,7 +349,7 @@
   </div>
 
   <!-- Partner Modal -->
-  <div id="partner-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="partner-modal-title">
+  <div id="partner-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="partner-modal-title" hidden>
     <div class="modal-content">
       <span class="close" role="button" aria-label="Close modal">&times;</span>
       <h2 id="partner-modal-title">Partner Registration</h2>
@@ -408,7 +365,7 @@
   </div>
 
   <!-- About Us Modal -->
-  <div id="about-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+  <div id="about-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" hidden>
     <div class="modal-content">
       <span class="close" role="button" aria-label="Close modal">&times;</span>
       <h2 id="about-modal-title">About TravCen</h2>
@@ -421,7 +378,7 @@
   </div>
 
   <!-- Privacy Policy Modal -->
-  <div id="privacy-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title">
+  <div id="privacy-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title" hidden>
     <div class="modal-content">
       <span class="close" role="button" aria-label="Close modal">&times;</span>
       <h2 id="privacy-modal-title">Privacy Policy</h2>
@@ -488,9 +445,9 @@
   </div>
 
   <!-- FAQ Modal -->
-  <div id="faq-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title">
+  <div id="faq-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" hidden>
     <div class="modal-content">
-      <span class="close" role="button" aria-label="Close modal">&times;</span>
+      <span class="close" role="button" aria-label="Close modal" onclick="closeFaqModal()">&times;</span>
       <h2 id="faq-modal-title">Frequently Asked Questions</h2>
       <div class="faq-content">
         <div class="faq-item">
@@ -542,42 +499,22 @@
   </div>
 
   <script>
-    // Modal funkcijos
-    document.addEventListener('DOMContentLoaded', function() {
-      // FAQ mygtuko funkcionalumas
-      document.getElementById('footer-faq').addEventListener('click', function(e) {
-        e.preventDefault();
-        document.getElementById('faq-modal').style.display = 'block';
-      });
-
-      // Uždarymo mygtukai
-      document.querySelectorAll('.close').forEach(function(closeBtn) {
-        closeBtn.addEventListener('click', function() {
-          this.closest('.modal').style.display = 'none';
-        });
-      });
-
-      // Uždarymas paspaudus už modalo
-      window.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
-          e.target.style.display = 'none';
-        }
-      });
-
-      // Uždarymas ESC mygtuku
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          document.querySelectorAll('.modal').forEach(function(modal) {
-            modal.style.display = 'none';
-          });
-        }
-      });
-    });
-
-    // Kitos esamos funkcijos
-    function openFaqModal() {
-      document.getElementById('faq-modal').style.display = 'block';
+    // FAQ funkcijos
+    function openFaqModal(e) {
+      e.preventDefault();
+      document.getElementById('faq-modal').removeAttribute('hidden');
     }
+
+    function closeFaqModal() {
+      document.getElementById('faq-modal').setAttribute('hidden', 'true');
+    }
+
+    // Uždarymas ESC mygtuku
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeFaqModal();
+      }
+    });
   </script>
 
   <script src="translate.js"></script>
