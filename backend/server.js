@@ -15,7 +15,7 @@ const { validationResult } = require('express-validator');
 const authRoutes = require('./routes/auth');
 const offerRoutes = require('./routes/offers');
 
-// 1. Duomenų bazės konfigūracija
+// 1. Database Configuration
 async function connectToDatabase() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -27,31 +27,31 @@ async function connectToDatabase() {
       minPoolSize: 2,
       connectTimeoutMS: 30000
     });
-    console.log('Prisijungta prie MongoDB Atlas');
+    console.log('Connected to MongoDB Atlas');
     
     mongoose.connection.on('connected', () => {
-      console.log('Mongoose ryšys aktyvus');
+      console.log('Mongoose connection active');
     });
     
     mongoose.connection.on('error', (err) => {
-      console.error('Mongoose ryšio klaida:', err);
+      console.error('Mongoose connection error:', err);
     });
     
     mongoose.connection.on('disconnected', () => {
-      console.warn('Mongoose atsijungė');
+      console.warn('Mongoose disconnected');
     });
     
   } catch (err) {
-    console.error('Kritinė duomenų bazės klaida:', err);
+    console.error('Critical database error:', err);
     process.exit(1);
   }
 }
 
-// 2. Express aplikacijos konfigūracija
+// 2. Express App Configuration
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Patobulinta CORS konfigūracija
+// Enhanced CORS Configuration
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'https://travcen.com',
@@ -62,7 +62,7 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function(origin, callback) {
-    // Leidžiame užklausas be origin (mobilioms programoms, POSTMAN)
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.some(allowed => 
@@ -71,7 +71,7 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    const error = 'CORS politika neleidžia pasiekti šio resurso iš nurodyto šaltinio';
+    const error = 'CORS policy does not allow access from the specified Origin';
     return callback(new Error(error), false);
   },
   credentials: true,
@@ -85,7 +85,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Saugumo priemonės
+// Security Middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -112,27 +112,27 @@ app.use(helmet({
   hidePoweredBy: true
 }));
 
-// Užklausų limitavimas
+// Rate Limiting Configuration
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minučių
+  windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200,
-  message: 'Per daug užklausų iš šio IP, bandykite vėliau',
+  message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.ip === '::ffff:127.0.0.1' || req.path === '/health'
 });
 
 const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 valanda
+  windowMs: 60 * 60 * 1000, // 1 hour
   max: 50,
-  message: 'Per daug autentifikacijos bandymų, bandykite vėliau',
+  message: 'Too many authentication attempts, please try again later',
   standardHeaders: true
 });
 
 app.use('/api', apiLimiter);
 app.use('/auth', authLimiter);
 
-// Įvesties duomenų apdorojimas
+// Body Parsers with enhanced security
 app.use(express.json({
   limit: '10kb',
   verify: (req, res, buf) => {
@@ -145,7 +145,7 @@ app.use(express.urlencoded({
   parameterLimit: 10
 }));
 
-// 3. Sesijos konfigūracija
+// 3. Session Configuration
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -155,7 +155,7 @@ const sessionConfig = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000, // 24 valandos
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
     domain: process.env.COOKIE_DOMAIN || '.travcen-backendas.onrender.com',
     path: '/',
     signed: true
@@ -163,12 +163,12 @@ const sessionConfig = {
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
     collectionName: 'sessions',
-    ttl: 24 * 60 * 60, // 24 valandos
+    ttl: 24 * 60 * 60, // 24 hours
     autoRemove: 'native',
     crypto: {
       secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
     },
-    touchAfter: 12 * 3600 // 12 valandų
+    touchAfter: 12 * 3600 // 12 hours
   }),
   rolling: true
 };
@@ -177,7 +177,7 @@ app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// 4. Mongoose modeliai
+// 4. Mongoose Models
 const userSchema = new mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true },
   facebookId: { type: String, unique: true, sparse: true },
@@ -187,7 +187,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas`
+      message: props => `${props.value} is not a valid email`
     }
   },
   name: { type: String, required: true, trim: true, minlength: 2 },
@@ -208,7 +208,7 @@ const partnerSchema = new mongoose.Schema({
     required: true, 
     validate: {
       validator: (v) => /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,6})([\/\w .-]*)*\/?$/.test(v),
-      message: props => `${props.value} nėra tinkamas URL`
+      message: props => `${props.value} is not a valid URL`
     }
   },
   email: { 
@@ -216,7 +216,7 @@ const partnerSchema = new mongoose.Schema({
     required: true, 
     validate: {
       validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas`
+      message: props => `${props.value} is not a valid email`
     }
   },
   description: { type: String, maxlength: 500, trim: true },
@@ -232,7 +232,7 @@ const partnerSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 
-// 5. Passport konfigūracija
+// 5. Passport Configuration
 passport.serializeUser((user, done) => {
   done(null, {
     id: user.id,
@@ -252,7 +252,7 @@ passport.deserializeUser(async (serializedUser, done) => {
   }
 });
 
-// Google autentifikacija
+// Google Authentication
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -267,7 +267,7 @@ passport.use(new GoogleStrategy({
 }, async (req, accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails?.[0]?.value?.toLowerCase();
-    if (!email) throw new Error('Google profilyje nerastas el. paštas');
+    if (!email) throw new Error('No email found in Google profile');
 
     let user = await User.findOne({ 
       $or: [
@@ -295,16 +295,16 @@ passport.use(new GoogleStrategy({
     
     done(null, user);
   } catch (err) {
-    console.error('Google autentifikacijos klaida:', err);
+    console.error('Google authentication error:', err);
     done(err, null, {
-      message: 'Autentifikacija nepavyko',
+      message: 'Authentication failed',
       provider: 'google',
       error: err.message
     });
   }
 }));
 
-// Facebook autentifikacija
+// Facebook Authentication
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
@@ -315,7 +315,7 @@ passport.use(new FacebookStrategy({
 }, async (req, accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails?.[0]?.value?.toLowerCase();
-    if (!email) throw new Error('Facebook profilyje nerastas el. paštas');
+    if (!email) throw new Error('No email found in Facebook profile');
 
     let user = await User.findOne({ 
       $or: [
@@ -343,16 +343,16 @@ passport.use(new FacebookStrategy({
     
     done(null, user);
   } catch (err) {
-    console.error('Facebook autentifikacijos klaida:', err);
+    console.error('Facebook authentication error:', err);
     done(err, null, {
-      message: 'Autentifikacija nepavyko',
+      message: 'Authentication failed',
       provider: 'facebook',
       error: err.message
     });
   }
 }));
 
-// 6. CSRF apsauga
+// 6. CSRF Protection
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
@@ -382,121 +382,121 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 7. Maršrutai
+// 7. Routes
 app.use('/auth', authRoutes);
 app.use('/api/offers', offerRoutes);
 
-// Sistemos būklės endpoint'as
+// Health Check Endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
-    duomenųBazė: mongoose.connection.readyState === 1 ? 'prisijungta' : 'atsijungusi',
-    veikimoLaikas: process.uptime(),
-    laikoŽymė: new Date().toISOString(),
-    atmintiesNaudojimas: process.memoryUsage(),
-    aplinka: process.env.NODE_ENV || 'development'
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    memoryUsage: process.memoryUsage(),
+    env: process.env.NODE_ENV || 'development'
   });
 });
 
-// Pagrindinis API maršrutas
+// Main API Route
 app.get('/api', (req, res) => {
   res.json({
-    paslauga: 'Travcen Backend API',
-    versija: '1.1.0',
-    būsena: 'veikia',
-    aplinka: process.env.NODE_ENV || 'development',
-    galimiEndpoint'ai: {
-      autentifikacija: {
+    service: 'Travcen Backend API',
+    version: '1.1.0',
+    status: 'operational',
+    environment: process.env.NODE_ENV || 'development',
+    availableEndpoints: {
+      auth: {
         google: '/auth/google',
         facebook: '/auth/facebook',
-        svečias: '/api/auth/guest'
+        guest: '/api/auth/guest'
       },
       api: {
-        būsena: '/health',
-        vartotojas: '/api/user',
-        pasiūlymai: '/api/offers',
-        partneriai: '/api/partners'
+        health: '/health',
+        user: '/api/user',
+        offers: '/api/offers',
+        partners: '/api/partners'
       }
     },
-    dokumentacija: process.env.API_DOCS_URL || 'https://docs.travcen.com'
+    documentation: process.env.API_DOCS_URL || 'https://docs.travcen.com'
   });
 });
 
-// 8. Klaidų apdorojimas
+// 8. Error Handling
 app.use((err, req, res, next) => {
-  console.error(`[${new Date().toISOString()}] Klaida:`, {
-    maršrutas: req.path,
-    metodas: req.method,
-    klaida: err.message,
+  console.error(`[${new Date().toISOString()}] Error:`, {
+    path: req.path,
+    method: req.method,
+    error: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     ip: req.ip,
     userAgent: req.headers['user-agent']
   });
 
-  const klaidosResponse = {
-    klaida: err.message || 'Vidinė serverio klaida',
-    statusas: err.status || 500,
-    laikoŽymė: new Date().toISOString()
+  const errorResponse = {
+    error: err.message || 'Internal Server Error',
+    status: err.status || 500,
+    timestamp: new Date().toISOString()
   };
 
   if (err.name === 'ValidationError') {
-    klaidosResponse.detalės = {};
+    errorResponse.details = {};
     Object.keys(err.errors).forEach(key => {
-      klaidosResponse.detalės[key] = err.errors[key].message;
+      errorResponse.details[key] = err.errors[key].message;
     });
-    return res.status(400).json(klaidosResponse);
+    return res.status(400).json(errorResponse);
   }
 
   if (err.name === 'MongoServerError') {
-    klaidosResponse.tipas = 'duomenų_bazės_klaida';
+    errorResponse.type = 'database_error';
     if (err.code === 11000) {
-      klaidosResponse.detalės = 'Dublikatas';
+      errorResponse.details = 'Duplicate key error';
     }
-    return res.status(400).json(klaidosResponse);
+    return res.status(400).json(errorResponse);
   }
 
   if (err.code === 'EBADCSRFTOKEN') {
-    klaidosResponse.sprendimas = 'Atnaujinkite puslapį ir bandykite dar kartą';
-    return res.status(403).json(klaidosResponse);
+    errorResponse.solution = 'Refresh the page and try again';
+    return res.status(403).json(errorResponse);
   }
 
-  res.status(klaidosResponse.statusas).json(klaidosResponse);
+  res.status(errorResponse.status).json(errorResponse);
 });
 
-// 9. Serverio paleidimas
+// 9. Server Startup
 async function startServer() {
   try {
     await connectToDatabase();
     
     const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Serveris veikia portu ${PORT}`);
-      console.log(`Aplinka: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`Duomenų bazė: ${mongoose.connection.readyState === 1 ? 'Prisijungta' : 'Atsijungusi'}`);
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
     });
 
-    // Gražus išjungimas
+    // Graceful shutdown
     process.on('SIGTERM', () => {
-      console.log('Gautas SIGTERM. Išjungiama...');
+      console.log('SIGTERM received. Shutting down gracefully...');
       server.close(() => {
         mongoose.connection.close(false, () => {
-          console.log('MongoDB ryšys uždarytas');
+          console.log('MongoDB connection closed');
           process.exit(0);
         });
       });
     });
 
     process.on('SIGINT', () => {
-      console.log('Gautas SIGINT. Išjungiama...');
+      console.log('SIGINT received. Shutting down gracefully...');
       server.close(() => {
         mongoose.connection.close(false, () => {
-          console.log('MongoDB ryšys uždarytas');
+          console.log('MongoDB connection closed');
           process.exit(0);
         });
       });
     });
 
   } catch (err) {
-    console.error('Serverio paleidimo klaida:', err);
+    console.error('Server startup error:', err);
     process.exit(1);
   }
 }
