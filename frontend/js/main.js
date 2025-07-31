@@ -1,152 +1,135 @@
-const passport = require("passport");
-const { OAuth2Client } = require('google-auth-library');
-const User = require("./models/user");
-require("dotenv").config();
-
-// Inicializuojame Google klientą
-const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET
-);
-
-// Serializacija/deserializacija
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id).select('-__v');
-    done(null, user);
-  } catch (error) {
-    done(error, null);
+// frontend/js/main.js
+document.addEventListener('DOMContentLoaded', () => {
+  // Check cookie consent
+  if (!localStorage.getItem('cookieConsent')) {
+    document.getElementById('cookie-banner').style.display = 'flex';
   }
-});
 
-// Google tokeno patvirtinimo funkcija
-exports.verifyGoogleToken = async (token) => {
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
+  // Cookie consent handler
+  document.getElementById('accept-cookies').addEventListener('click', () => {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookie-banner').style.display = 'none';
+  });
+
+  // Language selector
+  const languageSelector = document.getElementById('language-selector');
+  if (languageSelector) {
+    const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+    languageSelector.value = savedLang;
+    languageSelector.addEventListener('change', (e) => {
+      if (typeof setLanguage === 'function') {
+        setLanguage(e.target.value);
+      }
     });
-    const payload = ticket.getPayload();
-    
-    if (!payload.email_verified) {
-      throw new Error("Google el. paštas nepatvirtintas");
-    }
-
-    return {
-      sub: payload.sub,
-      email: payload.email,
-      name: payload.name || payload.email.split('@')[0],
-      picture: payload.picture || null
-    };
-  } catch (error) {
-    console.error('Google tokeno patvirtinimo klaida:', error);
-    throw new Error("Neteisingas Google tokenas");
   }
-};
 
-// Google Strategy (OAuth2)
-passport.use(
-  new (require("passport-google-oauth20").Strategy)(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/google/callback",
-      scope: ['email'], // Minimalūs scope'ai
-      prompt: 'select_account',
-      accessType: 'online',
-      passReqToCallback: true,
-      proxy: true,
-      state: true
-    },
-    async (req, accessToken, refreshToken, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value;
-        if (!email) {
-          throw new Error("Google paskyboje nerastas el. paštas");
-        }
+  // Modal functionality
+  const setupModal = (triggerId, modalId) => {
+    const trigger = document.getElementById(triggerId);
+    const modal = document.getElementById(modalId);
+    const closeBtn = modal.querySelector('.close');
 
-        let user = await User.findOne({ 
-          $or: [
-            { googleId: profile.id },
-            { email: email.toLowerCase() }
-          ]
-        });
-
-        if (!user) {
-          user = await User.create({
-            googleId: profile.id,
-            email: email.toLowerCase(),
-            name: profile.displayName || email.split('@')[0],
-            avatar: profile.photos?.[0]?.value || null,
-            provider: "google",
-            role: email === process.env.ADMIN_EMAIL ? "admin" : "user"
-          });
-        } else if (!user.googleId) {
-          user.googleId = profile.id;
-          user.avatar = profile.photos?.[0]?.value || user.avatar;
-          await user.save();
-        }
-
-        done(null, user);
-      } catch (error) {
-        console.error("Google autentifikacijos klaida:", error);
-        done(error, null);
-      }
+    if (trigger) {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      });
     }
-  )
-);
 
-// Facebook Strategy (paliekamas nepakeistas)
-passport.use(
-  new (require("passport-facebook").Strategy)(
-    {
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/facebook/callback",
-      profileFields: ['id', 'emails', 'name', 'displayName', 'photos'],
-      passReqToCallback: true,
-      proxy: true
-    },
-    async (req, accessToken, refreshToken, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value;
-        if (!email) {
-          throw new Error("Facebook paskyboje nerastas el. paštas");
-        }
-
-        let user = await User.findOne({ 
-          $or: [
-            { facebookId: profile.id },
-            { email: email.toLowerCase() }
-          ]
-        });
-
-        if (!user) {
-          user = await User.create({
-            facebookId: profile.id,
-            email: email.toLowerCase(),
-            name: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`,
-            avatar: profile.photos?.[0]?.value || null,
-            provider: "facebook",
-            role: email === process.env.ADMIN_EMAIL ? "admin" : "user"
-          });
-        } else if (!user.facebookId) {
-          user.facebookId = profile.id;
-          user.avatar = profile.photos?.[0]?.value || user.avatar;
-          await user.save();
-        }
-
-        done(null, user);
-      } catch (error) {
-        console.error("Facebook autentifikacijos klaida:", error);
-        done(error, null);
-      }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      });
     }
-  )
-);
 
-module.exports = passport;
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+  };
+
+  // Set up all modals
+  setupModal('footer-about', 'about-modal');
+  setupModal('footer-privacy', 'privacy-modal');
+  setupModal('footer-partner', 'partner-modal');
+  setupModal('footer-faq', 'faq-modal');
+
+  // Partner form validation
+  const partnerForm = document.getElementById('partner-form');
+  if (partnerForm) {
+    partnerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('modal-submit');
+      const originalText = submitBtn.textContent;
+      const feedback = document.getElementById('form-feedback');
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading"></span> Processing...';
+      feedback.style.display = 'none';
+      
+      try {
+        // Simulate form submission
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        feedback.textContent = 'Thank you for your submission! We will contact you soon.';
+        feedback.style.color = 'green';
+        feedback.style.display = 'block';
+        partnerForm.reset();
+      } catch (error) {
+        feedback.textContent = 'An error occurred. Please try again later.';
+        feedback.style.color = 'red';
+        feedback.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  }
+
+  // Guest login functionality
+  document.getElementById('login-google').addEventListener('click', async function() {
+    const button = this;
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="loading"></span> Loading...';
+    
+    try {
+      const response = await fetch('/api/auth/guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        window.location.href = '/';
+      } else {
+        console.error('Guest login failed');
+        alert('Guest login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Guest login error:', error);
+      alert('An error occurred. Please check your connection and try again.');
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
+  });
+
+  // Facebook Login
+  document.getElementById('login-facebook').addEventListener('click', function() {
+    const button = this;
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="loading"></span> Redirecting...';
+    window.location.href = 'https://travcen-backendas.onrender.com/auth/facebook';
+  });
+});
