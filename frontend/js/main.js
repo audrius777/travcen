@@ -9,8 +9,6 @@
 const APP_CONFIG = {
   apiBaseUrl: 'https://travcen-backendas.onrender.com/api',
   authUrls: {
-    guest: '/auth/guest',
-    facebook: '/auth/facebook',
     google: '/auth/google'
   },
   cookieConsentKey: 'travcen_cookie_consent',
@@ -230,77 +228,18 @@ function validatePartnerForm(formData) {
  * Inicializuoja autentifikacijos mygtukus
  */
 function setupAuthButtons() {
-  // Svečio prisijungimas
-  const guestButton = document.getElementById('login-google');
-  if (guestButton) {
-    guestButton.addEventListener('click', handleGuestLogin);
-  }
-
-  // Facebook prisijungimas
-  const facebookButton = document.getElementById('login-facebook');
-  if (facebookButton) {
-    facebookButton.addEventListener('click', handleFacebookLogin);
-  }
-}
-
-/**
- * Tvarko svečio prisijungimą
- */
-async function handleGuestLogin() {
-  const button = this;
-  const originalText = button.innerHTML;
-  
-  button.disabled = true;
-  button.innerHTML = '<span class="loading"></span> Loading...';
-  
-  try {
-    const response = await fetch(`${APP_CONFIG.apiBaseUrl}${APP_CONFIG.authUrls.guest}`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'include'
+  // Google prisijungimas
+  const googleButton = document.getElementById('login-google');
+  if (googleButton) {
+    googleButton.addEventListener('click', () => {
+      window.location.href = `${APP_CONFIG.apiBaseUrl}${APP_CONFIG.authUrls.google}`;
+      
+      // Google Analytics įrašas
+      if (typeof gtag === 'function') {
+        gtag('event', 'google_login_initiated');
+      }
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Login failed');
-    }
-
-    const data = await response.json();
-    window.location.href = data.redirectUrl || '/';
-
-    // Google Analytics įrašas
-    if (typeof gtag === 'function') {
-      gtag('event', 'guest_login_success');
-    }
-
-  } catch (error) {
-    console.error('Guest login error:', error);
-    showErrorToast(error.message || 'An error occurred. Please try again.');
-  } finally {
-    button.disabled = false;
-    button.innerHTML = originalText;
   }
-}
-
-/**
- * Tvarko Facebook prisijungimą
- */
-function handleFacebookLogin() {
-  const button = this;
-  const originalText = button.innerHTML;
-  
-  button.disabled = true;
-  button.innerHTML = '<span class="loading"></span> Redirecting...';
-  
-  // Google Analytics įrašas
-  if (typeof gtag === 'function') {
-    gtag('event', 'facebook_login_initiated');
-  }
-
-  window.location.href = `${APP_CONFIG.apiBaseUrl}${APP_CONFIG.authUrls.facebook}`;
 }
 
 /**
