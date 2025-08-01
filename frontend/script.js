@@ -28,18 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (searchBtn) {
     searchBtn.addEventListener("click", filterCards);
   }
-
-  // 3. Prisijungimo mygtukai (nepriklauso nuo kalbos)
-  document.getElementById("login-google")?.addEventListener("click", () => {
-    alert("Google login would be implemented here");
-  });
-
-  document.getElementById("login-facebook")?.addEventListener("click", () => {
-    alert("Facebook login would be implemented here");
-  });
 });
 
-// 4. Paieškos funkcija (liko nepakitusi)
+// 3. Paieškos funkcija (liko nepakitusi)
 function filterCards() {
   const departure = document.getElementById("departure").value.toLowerCase();
   const destination = document.getElementById("destination").value.toLowerCase();
