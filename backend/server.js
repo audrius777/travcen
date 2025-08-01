@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -20,8 +19,8 @@ async function connectToDatabase() {
       socketTimeoutMS: 45000,
       retryWrites: true,
       w: 'majority',
-      maxPoolSize: 10, // Maksimalus ryšių skaičius
-      minPoolSize: 2   // Minimalus ryšių skaičius
+      maxPoolSize: 10,
+      minPoolSize: 2
     });
     console.log('Prisijungta prie MongoDB Atlas');
     
@@ -64,12 +63,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
+      imgSrc: ["'self'", "data:"],
       connectSrc: ["'self'", process.env.MONGODB_URI, process.env.FRONTEND_URL],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      frameSrc: ["'self'", "https://accounts.google.com"],
+      frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
@@ -90,7 +89,7 @@ const limiter = rateLimit({
   message: 'Per daug užklausų iš šio IP, bandykite vėliau',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.ip === '::ffff:127.0.0.1' // Praleisti localhost
+  skip: (req) => req.ip === '::ffff:127.0.0.1'
 });
 
 app.use(limiter);
@@ -122,7 +121,7 @@ const sessionConfig = {
     crypto: {
       secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
     },
-    touchAfter: 24 * 3600 // Atnaujinti tik kartą per dieną
+    touchAfter: 24 * 3600
   })
 };
 
@@ -132,7 +131,6 @@ app.use(passport.session());
 
 // 4. Mongoose modeliai
 const userSchema = new mongoose.Schema({
-  googleId: { type: String, unique: true, sparse: true },
   email: { 
     type: String, 
     unique: true, 
@@ -188,45 +186,6 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
-  passReqToCallback: true,
-  proxy: true,
-  state: true
-}, async (req, accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails?.[0]?.value;
-    if (!email) {
-      return done(new Error('Google paskyboje nerastas el. paštas'));
-    }
-
-    let user = await User.findOne({ 
-      $or: [
-        { googleId: profile.id },
-        { email }
-      ]
-    });
-    
-    if (!user) {
-      user = await User.create({
-        googleId: profile.id,
-        email,
-        name: profile.displayName,
-        role: email === process.env.ADMIN_EMAIL ? 'admin' : 'user'
-      });
-    } else if (!user.googleId) {
-      user.googleId = profile.id;
-      await user.save();
-    }
-    
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-}));
-
 // 6. CSRF apsauga
 const csrfProtection = csrf({ 
   cookie: {
@@ -242,7 +201,6 @@ const csrfProtection = csrf({
 // CSRF middleware
 app.use((req, res, next) => {
   if (req.path.startsWith('/api') || 
-      req.path.startsWith('/auth') || 
       req.path === '/' || 
       req.path === '/favicon.ico' ||
       req.path.startsWith('/static')) {
@@ -251,24 +209,7 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 7. Autentifikacijos maršrutai
-app.get('/auth/google',
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'],
-    prompt: 'select_account',
-    accessType: 'offline',
-    session: true
-  })
-);
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed`,
-    successRedirect: process.env.FRONTEND_URL || '/'
-  })
-);
-
-// 8. API maršrutai
+// 7. API maršrutai
 const router = express.Router();
 
 // Sveikatos patikrinimas
@@ -371,7 +312,7 @@ router.post('/partner', csrfProtection, async (req, res) => {
 
 app.use('/api', router);
 
-// 9. Pagrindinis maršrutas
+// 8. Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -380,10 +321,6 @@ app.get('/', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     documentation: 'https://github.com/your-repo/docs',
     availableEndpoints: {
-      auth: {
-        google: '/auth/google',
-        callback: '/auth/google/callback'
-      },
       api: {
         health: '/api/health',
         user: '/api/user',
@@ -395,7 +332,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 10. Klaidų apdorojimas
+// 9. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
@@ -430,14 +367,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 11. Serverio paleidimas
+// 10. Serverio paleidimas
 async function startServer() {
   await connectToDatabase();
   
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
     console.log(`API pasiekiamas /api endpoint'uose`);
-    console.log(`Google autentifikacija pasiekiama /auth/google`);
     console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
   });
 }
@@ -445,4 +381,4 @@ async function startServer() {
 startServer().catch(err => {
   console.error('Serverio paleidimo klaida:', err);
   process.exit(1);
-});
+});;
