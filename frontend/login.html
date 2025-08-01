@@ -73,10 +73,9 @@
 
     <div class="divider">arba</div>
 
-    <!-- Pakeistas Google mygtukas į svečio prisijungimą -->
-    <button id="guest-login-button" class="google-login-button">
+    <button id="google-login-button" class="google-login-button">
       <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google"/>
-      <span>Prisijungti kaip svečias</span>
+      <span>Prisijungti su Google</span>
     </button>
 
     <div id="error-message" class="error"></div>
@@ -131,27 +130,9 @@
       }
     });
 
-    // Svečio prisijungimo funkcionalumas
-    document.getElementById('guest-login-button').addEventListener('click', async function() {
-      const errorElement = document.getElementById('error-message');
-      errorElement.textContent = '';
-      
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/auth/guest`, {
-          method: 'POST',
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          window.location.href = FRONTEND_URL;
-        } else {
-          const error = await response.json();
-          errorElement.textContent = error.message || 'Nepavyko prisijungti kaip svečias';
-        }
-      } catch (error) {
-        console.error('Svečio prisijungimo klaida:', error);
-        errorElement.textContent = 'Įvyko klaida. Bandykite vėliau.';
-      }
+    // Google prisijungimo funkcionalumas
+    document.getElementById('google-login-button').addEventListener('click', function() {
+      window.location.href = `${BACKEND_URL}/api/auth/google`;
     });
 
     // Vertimų funkcija
@@ -162,14 +143,14 @@
           "email-placeholder": "Email",
           "password-placeholder": "Password",
           "login-button": "Login",
-          "guest-login-text": "Continue as Guest"
+          "guest-login-text": "Login with Google"
         },
         lt: {
           "login-title": "Prisijungimas",
           "email-placeholder": "El. paštas",
           "password-placeholder": "Slaptažodis",
           "login-button": "Prisijungti",
-          "guest-login-text": "Prisijungti kaip svečias"
+          "guest-login-text": "Prisijungti su Google"
         }
       };
 
@@ -179,7 +160,7 @@
       document.getElementById('email').placeholder = translations[lang]['email-placeholder'];
       document.getElementById('password').placeholder = translations[lang]['password-placeholder'];
       document.getElementById('login-button').textContent = translations[lang]['login-button'];
-      document.querySelector('#guest-login-button span').textContent = translations[lang]['guest-login-text'];
+      document.querySelector('#google-login-button span').textContent = translations[lang]['guest-login-text'];
     }
 
     // Pradinis vertimas
