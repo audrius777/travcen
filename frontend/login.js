@@ -2,6 +2,15 @@ const BACKEND_URL = window.location.hostname.includes("localhost")
   ? "http://localhost:3000"
   : "https://travcen-backend.onrender.com";
 
+// Statinių mygtukų sekimas
+document.getElementById("login-google")?.addEventListener("click", () => {
+  console.log("Google login mygtukas paspaustas");
+});
+
+document.getElementById("login-facebook")?.addEventListener("click", () => {
+  console.log("Facebook login mygtukas paspaustas");
+});
+
 document.getElementById("login-form").addEventListener("submit", async function(e) {
   e.preventDefault();
   
