@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const passport = require('passport');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -126,8 +125,6 @@ const sessionConfig = {
 };
 
 app.use(session(sessionConfig));
-app.use(passport.initialize());
-app.use(passport.session());
 
 // 4. Mongoose modeliai
 const userSchema = new mongoose.Schema({
@@ -172,21 +169,7 @@ const partnerSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 
-// 5. Passport konfigūracija
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id).select('-__v');
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-});
-
-// 6. CSRF apsauga
+// 5. CSRF apsauga
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
@@ -209,7 +192,7 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 7. API maršrutai
+// 6. API maršrutai
 const router = express.Router();
 
 // Sveikatos patikrinimas
@@ -228,15 +211,10 @@ router.get('/csrf-token', csrfProtection, (req, res) => {
 
 // Vartotojo duomenys
 router.get('/user', (req, res) => {
-  if (req.isAuthenticated()) {
+  if (req.session.user) {
     res.json({ 
       loggedIn: true,
-      user: {
-        id: req.user._id,
-        email: req.user.email,
-        name: req.user.name,
-        role: req.user.role
-      }
+      user: req.session.user
     });
   } else {
     res.status(401).json({ loggedIn: false });
@@ -245,24 +223,16 @@ router.get('/user', (req, res) => {
 
 // Atsijungimas
 router.post('/logout', (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: 'Neprisijungęs vartotojas' });
-  }
-
-  req.logout((err) => {
+  req.session.destroy((err) => {
     if (err) {
+      console.error('Sesijos sunaikinimo klaida:', err);
       return res.status(500).json({ error: 'Atsijungimo klaida' });
     }
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Sesijos sunaikinimo klaida:', err);
-      }
-      res.clearCookie('travcen.sid', {
-        domain: process.env.COOKIE_DOMAIN,
-        path: '/'
-      });
-      res.json({ success: true });
+    res.clearCookie('travcen.sid', {
+      domain: process.env.COOKIE_DOMAIN,
+      path: '/'
     });
+    res.json({ success: true });
   });
 });
 
@@ -284,7 +254,7 @@ router.get('/partners', async (req, res) => {
 });
 
 router.post('/partner', csrfProtection, async (req, res) => {
-  if (!req.isAuthenticated() || req.user.role !== 'admin') {
+  if (!req.session.user || req.session.user.role !== 'admin') {
     return res.status(403).json({ error: 'Nepakankamos teisės' });
   }
 
@@ -312,7 +282,7 @@ router.post('/partner', csrfProtection, async (req, res) => {
 
 app.use('/api', router);
 
-// 8. Pagrindinis maršrutas
+// 7. Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -332,7 +302,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 9. Klaidų apdorojimas
+// 8. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
@@ -367,7 +337,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 10. Serverio paleidimas
+// 9. Serverio paleidimas
 async function startServer() {
   await connectToDatabase();
   
@@ -381,4 +351,4 @@ async function startServer() {
 startServer().catch(err => {
   console.error('Serverio paleidimo klaida:', err);
   process.exit(1);
-});;
+});
