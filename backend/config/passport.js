@@ -152,39 +152,7 @@ passport.use(
       proxy: true
     },
     async (req, accessToken, refreshToken, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value;
-        if (!email) {
-          throw new Error("Facebook paskyboje nerastas el. paštas");
-        }
-
-        let user = await User.findOne({ 
-          $or: [
-            { facebookId: profile.id },
-            { email: email.toLowerCase() }
-          ]
-        });
-
-        if (!user) {
-          user = await User.create({
-            facebookId: profile.id,
-            email: email.toLowerCase(),
-            name: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`,
-            avatar: profile.photos?.[0]?.value || null,
-            provider: "facebook",
-            role: email === process.env.ADMIN_EMAIL ? "admin" : "user"
-          });
-        } else if (!user.facebookId) {
-          user.facebookId = profile.id;
-          user.avatar = profile.photos?.[0]?.value || user.avatar;
-          await user.save();
-        }
-
-        done(null, user);
-      } catch (error) {
-        console.error("Facebook autentifikacijos klaida:", error);
-        done(error, null);
-      }
+      return done(null, false, { message: "Facebook prisijungimas laikinai išjungtas" });
     }
   )
 );
