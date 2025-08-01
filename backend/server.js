@@ -3,7 +3,6 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const FacebookStrategy = require('passport-facebook').Strategy;
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -93,10 +92,10 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com", "https://www.googletagmanager.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com", "https://*.facebook.com"],
+      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
       connectSrc: ["'self'", process.env.MONGODB_URI, ...allowedOrigins, "https://travcen-backendas.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      frameSrc: ["'self'", "https://accounts.google.com", "https://www.facebook.com"],
+      frameSrc: ["'self'", "https://accounts.google.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
@@ -182,7 +181,6 @@ app.use(passport.session());
 // 4. Mongoose Models with enhanced validation
 const userSchema = new mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true },
-  facebookId: { type: String, unique: true, sparse: true },
   email: { 
     type: String, 
     unique: true, 
@@ -306,54 +304,6 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// Facebook Strategy
-passport.use(new FacebookStrategy({
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: process.env.FACEBOOK_CALLBACK_URL || "https://travcen-backendas.onrender.com/auth/facebook/callback",
-  profileFields: ['id', 'emails', 'name', 'displayName', 'photos'],
-  enableProof: true,
-  passReqToCallback: true
-}, async (req, accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails?.[0]?.value?.toLowerCase();
-    if (!email) throw new Error('No email found in Facebook profile');
-
-    let user = await User.findOne({ 
-      $or: [
-        { facebookId: profile.id },
-        { email: email }
-      ]
-    });
-    
-    if (!user) {
-      user = await User.create({
-        facebookId: profile.id,
-        email,
-        name: profile.displayName || `${profile.name?.givenName} ${profile.name?.familyName}`,
-        avatar: profile.photos?.[0]?.value,
-        role: 'user',
-        lastLogin: new Date()
-      });
-    } else {
-      if (!user.facebookId) user.facebookId = profile.id;
-      if (!user.avatar) user.avatar = profile.photos?.[0]?.value;
-      user.lastLogin = new Date();
-      user.loginCount = (user.loginCount || 0) + 1;
-      await user.save();
-    }
-    
-    done(null, user);
-  } catch (err) {
-    console.error('Facebook authentication error:', err);
-    done(err, null, {
-      message: 'Authentication failed',
-      provider: 'facebook',
-      error: err.message
-    });
-  }
-}));
-
 // 6. CSRF Protection with exclusions
 const csrfProtection = csrf({ 
   cookie: {
@@ -411,7 +361,6 @@ app.get('/api', (req, res) => {
     availableEndpoints: {
       auth: {
         google: '/auth/google',
-        facebook: '/auth/facebook',
         guest: '/api/auth/guest'
       },
       api: {
