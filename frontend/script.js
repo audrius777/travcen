@@ -1,5 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // 1. Modalų valdymas (nepriklauso nuo kalbos)
+document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Užkrauname ir atvaizduojame partnerius
+  await loadPartners();
+
+  // 2. Modalų valdymas (išlaikomas originalus kodas)
   const modal = document.getElementById("partner-modal");
   const partnerLink = document.getElementById("partner-link");
   const closeBtn = document.querySelector(".close");
@@ -23,14 +26,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 2. Paieškos funkcija (nepriklauso nuo kalbos)
+  // 3. Paieškos funkcijos priskyrimas (išlaikoma originali logika)
   const searchBtn = document.getElementById("search-btn");
   if (searchBtn) {
     searchBtn.addEventListener("click", filterCards);
   }
 });
 
-// 3. Paieškos funkcija (liko nepakitusi)
+// 4. Partnerių užkrovimas
+async function loadPartners() {
+  try {
+    const response = await fetch('https://api.travcen.lt/partners');
+    const partners = await response.json();
+    renderCards(partners);
+  } catch (error) {
+    console.error("Klaida užkraunant partnerius:", error);
+    // Atvaizduoti klaidos pranešimą vartotojui
+    document.getElementById("card-list").innerHTML = `
+      <div class="error-message">
+        Nepavyko užkrauti pasiūlymų. Bandykite vėliau.
+      </div>
+    `;
+  }
+}
+
+// 5. Kortelių generavimas
+function renderCards(partners) {
+  const container = document.getElementById('card-list');
+  container.innerHTML = '';
+
+  partners.forEach(partner => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.id = partner.id;
+    card.dataset.from = partner.departure;
+    card.dataset.to = partner.destination;
+    card.dataset.price = partner.price;
+    card.dataset.type = partner.type;
+    
+    card.innerHTML = `
+      <img src="${partner.imageUrl || `https://source.unsplash.com/280x180/?${partner.destination}`}" />
+      <h3>${partner.destination} from ${partner.departure}</h3>
+      <p>Price: €${partner.price}</p>
+    `;
+    
+    card.addEventListener('click', () => {
+      // GA4 sekimas
+      gtag('event', 'partner_redirect', {
+        event_category: 'Nukreipimas',
+        event_label: partner.destination,
+        partner_id: partner.id,
+        value: partner.price
+      });
+
+      // Nukreipimas
+      window.location.href = partner.partnerUrl || `https://${partner.id}.travcen.lt`;
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// 6. Originali paieškos funkcija (be pakeitimų)
 function filterCards() {
   const departure = document.getElementById("departure").value.toLowerCase();
   const destination = document.getElementById("destination").value.toLowerCase();
@@ -41,8 +98,8 @@ function filterCards() {
   
   // Filtravimas
   const filteredCards = cards.filter(card => {
-    const cardDeparture = card.dataset.departure.toLowerCase();
-    const cardDestination = card.dataset.destination.toLowerCase();
+    const cardDeparture = card.dataset.from.toLowerCase();
+    const cardDestination = card.dataset.to.toLowerCase();
     const cardType = card.dataset.type;
     
     const matchesDeparture = !departure || cardDeparture.includes(departure);
