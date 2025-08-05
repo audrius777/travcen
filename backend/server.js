@@ -173,7 +173,7 @@ const pendingPartnerSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,6})([\/\w .-]*)*\/?$/.test(v),
-      message: props => `${props.value} nėra tinkamas URL'
+      message: props => `${props.value} nėra tinkamas URL`  // <- Pakeista į `
     }
   },
   email: { 
@@ -181,7 +181,7 @@ const pendingPartnerSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas'
+      message: props => `${props.value} nėra tinkamas el. pašto adresas`  // <- Pakeista į `
     }
   },
   description: { type: String, maxlength: 500, trim: true },
