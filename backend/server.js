@@ -166,8 +166,31 @@ const partnerSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
+const pendingPartnerSchema = new mongoose.Schema({
+  company: { type: String, required: true, trim: true },
+  website: { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: (v) => /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,6})([\/\w .-]*)*\/?$/.test(v),
+      message: props => `${props.value} nėra tinkamas URL'
+    }
+  },
+  email: { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      message: props => `${props.value} nėra tinkamas el. pašto adresas'
+    }
+  },
+  description: { type: String, maxlength: 500, trim: true },
+  createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
 const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
+const PendingPartner = mongoose.model('PendingPartner', pendingPartnerSchema);
 
 // 5. CSRF apsauga
 const csrfProtection = csrf({ 
@@ -280,6 +303,23 @@ router.post('/partner', csrfProtection, async (req, res) => {
   }
 });
 
+// New routes
+router.get('/validate-website', async (req, res) => {
+  const { url } = req.query;
+  const result = await validatePartnerWebsite(url);
+  res.json(result);
+});
+
+router.post('/partners/register', async (req, res) => {
+  const exists = await PendingPartner.findOne({ 
+    $or: [{ website: req.body.website }, { email: req.body.email }] 
+  });
+  if (exists) return res.status(400).json({ error: 'Partneris jau užregistruotas!' });
+
+  await PendingPartner.create(req.body);
+  res.json({ success: true });
+});
+
 app.use('/api', router);
 
 // 7. Pagrindinis maršrutas
@@ -295,7 +335,9 @@ app.get('/', (req, res) => {
         health: '/api/health',
         user: '/api/user',
         partners: '/api/partners',
-        logout: '/api/logout'
+        logout: '/api/logout',
+        validateWebsite: '/api/validate-website',
+        partnerRegister: '/api/partners/register'
       }
     },
     serverTime: new Date().toISOString()
@@ -346,6 +388,28 @@ async function startServer() {
     console.log(`API pasiekiamas /api endpoint'uose`);
     console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
   });
+}
+
+// Helper function for website validation
+async function validatePartnerWebsite(url) {
+  // Implement your website validation logic here
+  // This is just a placeholder implementation
+  try {
+    return {
+      valid: true,
+      message: 'Website is valid',
+      details: {
+        url,
+        status: 'verified'
+      }
+    };
+  } catch (error) {
+    return {
+      valid: false,
+      message: 'Website validation failed',
+      error: error.message
+    };
+  }
 }
 
 startServer().catch(err => {
