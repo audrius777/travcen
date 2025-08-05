@@ -4,31 +4,61 @@
   <title>Partnerių užklausos</title>
   <style>
     .request-card { border: 1px solid #ccc; padding: 15px; margin: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
   </style>
 </head>
 <body>
-  <div id="requests-container">
-    <!-- Čia bus užkroviamos užklausos -->
-  </div>
+  <table id="partner-requests">
+    <thead>
+      <tr>
+        <th>Įmonė</th>
+        <th>Svetainė</th>
+        <th>El. paštas</th>
+        <th>Užklausos data</th>
+        <th>Veiksmai</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Čia bus užkraunamos užklausos -->
+    </tbody>
+  </table>
 
   <script>
-    async function loadRequests() {
+    // Užkrauname laukiančius partnerius
+    async function loadPendingPartners() {
       const response = await fetch('/api/admin/pending-partners');
-      const requests = await response.json();
-      
-      requests.forEach(request => {
-        document.getElementById('requests-container').innerHTML += `
-          <div class="request-card" data-id="${request._id}">
-            <h3>${request.company}</h3>
-            <p><a href="${request.website}" target="_blank">${request.website}</a></p>
-            <button onclick="approvePartner('${request._id}')">Patvirtinti</button>
-            <button onclick="rejectPartner('${request._id}')">Atmesti</button>
-          </div>
+      const partners = await response.json();
+
+      partners.forEach(partner => {
+        const row = `
+          <tr>
+            <td>${partner.company}</td>
+            <td><a href="${partner.website}" target="_blank">${partner.website}</a></td>
+            <td>${partner.email}</td>
+            <td>${new Date(partner.createdAt).toLocaleDateString()}</td>
+            <td>
+              <button onclick="approvePartner('${partner._id}')">Patvirtinti</button>
+              <button onclick="rejectPartner('${partner._id}')">Atmesti</button>
+            </td>
+          </tr>
         `;
+        document.querySelector('#partner-requests tbody').innerHTML += row;
       });
     }
 
-    loadRequests();
+    loadPendingPartners();
+
+    function approvePartner(id) {
+      // Čia bus patvirtinimo logika
+      console.log('Patvirtinti partnerį su ID:', id);
+    }
+
+    function rejectPartner(id) {
+      // Čia bus atmetimo logika
+      console.log('Atmesti partnerį su ID:', id);
+    }
   </script>
 </body>
 </html>
