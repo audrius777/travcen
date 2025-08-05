@@ -1,64 +1,119 @@
-const path = require('path');
-const fs = require('fs');
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { PartnerOffer } from '../models/offerModel.js';
+import logger from '../utils/logger.js';
 
-// Configuration constants
-const PARTNERS_DIR = path.join(__dirname, '../partners');
-const MAX_CONCURRENT_REQUESTS = 5; // Limit concurrent partner API calls
+// ES modulių __dirname alternatyva
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Improved safeFetch with timeout and logging
-const safeFetch = async (fn, label) => {
-  try {
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout')), 15000)
-    );
-
-    const offers = await Promise.race([fn(), timeoutPromise]);
-    
-    console.log(`✅ Successfully loaded ${offers.length} offers from ${label}`);
-    return offers;
-  } catch (err) {
-    console.error(`❌ Error loading partner "${label}":`, err.message);
-    return []; // Return empty array to prevent breaking aggregation
-  }
+// Konfigūracija
+const CONFIG = {
+  PARTNERS_DIR: path.join(__dirname, '../partners'),
+  MAX_CONCURRENT_REQUESTS: 5,
+  REQUEST_TIMEOUT: 15000,
+  RETRY_ATTEMPTS: 2
 };
 
-// Dynamic partner module loading
-const loadPartnerModules = async () => {
+// Saugus modulio įkėlimas su timeout'u
+const loadPartnerOffers = async (partnerModule, partnerName) => {
   try {
-    const files = fs.readdirSync(PARTNERS_DIR);
-    return files
-      .filter(file => file.endsWith('.js') && !file.startsWith('_'))
-      .map(file => ({
-        name: path.basename(file, '.js'),
-        module: require(path.join(PARTNERS_DIR, file))
-      }));
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), CONFIG.REQUEST_TIMEOUT)
+    );
+
+    const offers = await Promise.race([partnerModule(), timeoutPromise]);
+    
+    if (!Array.isArray(offers)) {
+      throw new Error('Module did not return an array');
+    }
+
+    logger.info(`✅ ${offers.length} offers from ${partnerName}`);
+    return offers;
   } catch (err) {
-    console.error('❌ Error loading partner modules:', err);
+    logger.error(`❌ ${partnerName} load failed: ${err.message}`);
     return [];
   }
 };
 
-// Improved aggregation with concurrency control
-module.exports = async function aggregateOffers() {
-  const partners = await loadPartnerModules();
-  
-  // Process in batches to avoid overloading
-  const batches = [];
-  for (let i = 0; i < partners.length; i += MAX_CONCURRENT_REQUESTS) {
-    const batch = partners.slice(i, i + MAX_CONCURRENT_REQUESTS);
-    batches.push(batch);
+// Partnerių modulių įkėlimas
+const getPartnerModules = async () => {
+  try {
+    const files = await fs.readdir(CONFIG.PARTNERS_DIR);
+    return files
+      .filter(file => file.endsWith('.js') && !file.startsWith('_'))
+      .map(file => ({
+        name: path.basename(file, '.js'),
+        module: (await import(path.join(CONFIG.PARTNERS_DIR, file))).default
+      }));
+  } catch (err) {
+    logger.error('Partner module loading failed:', err);
+    return [];
   }
+};
 
+// Pasiūlymų agregavimas su bandymais
+const aggregateWithRetry = async (partnerModules, attempt = 1) => {
+  const batchSize = CONFIG.MAX_CONCURRENT_REQUESTS;
   let allOffers = [];
-  for (const batch of batches) {
-    const batchOffers = await Promise.all(
-      batch.map(partner => 
-        safeFetch(partner.module, partner.name)
-      )
-    );
-    allOffers = allOffers.concat(batchOffers.flat());
+
+  for (let i = 0; i < partnerModules.length; i += batchSize) {
+    const batch = partnerModules.slice(i, i + batchSize);
+    
+    try {
+      const batchResults = await Promise.all(
+        batch.map(p => loadPartnerOffers(p.module, p.name))
+      );
+      allOffers = allOffers.concat(...batchResults);
+    } catch (err) {
+      if (attempt <= CONFIG.RETRY_ATTEMPTS) {
+        logger.warn(`Retry attempt ${attempt} for batch ${i}-${i+batchSize}`);
+        return aggregateWithRetry(partnerModules, attempt + 1);
+      }
+      throw err;
+    }
   }
 
-  console.log(`ℹ️ Total ${allOffers.length} offers aggregated from ${partners.length} partners`);
   return allOffers;
 };
+
+// Pagrindinė eksportuojama funkcija
+export default async function aggregateOffers() {
+  try {
+    const partnerModules = await getPartnerModules();
+    
+    if (partnerModules.length === 0) {
+      throw new Error('No partner modules found');
+    }
+
+    const rawOffers = await aggregateWithRetry(partnerModules);
+    
+    // Validacija ir transformacija
+    const validOffers = rawOffers.filter(offer => {
+      try {
+        PartnerOffer.validateOffer(offer);
+        return true;
+      } catch (err) {
+        logger.warn(`Invalid offer skipped: ${err.message}`);
+        return false;
+      }
+    });
+
+    // Išsaugojimas duomenų bazėje
+    await PartnerOffer.bulkWrite(
+      validOffers.map(offer => ({
+        updateOne: {
+          filter: { offerId: offer.offerId },
+          update: { $set: offer },
+          upsert: true
+        }
+      }))
+    );
+
+    logger.info(`Aggregated ${validOffers.length} valid offers`);
+    return validOffers;
+  } catch (err) {
+    logger.error('Aggregation failed:', err);
+    throw err;
+  }
+}
