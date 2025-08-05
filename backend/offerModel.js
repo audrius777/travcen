@@ -100,6 +100,11 @@ const offerSchema = new mongoose.Schema({
     default: false,
     select: false
   },
+  source: { 
+    type: String, 
+    enum: ['manual', 'partner_api'], 
+    default: 'partner_api' 
+  },
 
   // Automatiniai laukai
   priceEUR: {
