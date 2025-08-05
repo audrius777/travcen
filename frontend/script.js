@@ -31,6 +31,40 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (searchBtn) {
     searchBtn.addEventListener("click", filterCards);
   }
+
+  // Partnerio registracijos formos valdymas
+  const modalSubmit = document.getElementById('modal-submit');
+  if (modalSubmit) {
+    modalSubmit.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        company: document.getElementById('modal-company').value,
+        website: document.getElementById('modal-website').value,
+        email: document.getElementById('modal-email').value,
+        description: document.getElementById('modal-description').value
+      };
+
+      try {
+        // 1. Siunčiame duomenis į naują API endpoint'ą
+        const response = await fetch('/api/partners/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          alert('Užklausa išsiųsta! Administratorius susisieks per 24 val.');
+          document.getElementById('partner-modal').style.display = 'none';
+        } else {
+          throw new Error('Serverio klaida');
+        }
+      } catch (error) {
+        console.error('Klaida:', error);
+        alert('Registracija nepavyko. Bandykite vėliau.');
+      }
+    });
+  }
 });
 
 // 4. Partnerių užkrovimas
