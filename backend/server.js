@@ -173,7 +173,7 @@ const pendingPartnerSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,6})([\/\w .-]*)*\/?$/.test(v),
-      message: props => `${props.value} nėra tinkamas URL`  // <- Pakeista į `
+      message: props => `${props.value} nėra tinkamas URL`
     }
   },
   email: { 
@@ -181,10 +181,11 @@ const pendingPartnerSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas`  // <- Pakeista į `
+      message: props => `${props.value} nėra tinkamas el. pašto adresas`
     }
   },
   description: { type: String, maxlength: 500, trim: true },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
@@ -303,21 +304,51 @@ router.post('/partner', csrfProtection, async (req, res) => {
   }
 });
 
-// New routes
+// Website validation endpoint
 router.get('/validate-website', async (req, res) => {
   const { url } = req.query;
   const result = await validatePartnerWebsite(url);
   res.json(result);
 });
 
+// Partnerio registracija (ATNAUJINTA VERSIJA)
 router.post('/partners/register', async (req, res) => {
-  const exists = await PendingPartner.findOne({ 
-    $or: [{ website: req.body.website }, { email: req.body.email }] 
-  });
-  if (exists) return res.status(400).json({ error: 'Partneris jau užregistruotas!' });
+  const { company, website, email, description } = req.body;
 
-  await PendingPartner.create(req.body);
-  res.json({ success: true });
+  // 1. Validacija
+  if (!company || !website || !email) {
+    return res.status(400).json({ error: 'Privalomi laukai (company, website, email) neužpildyti' });
+  }
+
+  // 2. Tikriname, ar partneris jau egzistuoja
+  const exists = await PendingPartner.findOne({ 
+    $or: [{ website }, { email }] 
+  });
+  if (exists) {
+    return res.status(400).json({ error: 'Partneris jau užregistruotas' });
+  }
+
+  try {
+    // 3. Išsaugome laukiantį partnerį
+    const newPendingPartner = await PendingPartner.create({ 
+      company, 
+      website, 
+      email,
+      description: description || '',
+      status: 'pending'
+    });
+
+    // 4. Siunčiame pranešimą adminui (placeholder)
+    await sendEmailToAdmin(company, email);
+
+    res.json({ 
+      success: true,
+      partner: newPendingPartner
+    });
+  } catch (err) {
+    console.error('Partnerio registracijos klaida:', err);
+    res.status(500).json({ error: 'Vidinė serverio klaida' });
+  }
 });
 
 app.use('/api', router);
@@ -410,6 +441,16 @@ async function validatePartnerWebsite(url) {
       error: error.message
     };
   }
+}
+
+// Email sending function (placeholder)
+async function sendEmailToAdmin(company, email) {
+  console.log(`[EMAIL NOTIFICATION] New partner registration:
+  Company: ${company}
+  Email: ${email}
+  
+  NOTE: In production, implement actual email sending here`);
+  return true;
 }
 
 startServer().catch(err => {
