@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://apis.google.com https://www.google.com https://www.gstatic.com;
-    connect-src 'self' https://api.travcen.com https://travcen.onrender.com https://www.google-analytics.com https://region1.google-analytics.com https://*.googleapis.com;
-    frame-src https://www.google.com;
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' https://source.unsplash.com data:;
-  ">
-
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -28,17 +18,14 @@
     gtag('config', 'G-KKDRG05LKT');
   </script>
   
-  <!-- Dinaminis reCAPTCHA įkėlimas -->
-  <script>
-    function loadRecaptcha() {
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?render=6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-    document.addEventListener('DOMContentLoaded', loadRecaptcha);
-  </script>
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://apis.google.com https://www.google.com https://www.gstatic.com;
+    connect-src 'self' https://api.travcen.com https://travcen.onrender.com https://www.google-analytics.com https://region1.google-analytics.com https://*.googleapis.com;
+    frame-src https://www.google.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' https://source.unsplash.com data:;
+  ">
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -385,7 +372,18 @@
   <script src="translate.js"></script>
   <script src="script.js"></script>
   <script>
+    // Dinamiškai įkeliame reCAPTCHA, kad išvengtume CSP klaidų
+    function loadRecaptcha() {
+      const script = document.createElement('script');
+      script.src = 'https://www.google.com/recaptcha/api.js?render=6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+      loadRecaptcha();
+      
       const languageSelector = document.getElementById('language-selector');
       if (languageSelector) {
         const savedLang = localStorage.getItem('selectedLanguage') || 'en';
