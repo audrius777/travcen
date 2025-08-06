@@ -216,11 +216,15 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <h2 id="modal-title">Partner Registration</h2>
-      <form>
+      <form id="partner-form">
         <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
         <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
         <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
         <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
+        <div class="g-recaptcha" 
+             data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
+             data-size="invisible">
+        </div>
         <button type="submit" id="modal-submit">Submit</button>
       </form>
     </div>
@@ -362,6 +366,7 @@
 
   <script src="translate.js"></script>
   <script src="script.js"></script>
+  <script src="https://www.google.com/recaptcha/api.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const languageSelector = document.getElementById('language-selector');
@@ -406,6 +411,23 @@
       setupModal('footer-privacy', 'privacy-modal');
       setupModal('footer-partner', 'partner-modal');
       setupModal('footer-faq', 'faq-modal');
+
+      // Handle partner form submission with reCAPTCHA
+      const partnerForm = document.getElementById('partner-form');
+      if (partnerForm) {
+        partnerForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          grecaptcha.execute();
+        });
+      }
+
+      // reCAPTCHA callback
+      window.onSubmitCallback = function(token) {
+        // Here you would typically submit the form to your server
+        alert('Form submitted successfully with reCAPTCHA verification!');
+        document.getElementById('partner-modal').style.display = 'none';
+        grecaptcha.reset();
+      };
     });
   </script>
 </body>
