@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const cors = require('cors');
 const MongoStore = require('connect-mongo');
 const { validationResult } = require('express-validator');
+const axios = require('axios');
 
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
@@ -311,16 +312,31 @@ router.get('/validate-website', async (req, res) => {
   res.json(result);
 });
 
-// Partnerio registracija (ATNAUJINTA VERSIJA)
+// Partnerio registracija (ATNAUJINTA VERSIJA SU CAPTCHA)
 router.post('/partners/register', async (req, res) => {
+  // 1. CAPTCHA patikra
+  try {
+    const captchaResponse = await axios.post(
+      `https://www.google.com/recaptcha/api/siteverify?secret=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe&response=${req.body.captchaToken}`
+    );
+    
+    if (!captchaResponse.data.success) {
+      return res.status(400).json({ error: "CAPTCHA patikra nepavyko" });
+    }
+  } catch (err) {
+    console.error('CAPTCHA patikros klaida:', err);
+    return res.status(500).json({ error: "CAPTCHA patikros sistemos klaida" });
+  }
+
+  // 2. Registracijos logika
   const { company, website, email, description } = req.body;
 
-  // 1. Validacija
+  // Validacija
   if (!company || !website || !email) {
     return res.status(400).json({ error: 'Privalomi laukai (company, website, email) neužpildyti' });
   }
 
-  // 2. Tikriname, ar partneris jau egzistuoja
+  // Tikriname, ar partneris jau egzistuoja
   const exists = await PendingPartner.findOne({ 
     $or: [{ website }, { email }] 
   });
@@ -329,7 +345,7 @@ router.post('/partners/register', async (req, res) => {
   }
 
   try {
-    // 3. Išsaugome laukiantį partnerį
+    // Išsaugome laukiantį partnerį
     const newPendingPartner = await PendingPartner.create({ 
       company, 
       website, 
@@ -338,7 +354,7 @@ router.post('/partners/register', async (req, res) => {
       status: 'pending'
     });
 
-    // 4. Siunčiame pranešimą adminui (placeholder)
+    // Siunčiame pranešimą adminui (placeholder)
     await sendEmailToAdmin(company, email);
 
     res.json({ 
