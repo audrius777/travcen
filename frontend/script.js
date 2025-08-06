@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       try {
         // 1. CAPTCHA patikra
-        const captchaToken = await grecaptcha.execute('JŪSŲ_SVETAINĖS_RAKTAS', { action: 'submit' });
+        const captchaToken = await grecaptcha.execute('6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI', { action: 'submit' });
         
         // 2. Siunčiame duomenis į naują API endpoint'ą
         const response = await fetch('/api/partners/register', {
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // 4. Partnerių užkrovimas
 async function loadPartners() {
   try {
-    const response = await fetch('https://api.travcen.lt/partners');
+    const response = await fetch('https://api.travcen.com/partners');
     const partners = await response.json();
     renderCards(partners);
   } catch (error) {
