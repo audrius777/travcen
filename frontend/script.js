@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://api.travcen.com';
+
 document.addEventListener("DOMContentLoaded", async () => {
   // 1. Užkrauname ir atvaizduojame partnerius
   await loadPartners();
@@ -50,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const captchaToken = await grecaptcha.execute('6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI', { action: 'submit' });
         
         // 2. Siunčiame duomenis į naują API endpoint'ą
-        const response = await fetch('/api/partners/register', {
+        const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -76,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // 4. Partnerių užkrovimas
 async function loadPartners() {
   try {
-    const response = await fetch('https://api.travcen.com/partners');
+    const response = await fetch(`${API_BASE_URL}/partners`);
     const partners = await response.json();
     renderCards(partners);
   } catch (error) {
