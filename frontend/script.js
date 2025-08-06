@@ -1,10 +1,11 @@
 const API_BASE_URL = 'https://api.travcen.com';
+const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 
 document.addEventListener("DOMContentLoaded", async () => {
   // 1. Užkrauname ir atvaizduojame partnerius
   await loadPartners();
 
-  // 2. Modalų valdymas (išlaikomas originalus kodas)
+  // 2. Modalų valdymas
   const modal = document.getElementById("partner-modal");
   const partnerLink = document.getElementById("partner-link");
   const closeBtn = document.querySelector(".close");
@@ -28,13 +29,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 3. Paieškos funkcijos priskyrimas (išlaikoma originali logika)
+  // 3. Paieškos funkcijos priskyrimas
   const searchBtn = document.getElementById("search-btn");
   if (searchBtn) {
     searchBtn.addEventListener("click", filterCards);
   }
 
-  // Partnerio registracijos formos valdymas
+  // Partnerio registracijos formos valdymas su reCAPTCHA v3
   const modalSubmit = document.getElementById('modal-submit');
   if (modalSubmit) {
     modalSubmit.addEventListener('click', async (e) => {
@@ -48,10 +49,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       try {
-        // 1. CAPTCHA patikra
-        const captchaToken = await grecaptcha.execute('6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI', { action: 'submit' });
+        // 1. CAPTCHA patikra su reCAPTCHA v3
+        const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'submit' });
         
-        // 2. Siunčiame duomenis į naują API endpoint'ą
+        // 2. Siunčiame duomenis į API su CAPTCHA tokenu
         const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -64,21 +65,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (response.ok) {
           alert('Užklausa išsiųsta! Administratorius susisieks per 24 val.');
           document.getElementById('partner-modal').style.display = 'none';
+          
+          // Išvalome formą po sėkmingo pateikimo
+          document.getElementById('partner-form').reset();
         } else {
-          throw new Error('Serverio klaida');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Serverio klaida');
         }
       } catch (error) {
         console.error('Klaida:', error);
-        alert('Registracija nepavyko. Bandykite vėliau.');
+        alert(`Registracija nepavyko: ${error.message || 'Bandykite vėliau.'}`);
       }
     });
   }
 });
 
-// 4. Partnerių užkrovimas
+// Partnerių užkrovimas
 async function loadPartners() {
   try {
     const response = await fetch(`${API_BASE_URL}/partners`);
+    if (!response.ok) {
+      throw new Error(`HTTP klaida! status: ${response.status}`);
+    }
     const partners = await response.json();
     renderCards(partners);
   } catch (error) {
@@ -92,9 +100,11 @@ async function loadPartners() {
   }
 }
 
-// 5. Kortelių generavimas
+// Kortelių generavimas
 function renderCards(partners) {
   const container = document.getElementById('card-list');
+  if (!container) return;
+
   container.innerHTML = '';
 
   partners.forEach(partner => {
@@ -107,19 +117,21 @@ function renderCards(partners) {
     card.dataset.type = partner.type;
     
     card.innerHTML = `
-      <img src="${partner.imageUrl || `https://source.unsplash.com/280x180/?${partner.destination}`}" />
+      <img src="${partner.imageUrl || `https://source.unsplash.com/280x180/?${partner.destination}`}" alt="${partner.destination}" />
       <h3>${partner.destination} from ${partner.departure}</h3>
       <p>Price: €${partner.price}</p>
     `;
     
     card.addEventListener('click', () => {
       // GA4 sekimas
-      gtag('event', 'partner_redirect', {
-        event_category: 'Nukreipimas',
-        event_label: partner.destination,
-        partner_id: partner.id,
-        value: partner.price
-      });
+      if (typeof gtag === 'function') {
+        gtag('event', 'partner_redirect', {
+          event_category: 'Nukreipimas',
+          event_label: partner.destination,
+          partner_id: partner.id,
+          value: partner.price
+        });
+      }
 
       // Nukreipimas
       window.location.href = partner.partnerUrl || `https://${partner.id}.travcen.com`;
@@ -129,7 +141,7 @@ function renderCards(partners) {
   });
 }
 
-// 6. Originali paieškos funkcija (be pakeitimų)
+// Paieškos funkcija
 function filterCards() {
   const departure = document.getElementById("departure").value.toLowerCase();
   const destination = document.getElementById("destination").value.toLowerCase();
