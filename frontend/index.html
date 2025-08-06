@@ -18,8 +18,8 @@
     gtag('config', 'G-KKDRG05LKT');
   </script>
   
-  <!-- reCAPTCHA skriptas -->
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <!-- reCAPTCHA v3 skriptas -->
+  <script src="https://www.google.com/recaptcha/api.js?render=6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI"></script>
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -224,10 +224,6 @@
         <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
         <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
         <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
-        <div class="g-recaptcha" 
-             data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
-             data-callback="onSubmitCallback">
-        </div>
         <button type="submit" id="modal-submit">Submit</button>
       </form>
     </div>
@@ -413,14 +409,6 @@
       setupModal('footer-privacy', 'privacy-modal');
       setupModal('footer-partner', 'partner-modal');
       setupModal('footer-faq', 'faq-modal');
-
-      // reCAPTCHA callback funkcija
-      window.onSubmitCallback = function(token) {
-        // Čia vykdoma formos pateikimo logika
-        console.log('reCAPTCHA patvirtintas:', token);
-        alert('Form submitted successfully with reCAPTCHA verification!');
-        document.getElementById('partner-modal').style.display = 'none';
-      };
     });
   </script>
 </body>
