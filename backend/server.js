@@ -63,12 +63,42 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", process.env.MONGODB_URI, process.env.FRONTEND_URL],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      frameSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://www.google.com",
+        "https://www.gstatic.com",
+        "https://www.googletagmanager.com",
+        "https://apis.google.com"
+      ],
+      connectSrc: [
+        "'self'",
+        process.env.MONGODB_URI,
+        process.env.FRONTEND_URL,
+        "https://www.google.com",
+        "https://www.google-analytics.com",
+        "https://region1.google-analytics.com",
+        "https://*.googleapis.com"
+      ],
+      frameSrc: [
+        "'self'",
+        "https://www.google.com"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https://www.google.com",
+        "https://www.google-analytics.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://fonts.gstatic.com"
+      ],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
