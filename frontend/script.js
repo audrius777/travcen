@@ -1,6 +1,23 @@
 const API_BASE_URL = 'https://api.travcen.com';
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 
+// Funkcija, kuri patikrina ar reCAPTCHA yra pasiruošusi
+async function ensureRecaptchaReady() {
+  return new Promise((resolve) => {
+    if (window.grecaptcha && window.grecaptcha.execute) {
+      resolve();
+      return;
+    }
+    
+    const interval = setInterval(() => {
+      if (window.grecaptcha && window.grecaptcha.execute) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 100);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   // 1. Užkrauname ir atvaizduojame partnerius
   await loadPartners();
@@ -49,10 +66,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       try {
-        // 1. CAPTCHA patikra su reCAPTCHA v3
+        // 1. Patikriname ar reCAPTCHA yra pasiruošusi
+        await ensureRecaptchaReady();
+        
+        // 2. CAPTCHA patikra su reCAPTCHA v3
         const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'submit' });
         
-        // 2. Siunčiame duomenis į API su CAPTCHA tokenu
+        // 3. Siunčiame duomenis į API su CAPTCHA tokenu
         const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
