@@ -2,9 +2,9 @@ import { MongoClient } from 'mongodb';
 import mongoose from 'mongoose';
 import logger from '../utils/logger.js';
 
-// Konfigūracija
+// Konfigūracija (ATNAUJINTA: NĖRA LOCALHOST FALLBACK)
 const DB_CONFIG = {
-  URI: process.env.MONGODB_URI || 'mongodb://localhost:27017',
+  URI: process.env.MONGODB_URI, // ❗ Tik iš .env failo
   NAME: 'travcen',
   OPTIONS: {
     maxPoolSize: 50,
@@ -16,12 +16,12 @@ const DB_CONFIG = {
   }
 };
 
-// Globalus ryšio objektas
+// Globalus ryšio objektas (liko nepakeistas)
 let cachedClient = null;
 let cachedDb = null;
 let mongooseConnection = null;
 
-// MongoDB Native Driver ryšys
+// MongoDB Native Driver ryšys (liko nepakeistas)
 export async function connectToDatabase() {
   if (cachedClient && cachedDb) {
     return {
@@ -46,7 +46,7 @@ export async function connectToDatabase() {
   }
 }
 
-// Mongoose ryšys
+// Mongoose ryšys (liko nepakeistas)
 export async function connectMongoose() {
   if (mongooseConnection) {
     return mongooseConnection;
@@ -70,7 +70,7 @@ export async function connectMongoose() {
   }
 }
 
-// Ryšio uždarymo funkcija
+// Ryšio uždarymo funkcija (liko nepakeista)
 export async function closeConnections() {
   try {
     if (cachedClient) {
@@ -90,7 +90,7 @@ export async function closeConnections() {
   }
 }
 
-// Automatinis ryšio tvarkymas
+// Automatinis ryšio tvarkymas (liko nepakeistas)
 process.on('SIGINT', async () => {
   await closeConnections();
   process.exit(0);
