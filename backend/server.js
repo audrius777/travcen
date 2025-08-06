@@ -48,7 +48,7 @@ const PORT = process.env.PORT || 10000;
 
 // CORS konfigūracija
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'https://travcen.vercel.app',
+  origin: process.env.FRONTEND_URL || 'https://travcen.com',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
