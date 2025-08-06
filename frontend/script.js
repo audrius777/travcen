@@ -46,11 +46,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       try {
-        // 1. Siunčiame duomenis į naują API endpoint'ą
+        // 1. CAPTCHA patikra
+        const captchaToken = await grecaptcha.execute('JŪSŲ_SVETAINĖS_RAKTAS', { action: 'submit' });
+        
+        // 2. Siunčiame duomenis į naują API endpoint'ą
         const response = await fetch('/api/partners/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: JSON.stringify({
+            ...formData,
+            captchaToken
+          })
         });
 
         if (response.ok) {
@@ -114,7 +120,7 @@ function renderCards(partners) {
       });
 
       // Nukreipimas
-      window.location.href = partner.partnerUrl || `https://${partner.id}.travcen.lt`;
+      window.location.href = partner.partnerUrl || `https://${partner.id}.travcen.com`;
     });
 
     container.appendChild(card);
