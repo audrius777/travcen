@@ -1,16 +1,16 @@
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
-const mongoose = require('mongoose');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const csrf = require('csurf');
-const crypto = require('crypto');
-const cors = require('cors');
-const MongoStore = require('connect-mongo');
-const { validationResult } = require('express-validator');
-const axios = require('axios');
-const partnerRoutes = require('./routes/partners'); // Pridėtas partnerių maršrutų importas
+import mongoose from 'mongoose';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import csrf from 'csurf';
+import crypto from 'crypto';
+import cors from 'cors';
+import MongoStore from 'connect-mongo';
+import { validationResult } from 'express-validator';
+import axios from 'axios';
+import partnerRoutes from './routes/partners.js';
 
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
