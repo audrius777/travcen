@@ -1,49 +1,69 @@
+import express from 'express';
 import axios from 'axios';
-import { RateLimiterMemory } from 'rate-limiter-flexible';
+import { validatePartner, validatePartnerWebsite } from '../services/partnerValidator.js';
+import { PendingPartner } from '../models';
 
-// Riboti užklausas nuo to paties IP (5 bandymai per minutę)
-const limiter = new RateLimiterMemory({
-  points: 5,
-  duration: 60
+const router = express.Router();
+
+// GET /api/validate-website?url=...
+router.get('/validate-website', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ error: 'URL parametras privalomas' });
+    }
+
+    const result = await validatePartnerWebsite(url);
+    res.json(result);
+  } catch (error) {
+    console.error('Svetainės validacijos klaida:', error);
+    res.status(500).json({ error: 'Vidinė serverio klaida' });
+  }
 });
 
-export async function validatePartner(company, website, email, ip) {
+// POST /api/partners/register
+router.post('/partners/register', async (req, res) => {
   try {
-    // 1. RIBOJIMAS: IP/email dublikatai
-    await limiter.consume(ip);
+    const { company, website, email, description, captchaToken } = req.body;
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    // 2. SVETAINĖS TIKRINIMAS
-    const websiteResponse = await axios.get(website, { 
-      timeout: 5000,
-      headers: { 'User-Agent': 'TravCen-Partner-Verification/1.0' }
-    });
-
-    // 3. ĮMONĖS TIKRINIMAS (ar svetainėje minima įmonė)
-    const companyExists = websiteResponse.data.includes(company);
-    if (!companyExists) {
-      throw new Error('Įmonė nerasta nurodytoje svetainėje');
+    // 1. CAPTCHA patikra
+    const captchaResponse = await axios.post(
+      'https://www.google.com/recaptcha/api/siteverify',
+      `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`
+    );
+    
+    if (!captchaResponse.data.success) {
+      return res.status(400).json({ error: 'Neteisinga CAPTCHA' });
     }
 
-    // 4. DUBLIKATŲ PATIKRA (MongoDB)
-    const existingPartner = await PendingPartner.findOne({ 
-      $or: [{ email }, { website }] 
-    });
-    if (existingPartner) {
-      throw new Error('Užklausa jau išsiųsta su šiuo email/svetaine');
+    // 2. Partnerio validacija
+    const validation = await validatePartner(company, website, email, ipAddress);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
     }
 
-    return { 
-      isValid: true,
-      isActive: websiteResponse.status === 200,
-      isCompanyVerified: companyExists
-    };
+    // 3. Išsaugojimas
+    const newPartner = new PendingPartner({
+      company,
+      website,
+      email,
+      description,
+      ipAddress,
+      status: 'pending'
+    });
+    await newPartner.save();
+
+    res.json({ success: true });
   } catch (error) {
-    console.error('Validacijos klaida:', error);
-    return { 
-      isValid: false, 
-      error: error.message,
-      isActive: false,
-      isCompanyVerified: false
-    };
+    console.error('Registracijos klaida:', error);
+    
+    if (error.message.includes('Viršytas bandymų limitas')) {
+      return res.status(429).json({ error: error.message });
+    }
+    
+    res.status(400).json({ error: error.message || 'Registracijos klaida' });
   }
-}
+});
+
+export default router;
