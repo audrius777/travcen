@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "description": "Kelionių svetainės Express backendas su MongoDB palaikymu",
   "main": "backend/server.js",
-  "type": "commonjs",
+  "type": "module",  // <-- PAKEISTI IŠ "commonjs" Į "module"
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
