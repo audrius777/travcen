@@ -10,6 +10,7 @@ const cors = require('cors');
 const MongoStore = require('connect-mongo');
 const { validationResult } = require('express-validator');
 const axios = require('axios');
+const partnerRoutes = require('./routes/partners'); // Pridėtas partnerių maršrutų importas
 
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
@@ -249,7 +250,7 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 6. API maršrutai
+// 6. Pagrindiniai API maršrutai
 const router = express.Router();
 
 // Sveikatos patikrinimas
@@ -293,23 +294,7 @@ router.post('/logout', (req, res) => {
   });
 });
 
-// Partnerių valdymas
-router.get('/partners', async (req, res) => {
-  try {
-    const partners = await Partner.find({ 
-      status: 'active',
-      $or: [
-        { expiresAt: { $exists: false } },
-        { expiresAt: { $gt: new Date() } }
-      ]
-    }).select('-__v').lean();
-    res.json(partners);
-  } catch (err) {
-    console.error('Partnerių gavimo klaida:', err);
-    res.status(500).json({ error: 'Nepavyko gauti partnerių sąrašo' });
-  }
-});
-
+// Partnerių valdymas (admin)
 router.post('/partner', csrfProtection, async (req, res) => {
   if (!req.session.user || req.session.user.role !== 'admin') {
     return res.status(403).json({ error: 'Nepakankamos teisės' });
@@ -337,99 +322,11 @@ router.post('/partner', csrfProtection, async (req, res) => {
   }
 });
 
-// Website validation endpoint
-router.get('/validate-website', async (req, res) => {
-  const { url } = req.query;
-  const result = await validatePartnerWebsite(url);
-  res.json(result);
-});
-
-// Partnerio registracija (ATNAUJINTA VERSIJA SU CAPTCHA)
-router.post('/partners/register', async (req, res) => {
-  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const { company, website, email, description, captchaToken } = req.body;
-
-  // 1. CAPTCHA patikra
-  try {
-    const captchaResponse = await axios.post(
-      `https://www.google.com/recaptcha/api/siteverify`,
-      new URLSearchParams({
-        secret: process.env.RECAPTCHA_SECRET_KEY,
-        response: captchaToken
-      }),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-    
-    if (!captchaResponse.data.success || captchaResponse.data.score < 0.5) {
-      return res.status(400).json({ 
-        error: "CAPTCHA patikra nepavyko",
-        details: captchaResponse.data['error-codes'] 
-      });
-    }
-  } catch (err) {
-    console.error('CAPTCHA patikros klaida:', err);
-    return res.status(500).json({ 
-      error: "CAPTCHA patikros sistemos klaida" 
-    });
-  }
-
-  // 2. Bandymų limito patikra
-  const recentAttempts = await PendingPartner.countDocuments({
-    $or: [
-      { email },
-      { ipAddress },
-      { website }
-    ],
-    createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-  });
-
-  if (recentAttempts >= 3) {
-    return res.status(429).json({ 
-      error: 'Viršytas bandymų limitas (3 kartus per 24 val.)' 
-    });
-  }
-
-  // 3. Validacija
-  if (!company || !website || !email) {
-    return res.status(400).json({ error: 'Privalomi laukai (company, website, email) neužpildyti' });
-  }
-
-  // 4. Tikriname, ar partneris jau egzistuoja
-  const exists = await PendingPartner.findOne({ 
-    $or: [{ website }, { email }] 
-  });
-  if (exists) {
-    return res.status(400).json({ error: 'Partneris jau užregistruotas' });
-  }
-
-  try {
-    // 5. Išsaugome laukiantį partnerį
-    const newPendingPartner = await PendingPartner.create({ 
-      company, 
-      website, 
-      email,
-      description: description || '',
-      status: 'pending',
-      ipAddress,
-      attempts: 1
-    });
-
-    // 6. Siunčiame pranešimą adminui
-    await sendEmailToAdmin(company, email);
-
-    res.json({ 
-      success: true,
-      partner: newPendingPartner
-    });
-  } catch (err) {
-    console.error('Partnerio registracijos klaida:', err);
-    res.status(500).json({ error: 'Vidinė serverio klaida' });
-  }
-});
-
+// 7. Partnerių maršrutų integracija
 app.use('/api', router);
+app.use('/api/partners', partnerRoutes); // Pridėta nauja eilutė
 
-// 7. Pagrindinis maršrutas
+// 8. Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -443,7 +340,6 @@ app.get('/', (req, res) => {
         user: '/api/user',
         partners: '/api/partners',
         logout: '/api/logout',
-        validateWebsite: '/api/validate-website',
         partnerRegister: '/api/partners/register'
       }
     },
@@ -451,7 +347,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 8. Klaidų apdorojimas
+// 9. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
@@ -486,7 +382,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 9. Serverio paleidimas
+// 10. Serverio paleidimas
 async function startServer() {
   await connectToDatabase();
   
@@ -495,41 +391,6 @@ async function startServer() {
     console.log(`API pasiekiamas /api endpoint'uose`);
     console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
   });
-}
-
-// Helper function for website validation
-async function validatePartnerWebsite(url) {
-  try {
-    const response = await axios.get(url, {
-      timeout: 5000,
-      headers: { 'User-Agent': 'TravCen-Partner-Verification/1.0' }
-    });
-    
-    return {
-      valid: true,
-      exists: true,
-      isActive: response.status === 200,
-      message: 'Svetainė pasiekiama'
-    };
-  } catch (error) {
-    return {
-      valid: false,
-      exists: false,
-      isActive: false,
-      message: 'Svetainė nepasiekiama',
-      error: error.message
-    };
-  }
-}
-
-// Email sending function (placeholder)
-async function sendEmailToAdmin(company, email) {
-  console.log(`[EMAIL NOTIFICATION] New partner registration:
-  Company: ${company}
-  Email: ${email}
-  
-  NOTE: In production, implement actual email sending here`);
-  return true;
 }
 
 startServer().catch(err => {
