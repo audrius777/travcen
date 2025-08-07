@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import { validatePartner, validatePartnerWebsite } from '../services/partnerValidator.js';
-import { PendingPartner } from '../models';
+import { PendingPartner } from '../models/index.js';
 
 const router = express.Router();
 
