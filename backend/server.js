@@ -1,6 +1,6 @@
-require('dotenv').config();
-const express = require('express');
-const session = require('express-session');
+import 'dotenv/config';
+import express from 'express';
+import session from 'express-session';
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
