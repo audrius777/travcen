@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://api.travcen.com';
+const API_BASE_URL = '/api'; // Pakeista į lokalų serverio kelią
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 
 // Funkcija, kuri patikrina ar reCAPTCHA yra pasiruošusi
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // 2. CAPTCHA patikra su reCAPTCHA v3
         const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'submit' });
         
-        // 3. Siunčiame duomenis į API su CAPTCHA tokenu
+        // 3. Siunčiame duomenis į API su CAPTCHA tokenu (dabar į lokalų serverį)
         const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Partnerių užkrovimas
+// Partnerių užkrovimas (dabar iš lokalaus serverio)
 async function loadPartners() {
   try {
     const response = await fetch(`${API_BASE_URL}/partners`);
@@ -120,7 +120,7 @@ async function loadPartners() {
   }
 }
 
-// Kortelių generavimas
+// Kortelių generavimas (liko nepakeista)
 function renderCards(partners) {
   const container = document.getElementById('card-list');
   if (!container) return;
@@ -161,7 +161,7 @@ function renderCards(partners) {
   });
 }
 
-// Paieškos funkcija
+// Paieškos funkcija (liko nepakeista)
 function filterCards() {
   const departure = document.getElementById("departure").value.toLowerCase();
   const destination = document.getElementById("destination").value.toLowerCase();
