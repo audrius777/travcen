@@ -1,8 +1,9 @@
-const express = require("express");
-const passport = require("passport");
+import express from "express";
+import passport from "passport";
+import { logAuthEvent } from "../utils/logger.js";
+import { validateSession } from "../middleware/auth.js";
+
 const router = express.Router();
-const { logAuthEvent } = require("../utils/logger");
-const { validateSession } = require("../middleware/auth");
 
 // Atsijungimo maršrutas
 router.get("/atsijungti", validateSession, (req, res) => {
