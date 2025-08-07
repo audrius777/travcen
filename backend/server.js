@@ -217,6 +217,8 @@ const pendingPartnerSchema = new mongoose.Schema({
   },
   description: { type: String, maxlength: 500, trim: true },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  ipAddress: { type: String, required: true },
+  attempts: { type: Number, default: 1 },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
@@ -344,29 +346,55 @@ router.get('/validate-website', async (req, res) => {
 
 // Partnerio registracija (ATNAUJINTA VERSIJA SU CAPTCHA)
 router.post('/partners/register', async (req, res) => {
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const { company, website, email, description, captchaToken } = req.body;
+
   // 1. CAPTCHA patikra
   try {
     const captchaResponse = await axios.post(
-      `https://www.google.com/recaptcha/api/siteverify?secret=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe&response=${req.body.captchaToken}`
+      `https://www.google.com/recaptcha/api/siteverify`,
+      new URLSearchParams({
+        secret: process.env.RECAPTCHA_SECRET_KEY,
+        response: captchaToken
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
     
-    if (!captchaResponse.data.success) {
-      return res.status(400).json({ error: "CAPTCHA patikra nepavyko" });
+    if (!captchaResponse.data.success || captchaResponse.data.score < 0.5) {
+      return res.status(400).json({ 
+        error: "CAPTCHA patikra nepavyko",
+        details: captchaResponse.data['error-codes'] 
+      });
     }
   } catch (err) {
     console.error('CAPTCHA patikros klaida:', err);
-    return res.status(500).json({ error: "CAPTCHA patikros sistemos klaida" });
+    return res.status(500).json({ 
+      error: "CAPTCHA patikros sistemos klaida" 
+    });
   }
 
-  // 2. Registracijos logika
-  const { company, website, email, description } = req.body;
+  // 2. Bandymų limito patikra
+  const recentAttempts = await PendingPartner.countDocuments({
+    $or: [
+      { email },
+      { ipAddress },
+      { website }
+    ],
+    createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+  });
 
-  // Validacija
+  if (recentAttempts >= 3) {
+    return res.status(429).json({ 
+      error: 'Viršytas bandymų limitas (3 kartus per 24 val.)' 
+    });
+  }
+
+  // 3. Validacija
   if (!company || !website || !email) {
     return res.status(400).json({ error: 'Privalomi laukai (company, website, email) neužpildyti' });
   }
 
-  // Tikriname, ar partneris jau egzistuoja
+  // 4. Tikriname, ar partneris jau egzistuoja
   const exists = await PendingPartner.findOne({ 
     $or: [{ website }, { email }] 
   });
@@ -375,16 +403,18 @@ router.post('/partners/register', async (req, res) => {
   }
 
   try {
-    // Išsaugome laukiantį partnerį
+    // 5. Išsaugome laukiantį partnerį
     const newPendingPartner = await PendingPartner.create({ 
       company, 
       website, 
       email,
       description: description || '',
-      status: 'pending'
+      status: 'pending',
+      ipAddress,
+      attempts: 1
     });
 
-    // Siunčiame pranešimą adminui (placeholder)
+    // 6. Siunčiame pranešimą adminui
     await sendEmailToAdmin(company, email);
 
     res.json({ 
@@ -469,21 +499,24 @@ async function startServer() {
 
 // Helper function for website validation
 async function validatePartnerWebsite(url) {
-  // Implement your website validation logic here
-  // This is just a placeholder implementation
   try {
+    const response = await axios.get(url, {
+      timeout: 5000,
+      headers: { 'User-Agent': 'TravCen-Partner-Verification/1.0' }
+    });
+    
     return {
       valid: true,
-      message: 'Website is valid',
-      details: {
-        url,
-        status: 'verified'
-      }
+      exists: true,
+      isActive: response.status === 200,
+      message: 'Svetainė pasiekiama'
     };
   } catch (error) {
     return {
       valid: false,
-      message: 'Website validation failed',
+      exists: false,
+      isActive: false,
+      message: 'Svetainė nepasiekiama',
       error: error.message
     };
   }
