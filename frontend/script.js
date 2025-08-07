@@ -1,7 +1,7 @@
-const API_BASE_URL = '/api'; // Pakeista į lokalų serverio kelią
+const API_BASE_URL = '/api'; // Pakeista iš 'https://api.travcen.com' į lokalų serverio kelią
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 
-// Funkcija, kuri patikrina ar reCAPTCHA yra pasiruošusi
+// Funkcija, kuri patikrina ar reCAPTCHA yra pasiruošusi (liko nepakeista)
 async function ensureRecaptchaReady() {
   return new Promise((resolve) => {
     if (window.grecaptcha && window.grecaptcha.execute) {
@@ -19,10 +19,10 @@ async function ensureRecaptchaReady() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Užkrauname ir atvaizduojame partnerius
+  // 1. Užkrauname ir atvaizduojame partnerius (liko nepakeista)
   await loadPartners();
 
-  // 2. Modalų valdymas
+  // 2. Modalų valdymas (liko nepakeista)
   const modal = document.getElementById("partner-modal");
   const partnerLink = document.getElementById("partner-link");
   const closeBtn = document.querySelector(".close");
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 3. Paieškos funkcijos priskyrimas
+  // 3. Paieškos funkcijos priskyrimas (liko nepakeista)
   const searchBtn = document.getElementById("search-btn");
   if (searchBtn) {
     searchBtn.addEventListener("click", filterCards);
@@ -59,26 +59,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.preventDefault();
       
       const formData = {
-        company: document.getElementById('modal-company').value,
-        website: document.getElementById('modal-website').value,
-        email: document.getElementById('modal-email').value,
-        description: document.getElementById('modal-description').value
+        company: document.getElementById('modal-company').value.trim(), // Pridėtas .trim()
+        website: document.getElementById('modal-website').value.trim(), // Pridėtas .trim()
+        email: document.getElementById('modal-email').value.trim(), // Pridėtas .trim()
+        description: document.getElementById('modal-description').value.trim() // Pridėtas .trim()
       };
 
       try {
-        // 1. Patikriname ar reCAPTCHA yra pasiruošusi
+        // 1. Patikriname ar reCAPTCHA yra pasiruošusi (liko nepakeista)
         await ensureRecaptchaReady();
         
-        // 2. CAPTCHA patikra su reCAPTCHA v3
+        // 2. CAPTCHA patikra su reCAPTCHA v3 (liko nepakeista)
         const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'submit' });
         
-        // 3. Siunčiame duomenis į API su CAPTCHA tokenu (dabar į lokalų serverį)
+        // 3. Siunčiame duomenis į API su CAPTCHA tokenu (pakeistas API endpoint)
         const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...formData,
-            captchaToken
+            captchaToken,
+            ipAddress: await getClientIp() // Pridėtas IP adreso gavimas
           })
         });
 
@@ -100,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Partnerių užkrovimas (dabar iš lokalaus serverio)
+// Partnerių užkrovimas (pakeistas API endpoint)
 async function loadPartners() {
   try {
     const response = await fetch(`${API_BASE_URL}/partners`);
@@ -198,4 +199,16 @@ function filterCards() {
   filteredCards.forEach(card => {
     card.style.display = "block";
   });
+}
+
+// Nauja funkcija - kliento IP adreso gavimas
+async function getClientIp() {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip;
+  } catch (error) {
+    console.error('Nepavyko gauti IP adreso:', error);
+    return 'unknown';
+  }
 }
