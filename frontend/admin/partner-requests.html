@@ -28,7 +28,7 @@
   <script>
     // Užkrauname laukiančius partnerius
     async function loadPendingPartners() {
-      const response = await fetch('/api/admin/pending-partners');
+      const response = await fetch('/api/partners/pending');
       const partners = await response.json();
 
       partners.forEach(partner => {
@@ -50,14 +50,22 @@
 
     loadPendingPartners();
 
-    function approvePartner(id) {
-      // Čia bus patvirtinimo logika
-      console.log('Patvirtinti partnerį su ID:', id);
+    async function approvePartner(id) {
+      await fetch(`/api/partners/verify/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' })
+      });
+      loadPendingPartners(); // Perkrauti sąrašą
     }
 
-    function rejectPartner(id) {
-      // Čia bus atmetimo logika
-      console.log('Atmesti partnerį su ID:', id);
+    async function rejectPartner(id) {
+      await fetch(`/api/partners/verify/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' })
+      });
+      loadPendingPartners();
     }
   </script>
 </body>
