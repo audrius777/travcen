@@ -324,7 +324,7 @@ router.post('/partner', csrfProtection, async (req, res) => {
 
 // 7. Partnerių maršrutų integracija
 app.use('/api', router);
-app.use('/api/partners', partnerRoutes); // Pridėta nauja eilutė
+app.use('/api/partners', partnerRoutes);
 
 // 8. Pagrindinis maršrutas
 app.get('/', (req, res) => {
