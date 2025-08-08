@@ -97,4 +97,13 @@ router.get('/partners', async (req, res) => {
   }
 });
 
-export default router;
+// 4. Laukiančių partnerių sąrašas su paieška (GET /api/partners/pending)
+router.get('/pending', async (req, res) => {
+  const { search } = req.query; // Pridėti paiešką
+  const query = { status: 'pending' };
+  if (search) query.company = { $regex: search, $options: 'i' };
+  const partners = await mongoose.models.PendingPartner.find(query);
+  res.json(partners);
+});
+
+export default router;rt default router;
