@@ -2,6 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import axios from 'axios';
 
+const router = express.Router();
+
+// Validacijos funkcijos
 const validatePartnerWebsite = async (url) => {
   try {
     if (!url.startsWith('http')) url = 'http://' + url;
@@ -13,12 +16,8 @@ const validatePartnerWebsite = async (url) => {
 };
 
 const validatePartner = async (company, website, email, ipAddress) => {
-  // Implement your partner validation logic here
-  // For now returning a default valid response
-  return { isValid: true };
+  // Jūsų validacijos logika čia
 };
-
-const router = express.Router();
 
 // 1. Svetainės validacija (GET /api/validate-website?url=...)
 router.get('/validate-website', async (req, res) => {
@@ -90,30 +89,6 @@ router.get('/partners', async (req, res) => {
     res.json(partners);
   } catch (error) {
     console.error('Partnerių gavimo klaida:', error);
-    res.status(500).json({ error: 'Serverio klaida' });
-  }
-});
-
-// 4. Laukiančių partnerių sąrašas (GET /api/partners/pending)
-router.get('/pending', async (req, res) => {
-  try {
-    const partners = await mongoose.models.PendingPartner.find({ status: 'pending' });
-    res.json(partners);
-  } catch (error) {
-    res.status(500).json({ error: 'Serverio klaida' });
-  }
-});
-
-// 5. Partnerio patvirtinimas/atmetimas (POST /api/partners/verify/:id)
-router.post('/verify/:id', async (req, res) => {
-  try {
-    const partner = await mongoose.models.PendingPartner.findById(req.params.id);
-    if (!partner) return res.status(404).json({ error: 'Partneris nerastas' });
-    
-    partner.status = req.body.action === 'approve' ? 'approved' : 'rejected';
-    await partner.save();
-    res.json({ success: true });
-  } catch (error) {
     res.status(500).json({ error: 'Serverio klaida' });
   }
 });
