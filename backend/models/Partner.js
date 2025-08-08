@@ -1,7 +1,17 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import axios from 'axios';
-import { validatePartner, validatePartnerWebsite } from '../services/partnerValidator.js';
+const validatePartnerWebsite = async (url) => {
+  try {
+    if (!url.startsWith('http')) url = 'http://' + url;
+    const response = await axios.get(url, { timeout: 5000 });
+    return { exists: response.status === 200 };
+  } catch {
+    return { exists: false };
+  }
+};
+
+const validatePartner = async (company, website, email, ipAddress) => {
 
 const router = express.Router();
 
