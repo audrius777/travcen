@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import axios from 'axios';
+
 const validatePartnerWebsite = async (url) => {
   try {
     if (!url.startsWith('http')) url = 'http://' + url;
@@ -12,6 +13,10 @@ const validatePartnerWebsite = async (url) => {
 };
 
 const validatePartner = async (company, website, email, ipAddress) => {
+  // Implement your partner validation logic here
+  // For now returning a default valid response
+  return { isValid: true };
+};
 
 const router = express.Router();
 
