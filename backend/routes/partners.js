@@ -1,9 +1,28 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import axios from 'axios';
-import { validatePartner, validatePartnerWebsite } from '../services/partnerValidator.js';
 
 const router = express.Router();
+
+// Vietinės validacijos funkcijos
+const validatePartnerWebsite = async (url) => {
+  try {
+    const response = await axios.get(
+      url.startsWith('http') ? url : `http://${url}`,
+      { timeout: 5000 }
+    );
+    return { exists: response.status === 200 };
+  } catch {
+    return { exists: false };
+  }
+};
+
+const validatePartner = async (company, website, email, ipAddress) => {
+  if (!company || !website || !email) {
+    return { isValid: false, error: 'Privalomi laukai neužpildyti' };
+  }
+  return { isValid: true };
+};
 
 // 1. Svetainės validacija (GET /api/validate-website?url=...)
 router.get('/validate-website', async (req, res) => {
