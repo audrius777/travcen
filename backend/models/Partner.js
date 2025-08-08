@@ -106,43 +106,4 @@ router.get('/pending', async (req, res) => {
   res.json(partners);
 });
 
-// 5. Partnerio patvirtinimas (POST /api/partners/:id/approve)
-router.post('/:id/approve', async (req, res) => {
-  try {
-    const partner = await mongoose.models.PendingPartner.findByIdAndDelete(req.params.id);
-    if (!partner) {
-      return res.status(404).json({ error: 'Partneris nerastas' });
-    }
-
-    const newPartner = new mongoose.models.Partner({
-      company: partner.company,
-      website: partner.website,
-      email: partner.email,
-      description: partner.description,
-      status: 'active'
-    });
-    await newPartner.save();
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Patvirtinimo klaida:', error);
-    res.status(500).json({ error: 'Serverio klaida' });
-  }
-});
-
-// 6. Partnerio atmetimas (POST /api/partners/:id/reject)
-router.post('/:id/reject', async (req, res) => {
-  try {
-    const partner = await mongoose.models.PendingPartner.findByIdAndDelete(req.params.id);
-    if (!partner) {
-      return res.status(404).json({ error: 'Partneris nerastas' });
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Atmetimo klaida:', error);
-    res.status(500).json({ error: 'Serverio klaida' });
-  }
-});
-
-export default router;
+export default router;rt default router;
