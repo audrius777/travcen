@@ -1,5 +1,6 @@
-const { sendEmail } = require('./mailer');
-const { connectToDatabase } = require('./db');
+import { sendEmail } from './mailer.js';
+import { connectToDatabase } from './db.js';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REMINDER_INTERVAL_DAYS = 7;
 const EXPIRY_GRACE_DAYS = 30;
