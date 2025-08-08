@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const router = express.Router();
 
-// Validacijos funkcijos
+// Website validation function
 const validatePartnerWebsite = async (url) => {
   try {
     if (!url.startsWith('http')) url = 'http://' + url;
@@ -15,8 +15,12 @@ const validatePartnerWebsite = async (url) => {
   }
 };
 
+// Partner validation function
 const validatePartner = async (company, website, email, ipAddress) => {
-  // Jūsų validacijos logika čia
+  if (!company || !website || !email) {
+    return { isValid: false, error: 'Privalomi laukai neužpildyti' };
+  }
+  return { isValid: true };
 };
 
 // 1. Svetainės validacija (GET /api/validate-website?url=...)
