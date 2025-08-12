@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
-  <script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT" nonce="<%- nonce %>"></script>
+  <script nonce="<%- nonce %>">
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
@@ -100,8 +100,8 @@
     </div>
   </div>
 
-  <script src="translate.js"></script>
-  <script>
+  <script src="translate.js" nonce="<%- nonce %>"></script>
+  <script nonce="<%- nonce %>">
     document.addEventListener('DOMContentLoaded', () => {
       const languageSelector = document.getElementById('language-selector');
       if (languageSelector) {
