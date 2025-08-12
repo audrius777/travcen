@@ -47,6 +47,19 @@ async function connectToDatabase() {
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Middleware, kuris generuoja "nonce" kiekvienam request'ui
+app.use((req, res, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
+// Nustatykite CSP header'į su nonce
+app.use((req, res, next) => {
+  const csp = `script-src-elem 'self' https://www.googletagmanager.com https://apis.google.com https://www.google.com/recaptcha/api.js 'nonce-${res.locals.nonce}'`;
+  res.setHeader('Content-Security-Policy', csp);
+  next();
+});
+
 // CORS konfigūracija
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'https://travcen.com',
@@ -61,49 +74,7 @@ app.use(cors(corsOptions));
 
 // Saugumo middleware'iai
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://www.google.com",
-        "https://www.gstatic.com",
-        "https://www.googletagmanager.com",
-        "https://apis.google.com"
-      ],
-      connectSrc: [
-        "'self'",
-        process.env.MONGODB_URI,
-        process.env.FRONTEND_URL,
-        "https://www.google.com",
-        "https://www.google-analytics.com",
-        "https://region1.google-analytics.com",
-        "https://*.googleapis.com"
-      ],
-      frameSrc: [
-        "'self'",
-        "https://www.google.com"
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "https://www.google.com",
-        "https://www.google-analytics.com"
-      ],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://fonts.googleapis.com"
-      ],
-      fontSrc: [
-        "'self'",
-        "https://fonts.gstatic.com"
-      ],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: []
-    }
-  },
+  contentSecurityPolicy: false, // Išjungiamas, nes nustatome savo CSP
   hsts: {
     maxAge: 63072000,
     includeSubDomains: true,
@@ -125,7 +96,7 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Kūno parseriai
+// Kūlo parseriai
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
