@@ -49,13 +49,26 @@ const PORT = process.env.PORT || 10000;
 
 // Middleware, kuris generuoja "nonce" kiekvienam request'ui
 app.use((req, res, next) => {
-  res.locals.nonce = crypto.randomBytes(16).toString('base64');
+  const nonce = crypto.randomBytes(16).toString('base64');
+  res.locals.nonce = nonce;
   next();
 });
 
-// Nustatykite CSP header'į su nonce
+// Tik API endpointams - išjungti CSP
 app.use((req, res, next) => {
-  const csp = `script-src-elem 'self' https://www.googletagmanager.com https://apis.google.com https://www.google.com/recaptcha/api.js 'nonce-${res.locals.nonce}'`;
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${res.locals.nonce}' https://www.googletagmanager.com https://apis.google.com https://www.google.com/recaptcha/api.js`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://source.unsplash.com https://medpoint.ee",
+    "connect-src 'self' https://travcen.onrender.com",
+    "frame-src 'self' https://www.google.com"
+  ].join('; ');
+
   res.setHeader('Content-Security-Policy', csp);
   next();
 });
