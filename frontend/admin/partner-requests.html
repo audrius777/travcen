@@ -25,7 +25,7 @@
     </tbody>
   </table>
 
-  <script>
+  <script nonce="<%- nonce %>">
     // Užkrauname laukiančius partnerius
     async function loadPendingPartners() {
       const response = await fetch('/api/partners/pending');
