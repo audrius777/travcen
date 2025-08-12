@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <!-- Google Tag Manager -->
-  <script nonce="<%- nonce %>">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
@@ -10,48 +10,13 @@
   <!-- End Google Tag Manager -->
   
   <!-- Google Analytics -->
-  <script nonce="<%- nonce %>" async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
-  <script nonce="<%- nonce %>">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
+  <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-KKDRG05LKT');
   </script>
-  
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'nonce-<%- nonce %>' 'strict-dynamic'
-      https://www.googletagmanager.com 
-      https://apis.google.com 
-      https://www.google.com 
-      https://www.gstatic.com 
-      https://www.google.com/recaptcha/ 
-      https://www.google.com/recaptcha/api.js;
-    script-src-elem 'self' 'nonce-<%- nonce %>'
-      https://www.googletagmanager.com 
-      https://apis.google.com 
-      https://www.google.com/recaptcha/api.js;
-    connect-src 'self' 
-      https://api.travcen.com 
-      https://travcen.onrender.com 
-      https://www.google-analytics.com 
-      https://region1.google-analytics.com 
-      https://*.googleapis.com 
-      https://www.google.com/recaptcha/api2/userverify;
-    frame-src 'self' 
-      https://www.google.com 
-      https://www.googletagmanager.com 
-      https://www.google.com/recaptcha/;
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' 
-      https://source.unsplash.com 
-      https://medpoint.ee 
-      https://www.googletagmanager.com 
-      data:;
-    font-src 'self' data:;
-    base-uri 'self';
-    object-src 'none';
-">
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -395,9 +360,9 @@
     </div>
   </div>
 
-  <script nonce="<%- nonce %>" src="translate.js"></script>
-  <script nonce="<%- nonce %>" src="script.js"></script>
-  <script nonce="<%- nonce %>">
+  <script src="translate.js"></script>
+  <script src="script.js"></script>
+  <script>
     // Dinamiškai įkeliame reCAPTCHA, kad išvengtume CSP klaidų
     function loadRecaptcha() {
       const script = document.createElement('script');
