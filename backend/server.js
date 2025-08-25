@@ -62,7 +62,7 @@ app.use((req, res, next) => {
   
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${res.locals.nonce}' https://www.googletagmanager.com https://apis.google.com https://www.google.com/recaptcha/api.js`,
+    `script-src 'self' 'nonce-${res.locals.nonce}' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://www.google.com/recaptcha/api.js`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https://source.unsplash.com https://medpoint.ee",
     "connect-src 'self' https://travcen.onrender.com",
