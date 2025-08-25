@@ -1,46 +1,39 @@
-// login.js
-const BACKEND_URL = "https://travcen.onrender.com";
+const BACKEND_URL = window.location.hostname.includes("localhost")
+  ? "http://localhost:3000"
+  : "https://travcen-backend.onrender.com";
 
-// Nustatome išsaugotą kalbą
-document.addEventListener('DOMContentLoaded', function() {
-  const savedLang = localStorage.getItem('selectedLanguage') || 'lt';
-  document.getElementById('language-selector').value = savedLang;
-
-  // Kalbos keitimas
-  document.getElementById('language-selector').addEventListener('change', function(e) {
-    const lang = e.target.value;
-    localStorage.setItem('selectedLanguage', lang);
-    
-    if (typeof setLanguage === 'function') {
-      setLanguage(lang);
-    } else {
-      applyTranslations(lang);
-    }
-  });
-
-  // Google prisijungimo mygtukas
-  document.getElementById("google-login-btn").addEventListener("click", redirectToGoogle);
-
-  // Prisijungimo forma
-  document.getElementById("login-form").addEventListener("submit", handleLogin);
-
-  // Pradinis vertimas
-  if (typeof setLanguage === 'function') {
-    setLanguage(savedLang);
-  } else {
-    applyTranslations(savedLang);
-  }
+// Statinių mygtukų sekimas
+document.getElementById("login-google")?.addEventListener("click", () => {
+  console.log("Google login mygtukas paspaustas");
 });
 
-function redirectToGoogle() {
-  window.location.href = `${BACKEND_URL}/auth/google`;
-}
+document.getElementById("login-facebook")?.addEventListener("click", () => {
+  console.log("Facebook login mygtukas paspaustas");
+});
 
-async function handleLogin(e) {
+document.getElementById("login-form").addEventListener("submit", async function(e) {
   e.preventDefault();
   
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const form = e.target;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const errorElement = document.getElementById("error-message");
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  // Validacija
+  if (!email || !password) {
+    errorElement.innerText = "Prašome užpildyti visus laukus";
+    return;
+  }
+
+  if (password.length < 8) {
+    errorElement.innerText = "Slaptažodis turi būti bent 8 simbolių ilgio";
+    return;
+  }
+
+  // UI būsenos keitimas
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Prisijungiama...';
 
   try {
     const response = await fetch(`${BACKEND_URL}/api/login`, {
@@ -48,49 +41,22 @@ async function handleLogin(e) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ email, password }),
-      credentials: "include"
+      credentials: "include",
+      body: JSON.stringify({ email, password })
     });
 
+    const data = await response.json();
+
     if (response.ok) {
-      window.location.href = "index.html";
+      window.location.href = "/";
     } else {
-      const error = await response.json();
-      alert(error.message || "Prisijungti nepavyko");
+      errorElement.innerText = data.message || "Neteisingi prisijungimo duomenys";
     }
-  } catch (err) {
-    console.error("Klaida:", err);
-    alert("Įvyko klaida bandant prisijungti");
+  } catch (error) {
+    errorElement.innerText = "Klaida jungiantis prie serverio. Bandykite vėliau.";
+    console.error("Prisijungimo klaida:", error);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Prisijungti";
   }
-}
-
-// Atsarginė vertimų funkcija (tik jei nenaudojate translate.js)
-function applyTranslations(lang) {
-  const translations = {
-    en: {
-      "login-title": "Login",
-      "email-placeholder": "Email",
-      "password-placeholder": "Password",
-      "login-button": "Login",
-      "or-text": "or",
-      "google-login": "Sign in with Google"
-    },
-    lt: {
-      "login-title": "Prisijungimas",
-      "email-placeholder": "El. paštas",
-      "password-placeholder": "Slaptažodis",
-      "login-button": "Prisijungti",
-      "or-text": "arba",
-      "google-login": "Prisijungti per Google"
-    }
-  };
-
-  if (!translations[lang]) return;
-
-  document.getElementById('login-title').textContent = translations[lang]['login-title'];
-  document.getElementById('email').placeholder = translations[lang]['email-placeholder'];
-  document.getElementById('password').placeholder = translations[lang]['password-placeholder'];
-  document.getElementById('login-button').textContent = translations[lang]['login-button'];
-  document.querySelector('.divider').textContent = translations[lang]['or-text'];
-  document.querySelector('.google-login span').textContent = translations[lang]['google-login'];
-}
+});
