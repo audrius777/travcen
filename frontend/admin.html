@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KKDRG05LKT"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-KKDRG05LKT');
-  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TravCen - Travel Offers Hub</title>
@@ -88,7 +81,7 @@
 
   <div id="partner-modal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="document.getElementById('partner-modal').style.display='none'">&times;</span>
+      <span class="close" id="partner-modal-close">&times;</span>
       <h2 id="modal-title">Partner Registration</h2>
       <form>
         <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
@@ -101,19 +94,6 @@
   </div>
 
   <script src="translate.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const languageSelector = document.getElementById('language-selector');
-      if (languageSelector) {
-        const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-        languageSelector.value = savedLang;
-        languageSelector.addEventListener('change', (e) => {
-          if (typeof setLanguage === 'function') {
-            setLanguage(e.target.value);
-          }
-        });
-      }
-    });
-  </script>
+  <script src="admin.js"></script>
 </body>
 </html>
