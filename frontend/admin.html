@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TravCen - Travel Offers Hub</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI"></script>
 </head>
 <body>
   <div class="top-bar">
@@ -23,8 +24,8 @@
       </select>
     </div>
     <div class="auth-buttons">
-      <button id="login-google"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> <span id="google-login-text">Sign in with Google</span></button>
-      <button id="login-facebook"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> <span id="facebook-login-text">Sign in with Facebook</span></button>
+      <button id="login-google" onclick="onClick(event)"><img src="https://img.icons8.com/color/20/000000/google-logo.png"/> <span id="google-login-text">Sign in with Google</span></button>
+      <button id="login-facebook" onclick="onClick(event)"><img src="https://img.icons8.com/color/20/000000/facebook-new.png"/> <span id="facebook-login-text">Sign in with Facebook</span></button>
     </div>
   </div>
 
@@ -93,6 +94,14 @@
     </div>
   </div>
 
+  <script>
+    function onClick(e) {
+      e.preventDefault();
+      grecaptcha.enterprise.ready(async () => {
+        const token = await grecaptcha.enterprise.execute('6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI', {action: 'LOGIN'});
+      });
+    }
+  </script>
   <script src="translate.js"></script>
   <script src="admin.js"></script>
 </body>
