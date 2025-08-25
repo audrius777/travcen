@@ -1,20 +1,53 @@
 const API_BASE_URL = '/api'; // Pakeista iš 'https://api.travcen.com' į lokalų serverio kelią
-const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
+const RECAPTCHA_SITE_KEY = '6Ld2L5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI'; // Naudokite šią, ne kitą
 
-// Funkcija, kuri patikrina ar reCAPTCHA yra pasiruošusi (liko nepakeista)
-async function ensureRecaptchaReady() {
-  return new Promise((resolve) => {
+// Pakeiskite loadRecaptcha funkciją:
+async function loadRecaptcha() {
+  return new Promise((resolve, reject) => {
+    // Jei jau įkelta
     if (window.grecaptcha && window.grecaptcha.execute) {
+      console.log('reCAPTCHA jau įkelta');
       resolve();
       return;
     }
+
+    // Patikrinti ar jau yra įkėlimo procesas
+    if (window.recaptchaLoading) {
+      const interval = setInterval(() => {
+        if (window.grecaptcha && window.grecaptcha.execute) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+      return;
+    }
+
+    window.recaptchaLoading = true;
     
-    const interval = setInterval(() => {
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => {
+      console.log('reCAPTCHA sėkmingai įkelta');
+      window.recaptchaLoading = false;
+      
+      // Papildoma patikra po įkėlimo
       if (window.grecaptcha && window.grecaptcha.execute) {
-        clearInterval(interval);
         resolve();
+      } else {
+        reject(new Error('reCAPTCHA įkelta, bet grecaptcha objektas nepasiekiamas'));
       }
-    }, 100);
+    };
+
+    script.onerror = () => {
+      console.error('Nepavyko įkelti reCAPTCHA scripto');
+      window.recaptchaLoading = false;
+      reject(new Error('Nepavyko įkelti reCAPTCHA'));
+    };
+
+    document.head.appendChild(script);
   });
 }
 
@@ -59,43 +92,63 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.preventDefault();
       
       const formData = {
-        company: document.getElementById('modal-company').value.trim(), // Pridėtas .trim()
-        website: document.getElementById('modal-website').value.trim(), // Pridėtas .trim()
-        email: document.getElementById('modal-email').value.trim(), // Pridėtas .trim()
-        description: document.getElementById('modal-description').value.trim() // Pridėtas .trim()
+        company: document.getElementById('modal-company').value.trim(),
+        website: document.getElementById('modal-website').value.trim(),
+        email: document.getElementById('modal-email').value.trim(),
+        description: document.getElementById('modal-description').value.trim()
       };
 
+      // Validacija
+      if (!formData.company || !formData.website || !formData.email) {
+        alert('Užpildykite privalomus laukus: įmonė, svetainė ir el. paštas');
+        return;
+      }
+
       try {
-        // 1. Patikriname ar reCAPTCHA yra pasiruošusi (liko nepakeista)
-        await ensureRecaptchaReady();
+        // Įkelti reCAPTCHA
+        await loadRecaptcha();
         
-        // 2. CAPTCHA patikra su reCAPTCHA v3 (liko nepakeista)
-        const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'submit' });
-        
-        // 3. Siunčiame duomenis į API su CAPTCHA tokenu (pakeistas API endpoint)
+        // Papildoma patikra
+        if (!window.grecaptcha || !window.grecaptcha.execute) {
+          throw new Error('reCAPTCHA nepasiruošusi');
+        }
+
+        // Gauti tokeną
+        const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { 
+          action: 'submit' 
+        });
+
+        console.log('reCAPTCHA token gautas:', captchaToken);
+
+        // Siųsti duomenis
         const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...formData,
             captchaToken,
-            ipAddress: await getClientIp() // Pridėtas IP adreso gavimas
+            ipAddress: await getClientIp()
           })
         });
 
         if (response.ok) {
           alert('Užklausa išsiųsta! Administratorius susisieks per 24 val.');
           document.getElementById('partner-modal').style.display = 'none';
-          
-          // Išvalome formą po sėkmingo pateikimo
           document.getElementById('partner-form').reset();
         } else {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Serverio klaida');
         }
+
       } catch (error) {
         console.error('Klaida:', error);
-        alert(`Registracija nepavyko: ${error.message || 'Bandykite vėliau.'}`);
+        
+        // Rodyti specifinius pranešimus
+        if (error.message.includes('site key') || error.message.includes('reCAPTCHA')) {
+          alert('reCAPTCHA klaida. Prašome perkrauti puslapį ir bandyti dar kartą.');
+        } else {
+          alert(`Registracija nepavyko: ${error.message || 'Bandykite vėliau.'}`);
+        }
       }
     });
   }
