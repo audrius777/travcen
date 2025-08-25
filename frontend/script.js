@@ -1,5 +1,5 @@
 const API_BASE_URL = '/api'; // Pakeista iš 'https://api.travcen.com' į lokalų serverio kelią
-const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI'; // Naudokite šią, ne kitą
+const RECAPTCHA_SITE_KEY = '6Lcbl.SwrAAAACbOLaUS5-dnUMRfJsdeiF6Mhmml';
 
 // Pakeiskite loadRecaptcha funkciją:
 async function loadRecaptcha() {
