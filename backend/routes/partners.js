@@ -4,11 +4,15 @@ import axios from 'axios';
 
 const router = express.Router();
 
-// Paprasta reCAPTCHA v3 patikros funkcija
+// reCAPTCHA v3 patikros funkcija
 async function validateRecaptchaV3(token) {
   try {
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Jūsų v3 secret key
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     
+    if (!secretKey) {
+      throw new Error('RECAPTCHA_SECRET_KEY not configured');
+    }
+
     const response = await axios.post(
       'https://www.google.com/recaptcha/api/siteverify',
       new URLSearchParams({
@@ -21,15 +25,20 @@ async function validateRecaptchaV3(token) {
       success: response.data.success,
       score: response.data.score || 0,
       action: response.data.action || '',
+      hostname: response.data.hostname || '',
       reasons: response.data['error-codes'] || []
     };
   } catch (error) {
-    console.error('reCAPTCHA patikros klaida:', error);
-    return { success: false, score: 0, reasons: ['verification_failed'] };
+    console.error('reCAPTCHA verification error:', error);
+    return { 
+      success: false, 
+      score: 0, 
+      reasons: ['verification_failed'],
+      error: error.message 
+    };
   }
 }
 
-// Likusi kodo dalis lieka tokia pati...
 // Vietinės validacijos funkcijos
 const validatePartnerWebsite = async (url) => {
   try {
@@ -72,11 +81,25 @@ router.post('/partners/register', async (req, res) => {
     const { company, website, email, description, captchaToken } = req.body;
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
+    if (!captchaToken) {
+      return res.status(400).json({ error: 'CAPTCHA token reikalingas' });
+    }
+
     // CAPTCHA patikra su reCAPTCHA v3
     const captchaResult = await validateRecaptchaV3(captchaToken);
     
-    if (!captchaResult.success || captchaResult.score < 0.5) {
-      return res.status(400).json({ error: 'Neteisinga CAPTCHA arba aukštas rizikos lygis' });
+    if (!captchaResult.success) {
+      return res.status(400).json({ 
+        error: 'Neteisinga CAPTCHA',
+        details: captchaResult.reasons 
+      });
+    }
+
+    if (captchaResult.score < 0.5) {
+      return res.status(400).json({ 
+        error: 'Aptiktas didelis rizikos lygis',
+        score: captchaResult.score 
+      });
     }
 
     // Partnerio duomenų validacija
@@ -96,14 +119,14 @@ router.post('/partners/register', async (req, res) => {
     });
     await newPartner.save();
 
-    res.json({ success: true });
+    res.json({ success: true, message: 'Registracija sėkminga' });
   } catch (error) {
     console.error('Registracijos klaida:', error);
     
     if (error.message.includes('limit')) {
       return res.status(429).json({ error: error.message });
     }
-    res.status(400).json({ error: error.message || 'Registracijos klaida' });
+    res.status(500).json({ error: 'Vidinė serverio klaida' });
   }
 });
 
