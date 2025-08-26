@@ -1,65 +1,35 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import axios from 'axios';
-import { RecaptchaEnterpriseServiceClient } from '@google-cloud/recaptcha-enterprise';
 
 const router = express.Router();
 
-// Recaptcha Enterprise kliento inicializavimas
-const recaptchaClient = new RecaptchaEnterpriseServiceClient();
-
-// Recaptcha vertinimo funkcija
-async function createAssessment(token, recaptchaAction = 'partner_registration') {
+// Paprasta reCAPTCHA v3 patikros funkcija
+async function validateRecaptchaV3(token) {
   try {
-    const projectNumber = process.env.RECAPTCHA_PROJECT_NUMBER || "334159315485"; 
-    const recaptchaKey = process.env.RECAPTCHA_SITE_KEY || "6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI";
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Jūsų v3 secret key
     
-    const projectPath = recaptchaClient.projectPath(projectNumber);
+    const response = await axios.post(
+      'https://www.google.com/recaptcha/api/siteverify',
+      new URLSearchParams({
+        secret: secretKey,
+        response: token
+      })
+    );
 
-    // Build the assessment request.
-    const request = {
-      assessment: {
-        event: {
-          token: token,
-          siteKey: recaptchaKey,
-        },
-      },
-      parent: projectPath,
+    return {
+      success: response.data.success,
+      score: response.data.score || 0,
+      action: response.data.action || '',
+      reasons: response.data['error-codes'] || []
     };
-
-    const [response] = await recaptchaClient.createAssessment(request);
-
-    // Check if the token is valid.
-    if (!response.tokenProperties.valid) {
-      console.log(`The CreateAssessment call failed because the token was: ${response.tokenProperties.invalidReason}`);
-      return { valid: false, reason: response.tokenProperties.invalidReason };
-    }
-
-    // Check if the expected action was executed.
-    if (response.tokenProperties.action === recaptchaAction) {
-      // Get the risk score and the reason(s)
-      console.log(`The reCAPTCHA score is: ${response.riskAnalysis.score}`);
-      if (response.riskAnalysis.reasons) {
-        response.riskAnalysis.reasons.forEach((reason) => {
-          console.log(reason);
-        });
-      }
-
-      return { 
-        valid: true, 
-        score: response.riskAnalysis.score,
-        reasons: response.riskAnalysis.reasons || []
-      };
-    } else {
-      console.log("The action attribute does not match the expected action");
-      return { valid: false, reason: "Action mismatch" };
-    }
   } catch (error) {
-    console.error('Recaptcha assessment error:', error);
-    return { valid: false, reason: "Assessment error" };
+    console.error('reCAPTCHA patikros klaida:', error);
+    return { success: false, score: 0, reasons: ['verification_failed'] };
   }
 }
 
+// Likusi kodo dalis lieka tokia pati...
 // Vietinės validacijos funkcijos
 const validatePartnerWebsite = async (url) => {
   try {
@@ -96,16 +66,16 @@ router.get('/validate-website', async (req, res) => {
   }
 });
 
-// 2. Partnerio registracija (POST /api/partners/register)
+// 2. Partnerio registracija (POST /api/partners/register) - SU V3
 router.post('/partners/register', async (req, res) => {
   try {
     const { company, website, email, description, captchaToken } = req.body;
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    // CAPTCHA patikra su Recaptcha Enterprise
-    const captchaAssessment = await createAssessment(captchaToken, 'partner_registration');
+    // CAPTCHA patikra su reCAPTCHA v3
+    const captchaResult = await validateRecaptchaV3(captchaToken);
     
-    if (!captchaAssessment.valid || captchaAssessment.score < 0.5) {
+    if (!captchaResult.success || captchaResult.score < 0.5) {
       return res.status(400).json({ error: 'Neteisinga CAPTCHA arba aukštas rizikos lygis' });
     }
 
