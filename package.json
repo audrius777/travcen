@@ -35,7 +35,7 @@
     "fs": "^0.0.1-security",
     "validator": "^13.9.0",
     "nodemailer": "^6.9.8",
-    "@google-cloud/recaptcha-enterprise": "^3.6.0"
+    "@google-cloud/recaptcha-enterprise": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
