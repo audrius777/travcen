@@ -11,7 +11,7 @@ const recaptchaClient = new RecaptchaEnterpriseServiceClient();
 // Recaptcha vertinimo funkcija
 async function createAssessment(token, recaptchaAction = 'partner_registration') {
   try {
-    const projectNumber = process.env.RECAPTCHA_PROJECT_NUMBER || "334159315485"; // Pakeiskite į tikrą projekto numerį
+    const projectNumber = process.env.RECAPTCHA_PROJECT_NUMBER || "334159315485"; 
     const recaptchaKey = process.env.RECAPTCHA_SITE_KEY || "6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI";
     
     const projectPath = recaptchaClient.projectPath(projectNumber);
