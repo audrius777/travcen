@@ -113,9 +113,18 @@ document.addEventListener("DOMContentLoaded", async () => {
           throw new Error('reCAPTCHA nepasiruošusi');
         }
 
-        // Gauti tokeną
-        const captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { 
-          action: 'submit' 
+        // Gauti tokeną su grecaptcha.ready()
+        const captchaToken = await new Promise((resolve, reject) => {
+          grecaptcha.ready(async () => {
+            try {
+              const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { 
+                action: 'submit' 
+              });
+              resolve(token);
+            } catch (error) {
+              reject(error);
+            }
+          });
         });
 
         console.log('reCAPTCHA token gautas:', captchaToken);
