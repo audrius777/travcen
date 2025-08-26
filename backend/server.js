@@ -74,8 +74,21 @@ app.use((req, res, next) => {
 });
 
 // CORS konfigūracija
+const allowedOrigins = [
+  'https://travcen.com',
+  'https://www.travcen.com', 
+  'https://travcen.vercel.app',
+  'http://localhost:3000' // development
+];
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'https://travcen.com',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
