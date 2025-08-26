@@ -25,7 +25,7 @@ async function loadRecaptcha() {
     window.recaptchaLoading = true;
     
     const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+    script.src = `https://www.google.com/recaptcha/api.js?render=6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI`;
     script.async = true;
     script.defer = true;
 
