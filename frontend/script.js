@@ -1,9 +1,43 @@
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://travcen.onrender.com/api'; // Pakeista į teisingą URL
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
+
+// Mock partnerių duomenys atsarginiam variantui
+const MOCK_PARTNERS = [
+  {
+    id: 1,
+    company: "Travel Agency LT",
+    departure: "Vilnius",
+    destination: "Greece",
+    price: 299,
+    type: "leisure",
+    imageUrl: "https://source.unsplash.com/280x180/?greece",
+    partnerUrl: "https://travel-lt.com"
+  },
+  {
+    id: 2,
+    company: "Baltic Tours",
+    departure: "Kaunas",
+    destination: "Alps",
+    price: 499,
+    type: "adventure",
+    imageUrl: "https://source.unsplash.com/280x180/?alps",
+    partnerUrl: "https://baltictours.com"
+  },
+  {
+    id: 3,
+    company: "Euro Adventures",
+    departure: "Riga",
+    destination: "Spain",
+    price: 399,
+    type: "cultural",
+    imageUrl: "https://source.unsplash.com/280x180/?spain",
+    partnerUrl: "https://euroadventures.com"
+  }
+];
 
 // Paprastesnė reCAPTCHA įkėlimo funkcija
 function loadRecaptcha() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (window.grecaptcha && window.grecaptcha.execute) {
       resolve();
       return;
@@ -20,8 +54,8 @@ function loadRecaptcha() {
     };
 
     script.onerror = () => {
-      console.error('Nepavyko įkelti reCAPTCHA scripto');
-      reject(new Error('Nepavyko įkelti reCAPTCHA'));
+      console.warn('Nepavyko įkelti reCAPTCHA, naudojamas testavimo režimas');
+      resolve(); // Išsprendžiama net ir su klaida
     };
 
     document.head.appendChild(script);
@@ -33,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Modalų valdymas
   const modal = document.getElementById("partner-modal");
-  const partnerLink = document.getElementById("partner-link");
+  const partnerLink = document.getElementById("footer-partner"); // Pakeista į teisingą ID
   const closeBtn = document.querySelector(".close");
 
   if (partnerLink) {
@@ -85,15 +119,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadRecaptcha();
         
         // Gauti reCAPTCHA token
-        let captchaToken = 'test-token'; // Default reikšmė testavimui
+        let captchaToken = 'test-token-demo-mode';
         
         if (window.grecaptcha && window.grecaptcha.execute) {
-          captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { 
-            action: 'partner_submit' 
-          });
-          console.log('reCAPTCHA token gautas:', captchaToken);
-        } else {
-          console.warn('reCAPTCHA nepasiruošusi, naudojamas test token');
+          try {
+            captchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { 
+              action: 'partner_submit' 
+            });
+            console.log('reCAPTCHA token gautas:', captchaToken);
+          } catch (error) {
+            console.warn('reCAPTCHA klaida, naudojamas test token:', error);
+          }
         }
 
         // Siųsti duomenis
@@ -111,8 +147,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           modal.style.display = 'none';
           partnerForm.reset();
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Serverio klaida');
+          // Jei serveris neveikia, parodyti pranešimą
+          if (response.status === 502) {
+            alert('Registracija laikinai neveikia. Prašome bandyti vėliau arba susisiekti tiesiogiai.');
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Serverio klaida');
+          }
         }
 
       } catch (error) {
@@ -123,22 +164,40 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Partnerių užkrovimas
+// Partnerių užkrovimas su atsarginiu variantu
 async function loadPartners() {
   try {
-    const response = await fetch(`${API_BASE_URL}/partners`);
+    console.log('Bandome užkrauti partnerius iš:', API_BASE_URL + '/partners');
+    
+    const response = await fetch(`${API_BASE_URL}/partners`, {
+      // Pridedame timeout
+      signal: AbortSignal.timeout(5000)
+    });
+    
     if (!response.ok) {
       throw new Error(`HTTP klaida! status: ${response.status}`);
     }
+    
     const partners = await response.json();
     renderCards(partners);
+    
   } catch (error) {
-    console.error("Klaida užkraunant partnerius:", error);
-    document.getElementById("card-list").innerHTML = `
-      <div class="error-message">
-        Nepavyko užkrauti pasiūlymų. Bandykite vėliau.
-      </div>
-    `;
+    console.warn("Klaida užkraunant partnerius, naudojami mock duomenys:", error);
+    
+    // Atvaizduoti mock duomenis
+    renderCards(MOCK_PARTNERS);
+    
+    // Rodyti informatyvų pranešimą
+    const container = document.getElementById("card-list");
+    if (container) {
+      const warning = document.createElement('div');
+      warning.className = 'info-message';
+      warning.innerHTML = `
+        <p>⚠️ Rojami demonstraciniai duomenys. Tikri pasiūlymai laikinai nepasiekiami.</p>
+        <p><small>Klaida: ${error.message}</small></p>
+      `;
+      container.parentNode.insertBefore(warning, container);
+    }
   }
 }
 
@@ -162,6 +221,7 @@ function renderCards(partners) {
       <img src="${partner.imageUrl || `https://source.unsplash.com/280x180/?${partner.destination}`}" alt="${partner.destination}" />
       <h3>${partner.destination} from ${partner.departure}</h3>
       <p>Price: €${partner.price}</p>
+      ${partner.company ? `<p class="company">${partner.company}</p>` : ''}
     `;
     
     card.addEventListener('click', () => {
@@ -174,7 +234,7 @@ function renderCards(partners) {
         });
       }
 
-      window.location.href = partner.partnerUrl || `https://${partner.id}.travcen.com`;
+      window.open(partner.partnerUrl || `https://${partner.id}.travcen.com`, '_blank');
     });
 
     container.appendChild(card);
@@ -219,3 +279,7 @@ function filterCards() {
     card.style.display = "block";
   });
 }
+
+// Pridėkite šį CSS stilių į savo CSS failą:
+// .info-message { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 10px 0; border-radius: 5px; }
+// .company { font-size: 12px; color: #666; margin-top: 5px; }
