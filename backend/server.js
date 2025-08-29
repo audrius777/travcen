@@ -1,4 +1,37 @@
-import 'dotenv/config';
+// PRIDĖTI VISIŠKAI PAČIOJE PRADŽIOJE, prieš bet ką kitą
+const app = express();
+
+// CRITICAL FIX - išjungti visus senus CORS nustatymus
+app.use((req, res, next) => {
+  console.log('Užklausa iš:', req.headers.origin);
+  console.log('Maršrutas:', req.path);
+  
+  const allowedOrigins = [
+    'https://travcen.com',
+    'https://www.travcen.com', 
+    'https://travcen.vercel.app',
+    'https://www.travcen.vercel.app',
+    'http://localhost:3000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    console.log('Nustatytas CORS origin:', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Vary', 'Origin');
+  
+  if (req.method === 'OPTIONS') {
+    console.log('OPTIONS užklausa - grąžinama 200');
+    return res.sendStatus(200);
+  }
+  
+  next();
+});import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import mongoose from 'mongoose';
