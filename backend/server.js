@@ -1,7 +1,22 @@
-// PRIDĖTI VISIŠKAI PAČIOJE PRADŽIOJE, prieš bet ką kitą
-const app = express();
+import 'dotenv/config';
+import express from 'express';
+import session from 'express-session';
+import mongoose from 'mongoose';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import csrf from 'csurf';
+import crypto from 'crypto';
+import cors from 'cors';
+import MongoStore from 'connect-mongo';
+import { validationResult } from 'express-validator';
+import axios from 'axios';
+import partnerRoutes from './routes/partners.js';
 
-// CRITICAL FIX - išjungti visus senus CORS nustatymus
+// 1. Express aplikacijos konfigūracija
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+// 2. CRITICAL FIX - CORS pataisymas pačioje pradžioje
 app.use((req, res, next) => {
   console.log('Užklausa iš:', req.headers.origin);
   console.log('Maršrutas:', req.path);
@@ -31,47 +46,9 @@ app.use((req, res, next) => {
   }
   
   next();
-});import 'dotenv/config';
-import express from 'express';
-import session from 'express-session';
-import mongoose from 'mongoose';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import csrf from 'csurf';
-import crypto from 'crypto';
-import cors from 'cors';
-import MongoStore from 'connect-mongo';
-import { validationResult } from 'express-validator';
-import axios from 'axios';
-import partnerRoutes from './routes/partners.js';
-
-// 0. CORS fix - pridedame pačioje pradžioje
-const app = express();
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    'https://travcen.com',
-    'https://www.travcen.com', 
-    'https://travcen.vercel.app',
-    'https://www.travcen.vercel.app',
-    'http://localhost:3000'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  
-  next();
 });
 
-// 1. Duomenų bazės konfigūracija
+// 3. Duomenų bazės konfigūracija
 async function connectToDatabase() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -102,16 +79,14 @@ async function connectToDatabase() {
   }
 }
 
-const PORT = process.env.PORT || 10000;
-
-// Middleware, kuris generuoja "nonce" kiekvienam request'ui
+// 4. Middleware, kuris generuoja "nonce" kiekvienam request'ui
 app.use((req, res, next) => {
   const nonce = crypto.randomBytes(16).toString('base64');
   res.locals.nonce = nonce;
   next();
 });
 
-// Tik API endpointams - išjungti CSP
+// 5. Tik API endpointams - išjungti CSP
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
     return next();
@@ -130,7 +105,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS konfigūracija
+// 6. UŽKOMENTUOKITE SENĄ CORS KONFIGŪRACIJĄ
+/*
 const allowedOrigins = [
   'https://travcen.com',
   'https://www.travcen.com', 
@@ -155,8 +131,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+*/
 
-// Saugumo middleware'iai
+// 7. Saugumo middleware'iai
 app.use(helmet({
   contentSecurityPolicy: false,
   hsts: {
@@ -168,7 +145,7 @@ app.use(helmet({
   frameguard: { action: 'deny' }
 }));
 
-// Rate limiting
+// 8. Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -180,11 +157,11 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Kūlo parseriai
+// 9. Kūlo parseriai
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// 3. Sesijos konfigūracija
+// 10. Sesijos konfigūracija
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -213,7 +190,7 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-// 4. Mongoose modeliai
+// 11. Mongoose modeliai
 const userSchema = new mongoose.Schema({
   email: { 
     type: String, 
@@ -282,7 +259,7 @@ const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 const PendingPartner = mongoose.model('PendingPartner', pendingPartnerSchema);
 
-// 5. CSRF apsauga
+// 12. CSRF apsauga
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
@@ -306,7 +283,7 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 6. Pagrindiniai API maršrutai
+// 13. Pagrindiniai API maršrutai
 const router = express.Router();
 
 // Sveikatos patikrinimas
@@ -378,11 +355,11 @@ router.post('/partner', csrfProtection, async (req, res) => {
   }
 });
 
-// 7. Partnerių maršrutų integracija
+// 14. Partnerių maršrutų integracija
 app.use('/api', router);
 app.use('/api/partners', partnerRoutes);
 
-// 8. Pagrindinis maršrutas
+// 15. Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -403,7 +380,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 9. Klaidų apdorojimas
+// 16. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
@@ -438,7 +415,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 10. Serverio paleidimas
+// 17. Serverio paleidimas
 async function startServer() {
   await connectToDatabase();
   
