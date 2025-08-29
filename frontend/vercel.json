@@ -29,12 +29,33 @@
           "value": "max-age=63072000; includeSubDomains; preload"
         }
       ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://travcen.com"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,PUT,DELETE,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-CSRF-Token"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "destination": "https://travcen.onrender.com/api/:path*"
     }
   ],
   "redirects": [
@@ -43,13 +64,5 @@
       "destination": "/",
       "permanent": true
     }
-  ],
-  "functions": {
-    "api/partners.js": {
-      "maxDuration": 30
-    },
-    "api/partners/register.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
