@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TravCen - Travel Offers Hub</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
     /* Privacy Policy Modal Styles */
     .privacy-content {
@@ -115,7 +116,6 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="top-bar">
@@ -187,6 +187,20 @@
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
     </p>
+  </div>
+
+  <div id="partner-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modal-title">Partner Registration</h2>
+      <form id="partner-form">
+        <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
+        <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
+        <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
+        <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
+        <button type="submit" id="modal-submit">Submit</button>
+      </form>
+    </div>
   </div>
 
   <!-- About Us Modal -->
