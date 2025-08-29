@@ -35,7 +35,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://travcen.com"
+          "value": "https://travcen.com, https://www.travcen.com, https://travcen.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
