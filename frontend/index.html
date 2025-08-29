@@ -6,165 +6,17 @@
   <title>TravCen - Travel Offers Hub</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Privacy Policy Modal Styles */
-    .privacy-content {
-      max-height: 70vh;
-      overflow-y: auto;
-      padding-right: 10px;
-      line-height: 1.6;
+    /* Papildomi stiliai, kurių nėra style.css */
+    #contact-modal .modal-content {
+      max-width: 500px;
+      text-align: center;
+      padding: 2rem;
     }
-
-    .privacy-content h3 {
-      color: #0066cc;
-      margin: 1.5rem 0 0.8rem;
-      font-size: 1.2rem;
-    }
-
-    .privacy-content ul {
-      margin: 0.8rem 0;
-      padding-left: 1.5rem;
-    }
-
-    .privacy-content li {
-      margin-bottom: 0.5rem;
-    }
-
-    .privacy-content a {
-      color: #0066cc;
-      text-decoration: none;
-    }
-
-    .privacy-content a:hover {
-      text-decoration: underline;
-    }
-
-    /* FAQ Modal Styles */
-    .faq-content {
-      max-height: 70vh;
-      overflow-y: auto;
-      padding-right: 10px;
-    }
-
-    .faq-item {
-      margin-bottom: 1.5rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid #eee;
-    }
-
-    .faq-item:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .faq-item h3 {
-      color: #0066cc;
+    
+    #contact-modal p {
       font-size: 1.1rem;
-      margin-bottom: 0.8rem;
-    }
-
-    .faq-item p {
       line-height: 1.6;
-      color: #333;
-    }
-
-    .faq-content a {
-      color: #0066cc;
-      text-decoration: none;
-    }
-
-    .faq-content a:hover {
-      text-decoration: underline;
-    }
-
-    /* Scrollbar styling */
-    .privacy-content::-webkit-scrollbar,
-    .faq-content::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .privacy-content::-webkit-scrollbar-track,
-    .faq-content::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
-
-    .privacy-content::-webkit-scrollbar-thumb,
-    .faq-content::-webkit-scrollbar-thumb {
-      background: #0066cc;
-      border-radius: 4px;
-    }
-
-    .privacy-content::-webkit-scrollbar-thumb:hover,
-    .faq-content::-webkit-scrollbar-thumb:hover {
-      background: #0052a3;
-    }
-
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 600px;
-      border-radius: 8px;
-      position: relative;
-    }
-
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      position: absolute;
-      top: 10px;
-      right: 15px;
-    }
-
-    .close:hover,
-    .close:focus {
-      color: black;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    @media (max-width: 768px) {
-      .faq-content {
-        max-height: 60vh;
-      }
-      .modal-content {
-        width: 90%;
-        margin: 15% auto;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .faq-content {
-        max-height: 50vh;
-      }
-      
-      .faq-item h3 {
-        font-size: 1rem;
-      }
-      
-      .modal-content {
-        width: 95%;
-        margin: 20% auto;
-        padding: 15px;
-      }
+      margin: 1.5rem 0;
     }
   </style>
 </head>
@@ -240,30 +92,18 @@
     </p>
   </div>
 
-  <div id="partner-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2 id="modal-title">Partner Registration</h2>
-      <form id="partner-form">
-        <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
-        <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
-        <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
-        <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
-        <button type="submit" id="modal-submit">Submit</button>
-      </form>
-    </div>
-  </div>
-
   <!-- About Us Modal -->
   <div id="about-modal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
       <h2>About TravCen</h2>
-      <p>TravCen is a smart travel search platform that brings together offers from multiple travel agencies into one convenient place.</p>
-      <p>We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.</p>
-      <p>Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
-      <p>Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
-      <p>Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
+      <div class="about-content">
+        <p>TravCen is a smart travel search platform that brings together offers from multiple travel agencies into one convenient place.</p>
+        <p>We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.</p>
+        <p>Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
+        <p>Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
+        <p>Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
+      </div>
     </div>
   </div>
 
@@ -376,11 +216,6 @@
         </div>
         
         <div class="faq-item">
-          <h3>❓ Can I become a travel partner and list my offers on TravCen?</h3>
-          <p>Yes! Visit the Become a Partner section in the footer and submit your company details via the partner registration form.</p>
-        </div>
-        
-        <div class="faq-item">
           <h3>❓ How can I contact TravCen?</h3>
           <p>For any general inquiries, suggestions, or partnership opportunities, you can email us at <a href="mailto:info@travcen.com">info@travcen.com</a>.</p>
         </div>
@@ -397,71 +232,73 @@
     </div>
   </div>
 
-  <script src="translate.js"></script>
-  <script src="script.js"></script>
   <script>
-    // Papildomas JavaScript, užtikrinantis visų modalų veikimą
+    // Modalų valdymo JavaScript
     document.addEventListener('DOMContentLoaded', function() {
-      // Gauti visus modalų elementus
-      var modals = {
-        about: document.getElementById("about-modal"),
-        privacy: document.getElementById("privacy-modal"),
-        faq: document.getElementById("faq-modal"),
-        contact: document.getElementById("contact-modal"),
-        partner: document.getElementById("partner-modal")
-      };
+      // Gauti visus modalus
+      const aboutModal = document.getElementById('about-modal');
+      const privacyModal = document.getElementById('privacy-modal');
+      const faqModal = document.getElementById('faq-modal');
+      const contactModal = document.getElementById('contact-modal');
       
-      // Gauti visus mygtukus, kurie atidaro modalus
-      var links = {
-        about: document.getElementById("footer-about"),
-        privacy: document.getElementById("footer-privacy"),
-        faq: document.getElementById("footer-faq"),
-        contact: document.getElementById("footer-contact")
-      };
+      // Gauti visus nuorodas
+      const aboutLink = document.getElementById('footer-about');
+      const privacyLink = document.getElementById('footer-privacy');
+      const faqLink = document.getElementById('footer-faq');
+      const contactLink = document.getElementById('footer-contact');
       
       // Gauti visus uždarymo mygtukus
-      var closeButtons = document.querySelectorAll('.close');
+      const closeButtons = document.querySelectorAll('.close');
       
-      // Priskirti funkcijas kiekvienam mygtukui
-      links.about.onclick = function(event) {
-        event.preventDefault();
-        modals.about.style.display = "block";
+      // Funkcija modalų atidarymui
+      function openModal(modal) {
+        modal.style.display = 'block';
       }
       
-      links.privacy.onclick = function(event) {
-        event.preventDefault();
-        modals.privacy.style.display = "block";
+      // Funkcija modalų uždarymui
+      function closeModal(modal) {
+        modal.style.display = 'none';
       }
       
-      links.faq.onclick = function(event) {
-        event.preventDefault();
-        modals.faq.style.display = "block";
-      }
-      
-      links.contact.onclick = function(event) {
-        event.preventDefault();
-        modals.contact.style.display = "block";
-      }
-      
-      // Uždaryti modalą paspaudus X
-      closeButtons.forEach(function(btn) {
-        btn.onclick = function() {
-          for (var key in modals) {
-            modals[key].style.display = "none";
-          }
-        }
+      // Priskirti įvykius nuorodoms
+      aboutLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal(aboutModal);
       });
       
-      // Uždaryti modalą paspaudus bet kur už jo ribų
-      window.onclick = function(event) {
-        for (var key in modals) {
-          if (event.target == modals[key]) {
-            modals[key].style.display = "none";
-          }
+      privacyLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal(privacyModal);
+      });
+      
+      faqLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal(faqModal);
+      });
+      
+      contactLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal(contactModal);
+      });
+      
+      // Priskirti įvykius uždarymo mygtukams
+      closeButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+          const modal = this.closest('.modal');
+          closeModal(modal);
+        });
+      });
+      
+      // Uždaryti modalą paspaudus už jo ribų
+      window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+          closeModal(e.target);
         }
-      }
+      });
     });
   </script>
+  <script src="translate.js"></script>
+  <script src="script.js"></script>
   <script src="index.js"></script>
 </body>
 </html>
