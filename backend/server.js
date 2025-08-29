@@ -12,6 +12,32 @@ import { validationResult } from 'express-validator';
 import axios from 'axios';
 import partnerRoutes from './routes/partners.js';
 
+// 0. CORS fix - pridedame pačioje pradžioje
+const app = express();
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://travcen.com',
+    'https://www.travcen.com', 
+    'https://travcen.vercel.app',
+    'https://www.travcen.vercel.app',
+    'http://localhost:3000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
 // 1. Duomenų bazės konfigūracija
 async function connectToDatabase() {
   try {
@@ -43,8 +69,6 @@ async function connectToDatabase() {
   }
 }
 
-// 2. Express aplikacijos konfigūracija
-const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Middleware, kuris generuoja "nonce" kiekvienam request'ui
@@ -79,7 +103,7 @@ const allowedOrigins = [
   'https://www.travcen.com', 
   'https://travcen.vercel.app',
   'https://www.travcen.vercel.app',
-  'http://localhost:3000' // development
+  'http://localhost:3000'
 ];
 
 const corsOptions = {
@@ -101,7 +125,7 @@ app.use(cors(corsOptions));
 
 // Saugumo middleware'iai
 app.use(helmet({
-  contentSecurityPolicy: false, // Išjungiamas, nes nustatome savo CSP
+  contentSecurityPolicy: false,
   hsts: {
     maxAge: 63072000,
     includeSubDomains: true,
