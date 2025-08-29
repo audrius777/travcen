@@ -182,11 +182,25 @@
       <a id="footer-faq" href="#">FAQ</a> |
       <a id="footer-privacy" href="#">Privacy Policy</a> |
       <a id="footer-contact" href="#">Contact</a> |
-      <a href="#" id="footer-about">About Us</a>
+      <a id="footer-about" href="#">About Us</a>
     </div>
     <p class="disclaimer" id="footer-disclaimer">
       <strong>Note:</strong> TravCen is an intermediary platform. We do not take responsibility for the services purchased through partner sites.
     </p>
+  </div>
+
+  <div id="partner-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modal-title">Partner Registration</h2>
+      <form id="partner-form">
+        <input type="text" id="modal-company" placeholder="Company Name" required /><br/>
+        <input type="url" id="modal-website" placeholder="Website URL" required /><br/>
+        <input type="email" id="modal-email" placeholder="Contact Email" required /><br/>
+        <textarea id="modal-description" placeholder="Short Description" rows="4"></textarea><br/>
+        <button type="submit" id="modal-submit">Submit</button>
+      </form>
+    </div>
   </div>
 
   <!-- About Us Modal -->
@@ -199,15 +213,6 @@
       <p>Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
       <p>Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
       <p>Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
-    </div>
-  </div>
-
-  <!-- Contact Modal -->
-  <div id="contact-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Contact Us</h2>
-      <p>If you would like to contact us, please email info@travcen.com</p>
     </div>
   </div>
 
@@ -320,6 +325,11 @@
         </div>
         
         <div class="faq-item">
+          <h3>❓ Can I become a travel partner and list my offers on TravCen?</h3>
+          <p>Yes! Visit the Become a Partner section in the footer and submit your company details via the partner registration form.</p>
+        </div>
+        
+        <div class="faq-item">
           <h3>❓ How can I contact TravCen?</h3>
           <p>For any general inquiries, suggestions, or partnership opportunities, you can email us at <a href="mailto:info@travcen.com">info@travcen.com</a>.</p>
         </div>
@@ -327,8 +337,64 @@
     </div>
   </div>
 
+  <!-- Contact Modal -->
+  <div id="contact-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Contact Us</h2>
+      <p>If you wish to contact us, please email info@travcen.com</p>
+    </div>
+  </div>
+
   <script src="translate.js"></script>
   <script src="script.js"></script>
+  <script>
+    // Papildomas JavaScript, užtikrinantis naujų modalų veikimą
+    document.addEventListener('DOMContentLoaded', function() {
+      // Gauti modalų elementus
+      var contactModal = document.getElementById("contact-modal");
+      var faqModal = document.getElementById("faq-modal");
+      
+      // Gauti mygtukus, kurie atidaro modalus
+      var contactLink = document.getElementById("footer-contact");
+      var faqLink = document.getElementById("footer-faq");
+      
+      // Gauti elementus, kurie uždaro modalus
+      var spanContact = contactModal.getElementsByClassName("close")[0];
+      var spanFaq = faqModal.getElementsByClassName("close")[0];
+      
+      // Kai paspaudžiama ant Kontaktų, atidaromas modalas
+      contactLink.onclick = function(event) {
+        event.preventDefault();
+        contactModal.style.display = "block";
+      }
+      
+      // Kai paspaudžiama ant FAQ, atidaromas modalas
+      faqLink.onclick = function(event) {
+        event.preventDefault();
+        faqModal.style.display = "block";
+      }
+      
+      // Uždaryti modalą paspaudus X
+      spanContact.onclick = function() {
+        contactModal.style.display = "none";
+      }
+      
+      spanFaq.onclick = function() {
+        faqModal.style.display = "none";
+      }
+      
+      // Uždaryti modalą paspaudus bet kur už jo ribų
+      window.onclick = function(event) {
+        if (event.target == contactModal) {
+          contactModal.style.display = "none";
+        }
+        if (event.target == faqModal) {
+          faqModal.style.display = "none";
+        }
+      }
+    });
+  </script>
   <script src="index.js"></script>
 </body>
 </html>
