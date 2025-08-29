@@ -78,6 +78,7 @@ const allowedOrigins = [
   'https://travcen.com',
   'https://www.travcen.com', 
   'https://travcen.vercel.app',
+  'https://www.travcen.vercel.app',
   'http://localhost:3000' // development
 ];
 
@@ -137,7 +138,7 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: process.env.COOKIE_DOMAIN,
+    domain: process.env.NODE_ENV === 'production' ? '.travcen.com' : 'localhost',
     path: '/',
     signed: true
   },
@@ -231,14 +232,15 @@ const csrfProtection = csrf({
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     signed: true,
-    domain: process.env.COOKIE_DOMAIN,
+    domain: process.env.NODE_ENV === 'production' ? '.travcen.com' : 'localhost',
     path: '/'
   }
 });
 
 // CSRF middleware
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api') || 
+  if (req.path.startsWith('/api/partners/register') || 
+      req.path === '/api/health' ||
       req.path === '/' || 
       req.path === '/favicon.ico' ||
       req.path.startsWith('/static')) {
@@ -284,7 +286,7 @@ router.post('/logout', (req, res) => {
       return res.status(500).json({ error: 'Atsijungimo klaida' });
     }
     res.clearCookie('travcen.sid', {
-      domain: process.env.COOKIE_DOMAIN,
+      domain: process.env.NODE_ENV === 'production' ? '.travcen.com' : 'localhost',
       path: '/'
     });
     res.json({ success: true });
