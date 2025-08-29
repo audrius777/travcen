@@ -103,4 +103,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupModal('footer-privacy', 'privacy-modal');
   setupModal('footer-partner', 'partner-modal');
   setupModal('footer-faq', 'faq-modal');
+  setupModal('footer-contact', 'contact-modal');
 });
