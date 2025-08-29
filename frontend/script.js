@@ -193,7 +193,7 @@ async function loadPartners() {
       const warning = document.createElement('div');
       warning.className = 'info-message';
       warning.innerHTML = `
-        <p>⚠️ Rojami demonstraciniai duomenys. Tikri pasiūlymai laikinai nepasiekiami.</p>
+        <p>⚠ Demo data shown. Real offers temporarily unavailable..</p>
         <p><small>Klaida: ${error.message}</small></p>
       `;
       container.parentNode.insertBefore(warning, container);
