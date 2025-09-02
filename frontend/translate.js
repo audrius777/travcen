@@ -28,7 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Short Description",
       "modal-submit": "Submit",
       "login-google": "Sign in with Google",
-      "login-facebook": "Sign in with Facebook"
+      "login-facebook": "Sign in with Facebook",
+      "footer-about": "About Us",
+      "about-title": "About TravCen",
+      "about-text-1": "TravCen is a smart travel search platform that brings together offers from multiple travel agencies into one convenient place.",
+      "about-text-2": "We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.",
+      "about-text-3": "Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.",
+      "about-text-4": "Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.",
+      "about-text-5": "Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com",
+      "contact-title": "Contact Us",
+      "contact-text": "Contact us at info@travcen.com"
     },
     lt: {
       "site-title": "TravCen",
@@ -56,7 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Trumpas aprašymas",
       "modal-submit": "Pateikti",
       "login-google": "Prisijungti su Google",
-      "login-facebook": "Prisijungti su Facebook"
+      "login-facebook": "Prisijungti su Facebook",
+      "footer-about": "Apie mus",
+      "about-title": "Apie TravCen",
+      "about-text-1": "TravCen yra išmani kelionių paieškos platforma, kuri sujungia kelionių pasiūlymus iš įvairių kelionių agentūrų į vieną patogią vietą.",
+      "about-text-2": "Mes padedame keliautojams greitai ir lengvai rasti geriausias atostogų, kultūrinių, nuotykių ir last minute keliones — taupydami ir laiką, ir pinigus.",
+      "about-text-3": "Skirtingai nuo tradicinių agentūrų, TravCen nėra tiesioginis kelionių tiekėjas. Vietoj to, mes veikiame kaip skaidrus agregatorius, suteikiantis vartotojams laisvę lyginti ir rinktis tinkamiausias kelionių parinktis iš patikimų partnerių.",
+      "about-text-4": "Mūsų misija paprasta: padaryti kelionių planavimą lengvesnį, išmanesnį ir prieinamesnį visiems.",
+      "about-text-5": "Turite klausimų ar norite bendradarbiauti?<br>📬 Susisiekite su mumis info@travcen.com",
+      "contact-title": "Susisiekite su mumis",
+      "contact-text": "Susisiekite su mumis info@travcen.com"
     },
     fr: {
       "site-title": "TravCen",
@@ -84,7 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Brève description",
       "modal-submit": "Envoyer",
       "login-google": "Se connecter avec Google",
-      "login-facebook": "Se connecter avec Facebook"
+      "login-facebook": "Se connecter avec Facebook",
+      "footer-about": "À propos de nous",
+      "about-title": "À propos de TravCen",
+      "about-text-1": "TravCen est une plateforme de recherche de voyages intelligente qui regroupe les offres de plusieurs agences de voyages en un seul endroit pratique.",
+      "about-text-2": "Nous aidons les voyageurs à trouver rapidement et facilement les meilleures vacances, séjours culturels, aventures et last minute — en économisant à la fois du temps et de l'argent.",
+      "about-text-3": "Contrairement aux agences traditionnelles, TravCen n'est pas un prestataire de voyages direct. Au lieu de cela, nous agissons comme un agrégateur transparent, donnant aux utilisateurs la liberté de comparer et de choisir les options de voyage les plus adaptées auprès de partenaires de confiance.",
+      "about-text-4": "Notre mission est simple : rendre la planification des voyages plus facile, plus intelligente et plus accessible pour tous.",
+      "about-text-5": "Des questions ou envie de collaborer ?<br>📬 Contactez-nous à info@travcen.com",
+      "contact-title": "Contactez-nous",
+      "contact-text": "Contactez-nous à info@travcen.com"
     },
     es: {
       "site-title": "TravCen",
@@ -112,7 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Descripción breve",
       "modal-submit": "Enviar",
       "login-google": "Iniciar sesión con Google",
-      "login-facebook": "Iniciar sesión con Facebook"
+      "login-facebook": "Iniciar sesión con Facebook",
+      "footer-about": "Sobre nosotros",
+      "about-title": "Sobre TravCen",
+      "about-text-1": "TravCen es una plataforma inteligente de búsqueda de viajes que reúne ofertas de múltiples agencias de viajes en un lugar conveniente.",
+      "about-text-2": "Ayudamos a los viajeros a encontrar rápida y fácilmente las mejores vacaciones, viajes culturales, de aventura y de último minuto, ahorrando tiempo y dinero.",
+      "about-text-3": "A diferencia de las agencias tradicionales, TravCen no es un proveedor directo de viajes. En cambio, actuamos como un agregador transparente, dando a los usuarios la libertad de comparar y elegir las opciones de viaje más adecuadas de socios confiables.",
+      "about-text-4": "Nuestra misión es simple: hacer que la planificación de viajes sea más fácil, inteligente y accesible para todos.",
+      "about-text-5": "¿Tienes preguntas o quieres colaborar?<br>📬 Contáctanos en info@travcen.com",
+      "contact-title": "Contáctanos",
+      "contact-text": "Contáctanos en info@travcen.com"
     },
     de: {
       "site-title": "TravCen",
@@ -140,7 +176,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Kurzbeschreibung",
       "modal-submit": "Absenden",
       "login-google": "Mit Google anmelden",
-      "login-facebook": "Mit Facebook anmelden"
+      "login-facebook": "Mit Facebook anmelden",
+      "footer-about": "Über uns",
+      "about-title": "Über TravCen",
+      "about-text-1": "TravCen ist eine intelligente Reisesuchplattform, die Angebote mehrerer Reisebüros an einem praktischen Ort zusammenführt.",
+      "about-text-2": "Wir helfen Reisenden, schnell und einfach die besten Urlaubs-, Kultur-, Abenteuer- und Last-Minute-Reisen zu finden und sparen dabei Zeit und Geld.",
+      "about-text-3": "Im Gegensatz zu traditionellen Agenturen ist TravCen kein direkter Reiseanbieter. Stattdessen agieren wir als transparenter Aggregator und geben den Nutzern die Freiheit, die am besten geeigneten Reiseoptionen von vertrauenswürdigen Partnern zu vergleichen und auszuwählen.",
+      "about-text-4": "Unsere Mission ist einfach: Reiseplanung für alle einfacher, smarter und zugänglicher zu machen.",
+      "about-text-5": "Haben Sie Fragen oder möchten Sie zusammenarbeiten?<br>📬 Kontaktieren Sie uns unter info@travcen.com",
+      "contact-title": "Kontaktieren Sie uns",
+      "contact-text": "Kontaktieren Sie uns unter info@travcen.com"
     },
     zh: {
       "site-title": "TravCen",
@@ -168,7 +213,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "简短描述",
       "modal-submit": "提交",
       "login-google": "使用 Google 登录",
-      "login-facebook": "使用 Facebook 登录"
+      "login-facebook": "使用 Facebook 登录",
+      "footer-about": "关于我们",
+      "about-title": "关于 TravCen",
+      "about-text-1": "TravCen 是一个智能旅行搜索平台，将多家旅行社的优惠汇集到一个方便的地方。",
+      "about-text-2": "我们帮助旅行者快速轻松地找到最好的假期、文化、冒险和最后一刻旅行——节省时间和金钱。",
+      "about-text-3": "与传统的旅行社不同，TravCen 不是直接的旅行提供商。相反，我们作为一个透明的聚合器，让用户可以自由比较和选择来自可信合作伙伴的最合适的旅行选项。",
+      "about-text-4": "我们的使命很简单：让旅行计划对每个人来说都更轻松、更智能、更易访问。",
+      "about-text-5": "有问题或想合作？<br>📬 联系我们：info@travcen.com",
+      "contact-title": "联系我们",
+      "contact-text": "联系我们：info@travcen.com"
     },
     ko: {
       "site-title": "TravCen",
@@ -196,7 +250,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "간단한 설명",
       "modal-submit": "제출",
       "login-google": "Google로 로그인",
-      "login-facebook": "Facebook으로 로그인"
+      "login-facebook": "Facebook으로 로그인",
+      "footer-about": "회사 소개",
+      "about-title": "TravCen 소개",
+      "about-text-1": "TravCen은 여러 여행사들의 제안을 한 곳에 모아주는 스마트 여행 검색 플랫폼입니다.",
+      "about-text-2": "우리는 여행자들이 최고의 휴가, 문화, 어드벤처, 라스트 미닛 여행을 빠르고 쉽게 찾을 수 있도록 도와 시간과 돈을 절약합니다.",
+      "about-text-3": "기존 여행사와 달리 TravCen은 직접적인 여행 제공업체가 아닙니다. 대신 우리는 투명한 집계자로 활동하여 사용자가 신뢰할 수 있는 파트너로부터 가장 적합한 여행 옵션을 비교하고 선택할 수 있는 자유를 제공합니다.",
+      "about-text-4": "우리의 미션은 간단합니다: 모두를 위해 여행 계획을 더 쉽고, 더 스마트하며, 더 접근하기 쉽게 만드는 것입니다.",
+      "about-text-5": "질문이 있거나 협업을 원하시나요?<br>📬 info@travcen.com으로 문의하세요",
+      "contact-title": "문의하기",
+      "contact-text": "info@travcen.com으로 문의하세요"
     },
     da: {
       "site-title": "TravCen",
@@ -224,7 +287,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Kort beskrivelse",
       "modal-submit": "Indsend",
       "login-google": "Log ind med Google",
-      "login-facebook": "Log ind med Facebook"
+      "login-facebook": "Log ind med Facebook",
+      "footer-about": "Om os",
+      "about-title": "Om TravCen",
+      "about-text-1": "TravCen er en smart rejsesøgeplatform, der samler tilbud fra flere rejsebureauer på ét bekvemt sted.",
+      "about-text-2": "Vi hjælper rejsende med at finde de bedste ferier, kulturelle, eventyr- og last minute-rejser hurtigt og nemt — og sparer både tid og penge.",
+      "about-text-3": "I modsætning til traditionelle bureauer er TravCen ikke en direkte rejseudbyder. I stedet fungerer vi som en transparent aggregator, der giver brugerne frihed til at sammenligne og vælge de mest passende rejsemuligheder fra pålidelige partnere.",
+      "about-text-4": "Vores mission er enkel: at gøre rejseplanlægning nemmere, smartere og mere tilgængelig for alle.",
+      "about-text-5": "Har du spørgsmål eller ønsker at samarbejde?<br>📬 Kontakt os på info@travcen.com",
+      "contact-title": "Kontakt os",
+      "contact-text": "Kontakt os på info@travcen.com"
     },
     sv: {
       "site-title": "TravCen",
@@ -252,7 +324,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Kort beskrivning",
       "modal-submit": "Skicka",
       "login-google": "Logga in med Google",
-      "login-facebook": "Logga in med Facebook"
+      "login-facebook": "Logga in med Facebook",
+      "footer-about": "Om oss",
+      "about-title": "Om TravCen",
+      "about-text-1": "TravCen är en smart resesökningsplattform som samlar erbjudanden från flera resebyråer på ett bekvämt ställe.",
+      "about-text-2": "Vi hjälper resenärer att snabbt och enkelt hitta de bästa semestern, kultur-, äventyr- och sista minuten-resorna — och sparar både tid och pengar.",
+      "about-text-3": "Till skillnad från traditionella byråer är TravCen inte en direkt reseleverantör. Istället agerar vi som en transparent aggregator som ger användarna frihet att jämföra och välja de mest lämpliga resealternativen från pålitliga partners.",
+      "about-text-4": "Vårt uppdrag är enkelt: att göra reseplanering enklare, smartare och mer tillgängligt för alla.",
+      "about-text-5": "Har du frågor eller vill samarbeta?<br>📬 Kontakta oss på info@travcen.com",
+      "contact-title": "Kontakta oss",
+      "contact-text": "Kontakta oss på info@travcen.com"
     },
     no: {
       "site-title": "TravCen",
@@ -280,7 +361,16 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Kort beskrivelse",
       "modal-submit": "Send inn",
       "login-google": "Logg inn med Google",
-      "login-facebook": "Logg inn med Facebook"
+      "login-facebook": "Logg inn med Facebook",
+      "footer-about": "Om oss",
+      "about-title": "Om TravCen",
+      "about-text-1": "TravCen er en smart reisesøkeplattform som samler tilbud fra flere reisebyråer på ett sted.",
+      "about-text-2": "Vi hjelper reisende med å raskt og enkelt finne de beste ferie-, kultur-, eventyr- og siste minutt-reisene — og sparer både tid og penger.",
+      "about-text-3": "I motsetning til tradisjonelle byråer er TravCen ikke en direkte reiseleverandør. I stedet fungerer vi som en transparent aggregator som gir brukerne frihet til å sammenligne og velge de mest passende reisealternativene fra pålitelige partnere.",
+      "about-text-4": "Vår misjon er enkel: å gjøre reiseplanlegging enklere, smartere og mer tilgjengelig for alle.",
+      "about-text-5": "Har du spørsmål eller ønsker å samarbeide?<br>📬 Kontakt oss på info@travcen.com",
+      "contact-title": "Kontakt oss",
+      "contact-text": "Kontakt oss på info@travcen.com"
     }
   };
 
