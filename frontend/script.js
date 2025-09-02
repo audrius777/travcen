@@ -65,29 +65,31 @@ function loadRecaptcha() {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadPartners();
 
-  // Modalų valdymas
-  const modal = document.getElementById("partner-modal");
-  const partnerLink = document.getElementById("footer-partner"); // Pakeista į teisingą ID
-  const closeBtn = document.querySelector(".close");
+  // Modalų valdymas - SPECIFINIS PARTNERIO MODALO VALDYMAS
+  const partnerModal = document.getElementById("partner-modal");
+  const partnerLink = document.getElementById("footer-partner");
+  const partnerCloseBtn = partnerModal ? partnerModal.querySelector(".close") : null;
 
   if (partnerLink) {
     partnerLink.addEventListener("click", (e) => {
       e.preventDefault();
-      modal.style.display = "block";
+      partnerModal.style.display = "block";
     });
   }
 
-  if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      modal.style.display = "none";
+  if (partnerCloseBtn) {
+    partnerCloseBtn.addEventListener("click", () => {
+      partnerModal.style.display = "none";
     });
   }
 
-  window.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.style.display = "none";
-    }
-  });
+  if (partnerModal) {
+    window.addEventListener("click", (e) => {
+      if (e.target === partnerModal) {
+        partnerModal.style.display = "none";
+      }
+    });
+  }
 
   // Paieškos funkcijos priskyrimas
   const searchBtn = document.getElementById("search-btn");
@@ -144,7 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (response.ok) {
           alert('Užklausa išsiųsta! Administratorius susisieks per 24 val.');
-          modal.style.display = 'none';
+          partnerModal.style.display = 'none';
           partnerForm.reset();
         } else {
           // Jei serveris neveikia, parodyti pranešimą
