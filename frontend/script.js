@@ -194,7 +194,7 @@ async function loadPartners() {
   }
 }
 
-// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA (CENTRE BE STILIAUS PAKEITIMŲ)
+// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA (CENTRE BE FONO)
 function showWarningMessage(errorMsg) {
   // Išvalyti senus įspėjimus
   const oldWarnings = document.querySelectorAll('.info-message-fixed');
@@ -207,13 +207,16 @@ function showWarningMessage(errorMsg) {
     <p><small>Error: ${errorMsg}</small></p>
   `;
   
-  // Pritaikome esamą stilių iš .info-message klasės, bet pridedame centravimą
+  // Pritaikome tik centravimą be jokio fono
   warning.style.position = 'fixed';
   warning.style.top = '50%';
   warning.style.left = '50%';
   warning.style.transform = 'translate(-50%, -50%)';
   warning.style.zIndex = '10000';
   warning.style.textAlign = 'center';
+  warning.style.color = '#333'; // Teksto spalva
+  warning.style.fontWeight = 'bold';
+  warning.style.textShadow = '0 1px 0 rgba(255, 255, 255, 0.7)'; // Šiek tiek šešėlio, kad tekstas būtų gerai matomas
   
   // Įterpti tiesiai į body pradžią
   document.body.appendChild(warning);
