@@ -10,6 +10,7 @@ const MOCK_PARTNERS = [
     destination: "Greece",
     price: 299,
     type: "leisure",
+    departureDate: "2023-06-15",
     imageUrl: "https://source.unsplash.com/280x180/?greece",
     partnerUrl: "https://travel-lt.com"
   },
@@ -20,6 +21,7 @@ const MOCK_PARTNERS = [
     destination: "Alps",
     price: 499,
     type: "adventure",
+    departureDate: "2023-07-20",
     imageUrl: "https://source.unsplash.com/280x180/?alps",
     partnerUrl: "https://baltictours.com"
   },
@@ -30,6 +32,7 @@ const MOCK_PARTNERS = [
     destination: "Spain",
     price: 399,
     type: "cultural",
+    departureDate: "2023-08-10",
     imageUrl: "https://source.unsplash.com/280x180/?spain",
     partnerUrl: "https://euroadventures.com"
   }
@@ -194,7 +197,7 @@ async function loadPartners() {
   }
 }
 
-// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA (CENTRE BE FONO)
+// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA (CENTRE BE STILIAUS PAKEITIMŲ)
 function showWarningMessage(errorMsg) {
   // Išvalyti senus įspėjimus
   const oldWarnings = document.querySelectorAll('.info-message-fixed');
@@ -207,16 +210,12 @@ function showWarningMessage(errorMsg) {
     <p><small>Error: ${errorMsg}</small></p>
   `;
   
-  // Pritaikome tik centravimą be jokio fono
+  // TIK centravimas - nieko daugiau
   warning.style.position = 'fixed';
   warning.style.top = '50%';
   warning.style.left = '50%';
   warning.style.transform = 'translate(-50%, -50%)';
   warning.style.zIndex = '10000';
-  warning.style.textAlign = 'center';
-  warning.style.color = '#333'; // Teksto spalva
-  warning.style.fontWeight = 'bold';
-  warning.style.textShadow = '0 1px 0 rgba(255, 255, 255, 0.7)'; // Šiek tiek šešėlio, kad tekstas būtų gerai matomas
   
   // Įterpti tiesiai į body pradžią
   document.body.appendChild(warning);
@@ -237,12 +236,20 @@ function renderCards(partners) {
     card.dataset.to = partner.destination;
     card.dataset.price = partner.price;
     card.dataset.type = partner.type;
+    card.dataset.date = partner.departureDate || '';
+    
+    // Formatavame datą skaityti formatui
+    const formattedDate = partner.departureDate ? 
+      new Date(partner.departureDate).toLocaleDateString() : 'Date not specified';
     
     card.innerHTML = `
       <img src="${partner.imageUrl || `https://source.unsplash.com/280x180/?${partner.destination}`}" alt="${partner.destination}" />
-      <h3>${partner.destination} from ${partner.departure}</h3>
-      <p>Price: €${partner.price}</p>
-      ${partner.company ? `<p class="company">${partner.company}</p>` : ''}
+      <div class="card-content">
+        <h3>${partner.destination} from ${partner.departure}</h3>
+        <p class="departure-date">Departure: ${formattedDate}</p>
+        <p class="price">Price: €${partner.price}</p>
+        ${partner.company ? `<p class="company">${partner.company}</p>` : ''}
+      </div>
     `;
     
     card.addEventListener('click', () => {
@@ -262,12 +269,13 @@ function renderCards(partners) {
   });
 }
 
-// Paieškos funkcija
+// Paieškos funkcija su datos filtru
 function filterCards() {
   const departure = document.getElementById("departure").value.toLowerCase();
   const destination = document.getElementById("destination").value.toLowerCase();
   const tripType = document.getElementById("trip-type").value;
   const priceSort = document.getElementById("price-sort").value;
+  const departureDate = document.getElementById("departure-date").value;
 
   const cards = Array.from(document.querySelectorAll(".card"));
   
@@ -276,12 +284,14 @@ function filterCards() {
     const cardDeparture = card.dataset.from.toLowerCase();
     const cardDestination = card.dataset.to.toLowerCase();
     const cardType = card.dataset.type;
+    const cardDate = card.dataset.date;
     
     const matchesDeparture = !departure || cardDeparture.includes(departure);
     const matchesDestination = !destination || cardDestination.includes(destination);
     const matchesType = !tripType || cardType === tripType;
+    const matchesDate = !departureDate || cardDate === departureDate;
     
-    return matchesDeparture && matchesDestination && matchesType;
+    return matchesDeparture && matchesDestination && matchesType && matchesDate;
   });
 
   // Rikiavimas
