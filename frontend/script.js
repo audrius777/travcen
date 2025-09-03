@@ -189,26 +189,28 @@ async function loadPartners() {
     // Atvaizduoti mock duomenis
     renderCards(MOCK_PARTNERS);
     
-    // Rodyti informatyvų pranešimą
+    // Rodyti informatyvų pranešimą CENTRE
     const container = document.getElementById("card-list");
-  if (container) {
-    const warning = document.createElement('div');
-    warning.className = 'info-message';
-    warning.style.cssText = `
-      text-align: center;
-      padding: 20px;
-      margin: 20px auto;
-      background: #fff8e1;
-      border-left: 4px solid #ffc107;
-      border-radius: 5px;
-      max-width: 80%;
-      font-weight: bold;
-    `;
-    warning.innerHTML = `
-      <p>⚠ Demo data shown. Real offers temporarily unavailable.</p>
-      <p><small>Error: ${error.message}</small></p>
-    `;
-      container.parentNode.insertBefore(warning, container);
+    if (container) {
+      // Išvalyti senus įspėjimus
+      const oldWarnings = document.querySelectorAll('.info-message');
+      oldWarnings.forEach(warning => warning.remove());
+      
+      const warning = document.createElement('div');
+      warning.className = 'info-message';
+      warning.innerHTML = `
+        <p>⚠ Demo data shown. Real offers temporarily unavailable.</p>
+        <p><small>Error: ${error.message}</small></p>
+      `;
+      
+      // Įterpti pranešimą viršuje, prieš visą turinį
+      const mainContent = document.querySelector('.search-section').nextElementSibling;
+      if (mainContent && mainContent.classList.contains('results')) {
+        mainContent.parentNode.insertBefore(warning, mainContent);
+      } else {
+        // Atsarginis variantas
+        container.parentNode.insertBefore(warning, container);
+      }
     }
   }
 }
@@ -291,7 +293,3 @@ function filterCards() {
     card.style.display = "block";
   });
 }
-
-// Pridėkite šį CSS stilių į savo CSS failą:
-// .info-message { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 10px 0; border-radius: 5px; }
-// .company { font-size: 12px; color: #666; margin-top: 5px; }
