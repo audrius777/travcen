@@ -463,11 +463,35 @@ body.partner-page .card::after {
   padding: 0 1rem;
 }
 
+/* Įspėjamasis pranešimas */
+.info-message {
+  text-align: center;
+  padding: 20px;
+  margin: 20px 140px;
+  background: #fff8e1;
+  border-left: 4px solid #ffc107;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.info-message p {
+  margin: 5px 0;
+}
+
+.info-message small {
+  color: #666;
+  font-weight: normal;
+}
+
 /* Atsakomasis dizainas */
 @media (max-width: 1200px) {
   .results {
     margin-left: 120px;
     margin-right: 120px;
+  }
+  .info-message {
+    margin: 20px 120px;
   }
 }
 
@@ -476,12 +500,18 @@ body.partner-page .card::after {
     margin-left: 80px;
     margin-right: 80px;
   }
+  .info-message {
+    margin: 20px 80px;
+  }
 }
 
 @media (max-width: 900px) {
   .results {
     margin-left: 20px;
     margin-right: 20px;
+  }
+  .info-message {
+    margin: 20px 20px;
   }
 }
 
@@ -493,6 +523,10 @@ body.partner-page .card::after {
   .results {
     margin-left: 1rem;
     margin-right: 1rem;
+  }
+  
+  .info-message {
+    margin: 20px 1rem;
   }
   
   .search-section {
