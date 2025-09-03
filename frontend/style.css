@@ -484,6 +484,43 @@ body.partner-page .card::after {
   font-weight: normal;
 }
 
+/* GARANTUOTAI VEIKIANTIS ĮSPĖJIMO STILIUS */
+.info-message-fixed {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10000 !important;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+  padding: 25px;
+  background: #fff8e1;
+  border: 3px solid #ffc107;
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+  font-weight: bold;
+}
+
+.info-message-fixed p {
+  margin: 10px 0;
+  font-size: 1.2rem;
+}
+
+.info-message-fixed small {
+  color: #666;
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+/* Autoriaus teisės */
+.copyright {
+  margin-top: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 /* Atsakomasis dizainas */
 @media (max-width: 1200px) {
   .results {
@@ -527,6 +564,15 @@ body.partner-page .card::after {
   
   .info-message {
     margin: 20px 1rem;
+  }
+  
+  .info-message-fixed {
+    width: 90%;
+    padding: 20px;
+  }
+  
+  .info-message-fixed p {
+    font-size: 1.1rem;
   }
   
   .search-section {
