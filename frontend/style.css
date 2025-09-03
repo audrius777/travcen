@@ -466,10 +466,10 @@ body.partner-page .card::after {
 /* Įspėjamasis pranešimas */
 .info-message {
   text-align: center;
-  padding: 20px;
-  margin: 20px 140px;
-  background: #fff8e1;
-  border-left: 4px solid #ffc107;
+  padding: 15px;
+  margin: 15px 140px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
   border-radius: 5px;
   font-weight: bold;
   color: #333;
@@ -482,35 +482,6 @@ body.partner-page .card::after {
 .info-message small {
   color: #666;
   font-weight: normal;
-}
-
-/* GARANTUOTAI VEIKIANTIS ĮSPĖJIMO STILIUS */
-.info-message-fixed {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 10000 !important;
-  width: 80%;
-  max-width: 500px;
-  text-align: center;
-  padding: 25px;
-  background: #fff8e1;
-  border: 3px solid #ffc107;
-  border-radius: 10px;
-  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-  font-weight: bold;
-}
-
-.info-message-fixed p {
-  margin: 10px 0;
-  font-size: 1.2rem;
-}
-
-.info-message-fixed small {
-  color: #666;
-  font-weight: normal;
-  font-size: 0.9rem;
 }
 
 /* Autoriaus teisės */
@@ -528,7 +499,7 @@ body.partner-page .card::after {
     margin-right: 120px;
   }
   .info-message {
-    margin: 20px 120px;
+    margin: 15px 120px;
   }
 }
 
@@ -538,7 +509,7 @@ body.partner-page .card::after {
     margin-right: 80px;
   }
   .info-message {
-    margin: 20px 80px;
+    margin: 15px 80px;
   }
 }
 
@@ -548,7 +519,7 @@ body.partner-page .card::after {
     margin-right: 20px;
   }
   .info-message {
-    margin: 20px 20px;
+    margin: 15px 20px;
   }
 }
 
@@ -563,16 +534,8 @@ body.partner-page .card::after {
   }
   
   .info-message {
-    margin: 20px 1rem;
-  }
-  
-  .info-message-fixed {
-    width: 90%;
-    padding: 20px;
-  }
-  
-  .info-message-fixed p {
-    font-size: 1.1rem;
+    margin: 15px 1rem;
+    padding: 12px;
   }
   
   .search-section {
