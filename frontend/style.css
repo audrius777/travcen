@@ -118,6 +118,22 @@ header h1 {
   box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
 }
 
+/* Datos pasirinkimo lauko stilius */
+.search-section input[type="date"] {
+  padding: 0.7rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 180px;
+  font-size: 1rem;
+  font-family: 'Arial', sans-serif;
+}
+
+.search-section input[type="date"]:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
+}
+
 #search-btn {
   background: #0066cc;
   color: white;
@@ -205,7 +221,14 @@ header h1 {
   margin-bottom: 0.5rem;
 }
 
-.card p {
+/* Išvykimo datos stilius kortelėje */
+.departure-date {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.card p.price {
   color: #0066cc;
   font-weight: bold;
   font-size: 1.1rem;
@@ -544,7 +567,8 @@ body.partner-page .card::after {
   }
   
   .search-section input,
-  .search-section select {
+  .search-section select,
+  .search-section input[type="date"] {
     width: 100%;
   }
   
