@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://travcen.onrender.com/api'; // Pakeista į teisingą URL
+const API_BASE_URL = 'https://travcen.onrender.com/api';
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 
 // Mock partnerių duomenys atsarginiam variantui
@@ -189,30 +189,35 @@ async function loadPartners() {
     // Atvaizduoti mock duomenis
     renderCards(MOCK_PARTNERS);
     
-    // Rodyti informatyvų pranešimą CENTRE
-    const container = document.getElementById("card-list");
-    if (container) {
-      // Išvalyti senus įspėjimus
-      const oldWarnings = document.querySelectorAll('.info-message');
-      oldWarnings.forEach(warning => warning.remove());
-      
-      const warning = document.createElement('div');
-      warning.className = 'info-message';
-      warning.innerHTML = `
-        <p>⚠ Demo data shown. Real offers temporarily unavailable.</p>
-        <p><small>Error: ${error.message}</small></p>
-      `;
-      
-      // Įterpti pranešimą viršuje, prieš visą turinį
-      const mainContent = document.querySelector('.search-section').nextElementSibling;
-      if (mainContent && mainContent.classList.contains('results')) {
-        mainContent.parentNode.insertBefore(warning, mainContent);
-      } else {
-        // Atsarginis variantas
-        container.parentNode.insertBefore(warning, container);
-      }
-    }
+    // Rodyti informatyvų pranešimą CENTRE - GARANTUOTAI
+    showWarningMessage(error.message);
   }
+}
+
+// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA
+function showWarningMessage(errorMsg) {
+  // Išvalyti senus įspėjimus
+  const oldWarnings = document.querySelectorAll('.info-message-fixed');
+  oldWarnings.forEach(warning => warning.remove());
+  
+  const warning = document.createElement('div');
+  warning.className = 'info-message-fixed';
+  warning.innerHTML = `
+    <p>⚠ Demo data shown. Real offers temporarily unavailable.</p>
+    <p><small>Error: ${errorMsg}</small></p>
+  `;
+  
+  // Įterpti tiesiai į body pradžią
+  document.body.appendChild(warning);
+  
+  // Papildomas užtikrinimas - priverstinai nustatyti poziciją
+  setTimeout(() => {
+    warning.style.position = 'fixed';
+    warning.style.top = '50%';
+    warning.style.left = '50%';
+    warning.style.transform = 'translate(-50%, -50%)';
+    warning.style.zIndex = '10000';
+  }, 10);
 }
 
 // Kortelių generavimas
