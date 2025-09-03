@@ -191,13 +191,23 @@ async function loadPartners() {
     
     // Rodyti informatyvų pranešimą
     const container = document.getElementById("card-list");
-    if (container) {
-      const warning = document.createElement('div');
-      warning.className = 'info-message';
-      warning.innerHTML = `
-        <p>⚠ Demo data shown. Real offers temporarily unavailable..</p>
-        <p><small>Klaida: ${error.message}</small></p>
-      `;
+  if (container) {
+    const warning = document.createElement('div');
+    warning.className = 'info-message';
+    warning.style.cssText = `
+      text-align: center;
+      padding: 20px;
+      margin: 20px auto;
+      background: #fff8e1;
+      border-left: 4px solid #ffc107;
+      border-radius: 5px;
+      max-width: 80%;
+      font-weight: bold;
+    `;
+    warning.innerHTML = `
+      <p>⚠ Demo data shown. Real offers temporarily unavailable.</p>
+      <p><small>Error: ${error.message}</small></p>
+    `;
       container.parentNode.insertBefore(warning, container);
     }
   }
