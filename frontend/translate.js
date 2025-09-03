@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "All travel offers in one place",
       "departure-placeholder": "Departure location",
       "destination-placeholder": "Destination",
+      "departure-date-placeholder": "Departure date",
       "trip-type-default": "Trip type",
       "trip-type-leisure": "Leisure",
       "trip-type-adventure": "Adventure",
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Visos kelionių pasiūlymos vienoje vietoje",
       "departure-placeholder": "Išvykimo vieta",
       "destination-placeholder": "Kelionės tikslas",
+      "departure-date-placeholder": "Išvykimo data",
       "trip-type-default": "Kelionės tipas",
       "trip-type-leisure": "Poilsinė",
       "trip-type-adventure": "Prielinksninė",
@@ -81,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Toutes les offres de voyage en un seul endroit",
       "departure-placeholder": "Lieu de départ",
       "destination-placeholder": "Destination",
+      "departure-date-placeholder": "Date de départ",
       "trip-type-default": "Type de voyage",
       "trip-type-leisure": "Loisirs",
       "trip-type-adventure": "Aventure",
@@ -106,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "footer-about": "À propos de nous",
       "about-title": "À propos de TravCen",
       "about-text-1": "TravCen est une plateforme de recherche de voyages intelligente qui regroupe les offres de plusieurs agences de voyages en un seul endroit pratique.",
-      "about-text-2": "Nous aidons les voyageurs à trouver rapidement et facilement les meilleures vacances, séjours culturels, aventures et last minute — en économisant à la fois du temps et de l'argent.",
+      "about-text-2": "Nous aidons les voyageurs à trouver rapidement et facilement les meilleures vacances, séjours culturel, aventures et last minute — en économisant à la fois du temps et de l'argent.",
       "about-text-3": "Contrairement aux agences traditionnelles, TravCen n'est pas un prestataire de voyages direct. Au lieu de cela, nous agissons comme un agrégateur transparent, donnant aux utilisateurs la liberté de comparer et de choisir les options de voyage les plus adaptées auprès de partenaires de confiance.",
       "about-text-4": "Notre mission est simple : rendre la planification des voyages plus facile, plus intelligente et plus accessible pour tous.",
       "about-text-5": "Des questions ou envie de collaborer ?<br>📬 Contactez-nous à info@travcen.com",
@@ -118,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Todas las ofertas de viaje en un solo lugar",
       "departure-placeholder": "Lugar de salida",
       "destination-placeholder": "Destino",
+      "departure-date-placeholder": "Fecha de salida",
       "trip-type-default": "Tipo de viaje",
       "trip-type-leisure": "Ocio",
       "trip-type-adventure": "Aventura",
@@ -139,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Descripción breve",
       "modal-submit": "Enviar",
       "login-google": "Iniciar sesión con Google",
-      "login-facebook": "Iniciar sesión con Facebook",
+      "login-facebook": "Iniciar sesión avec Facebook",
       "footer-about": "Sobre nosotros",
       "about-title": "Sobre TravCen",
       "about-text-1": "TravCen es una plataforma inteligente de búsqueda de viajes que reúne ofertas de múltiples agencias de viajes en un lugar conveniente.",
@@ -155,14 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Alle Reiseangebote an einem Ort",
       "departure-placeholder": "Abfahrtsort",
       "destination-placeholder": "Reiseziel",
+      "departure-date-placeholder": "Abreisedatum",
       "trip-type-default": "Reisetyp",
       "trip-type-leisure": "Erholung",
       "trip-type-adventure": "Abenteuer",
       "trip-type-cultural": "Kulturell",
       "trip-type-last-minute": "Last Minute",
       "price-sort-default": "Nach Preis sortieren",
-      "price-sort-low": "Preis: aufsteigend",
-      "price-sort-high": "Preis: absteigend",
+      "price-sort-low": "Pris: aufsteigend",
+      "price-sort-high": "Pris: absteigend",
       "search-btn": "Suchen",
       "footer-faq": "FAQ",
       "footer-privacy": "Datenschutzrichtlinie",
@@ -170,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "footer-partner": "Partner werden",
       "footer-disclaimer": "Hinweis: TravCen ist eine Vermittlungsplattform. Wir übernehmen keine Verantwortung für Dienstleistungen, die über Partnerseiten erworben wurden.",
       "modal-title": "Partnerregistrierung",
-      "modal-company": "Firmenname",
+      "modal-company": "Firmanavn",
       "modal-website": "Website-URL",
       "modal-email": "Kontakt-E-Mail",
       "modal-description": "Kurzbeschreibung",
@@ -182,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-text-1": "TravCen ist eine intelligente Reisesuchplattform, die Angebote mehrerer Reisebüros an einem praktischen Ort zusammenführt.",
       "about-text-2": "Wir helfen Reisenden, schnell und einfach die besten Urlaubs-, Kultur-, Abenteuer- und Last-Minute-Reisen zu finden und sparen dabei Zeit und Geld.",
       "about-text-3": "Im Gegensatz zu traditionellen Agenturen ist TravCen kein direkter Reiseanbieter. Stattdessen agieren wir als transparenter Aggregator und geben den Nutzern die Freiheit, die am besten geeigneten Reiseoptionen von vertrauenswürdigen Partnern zu vergleichen und auszuwählen.",
-      "about-text-4": "Unsere Mission ist einfach: Reiseplanung für alle einfacher, smarter und zugänglicher zu machen.",
+      "about-text-4": "Unsere Mission ist simple: Reiseplanung für alle einfacher, smarter und zugänglicher zu machen.",
       "about-text-5": "Haben Sie Fragen oder möchten Sie zusammenarbeiten?<br>📬 Kontaktieren Sie uns unter info@travcen.com",
       "contact-title": "Kontaktieren Sie uns",
       "contact-text": "Kontaktieren Sie uns unter info@travcen.com"
@@ -192,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "所有旅行优惠一站式呈现",
       "departure-placeholder": "出发地",
       "destination-placeholder": "目的地",
+      "departure-date-placeholder": "出发日期",
       "trip-type-default": "旅行类型",
       "trip-type-leisure": "休闲",
       "trip-type-adventure": "探险",
@@ -229,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "모든 여행 상품을 한 곳에서",
       "departure-placeholder": "출발지",
       "destination-placeholder": "목적지",
+      "departure-date-placeholder": "출발 날짜",
       "trip-type-default": "여행 유형",
       "trip-type-leisure": "여가",
       "trip-type-adventure": "모험",
@@ -266,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Alle rejsetilbud samlet ét sted",
       "departure-placeholder": "Afrejsested",
       "destination-placeholder": "Destination",
+      "departure-date-placeholder": "Afrejsedato",
       "trip-type-default": "Rejsetype",
       "trip-type-leisure": "Ferie",
       "trip-type-adventure": "Eventyr",
@@ -303,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Alla resetjänster på ett ställe",
       "departure-placeholder": "Avreseort",
       "destination-placeholder": "Destination",
+      "departure-date-placeholder": "Avresedatum",
       "trip-type-default": "Resetyp",
       "trip-type-leisure": "Fritid",
       "trip-type-adventure": "Äventyr",
@@ -329,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-title": "Om TravCen",
       "about-text-1": "TravCen är en smart resesökningsplattform som samlar erbjudanden från flera resebyråer på ett bekvämt ställe.",
       "about-text-2": "Vi hjälper resenärer att snabbt och enkelt hitta de bästa semestern, kultur-, äventyr- och sista minuten-resorna — och sparar både tid och pengar.",
-      "about-text-3": "Till skillnad från traditionella byråer är TravCen inte en direkt reseleverantör. Istället agerar vi som en transparent aggregator som ger användarna frihet att jämföra och välja de mest lämpliga resealternativen från pålitliga partners.",
+      "about-text-3": "Till skillnad från traditionella byråer är TravCen ikke en direkt reseleverantör. Istället agerar vi som en transparent aggregator som ger användarna frihet att jämföre och välja de mest lämpliga resealternativen från pålitliga partners.",
       "about-text-4": "Vårt uppdrag är enkelt: att göra reseplanering enklare, smartare och mer tillgängligt för alla.",
       "about-text-5": "Har du frågor eller vill samarbeta?<br>📬 Kontakta oss på info@travcen.com",
       "contact-title": "Kontakta oss",
@@ -340,6 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "welcome-text": "Alle reisetilbud på ett sted",
       "departure-placeholder": "Avreisested",
       "destination-placeholder": "Destinasjon",
+      "departure-date-placeholder": "Avreisedato",
       "trip-type-default": "Reisetype",
       "trip-type-leisure": "Fritid",
       "trip-type-adventure": "Eventyr",
@@ -366,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-title": "Om TravCen",
       "about-text-1": "TravCen er en smart reisesøkeplattform som samler tilbud fra flere reisebyråer på ett sted.",
       "about-text-2": "Vi hjelper reisende med å raskt og enkelt finne de beste ferie-, kultur-, eventyr- og siste minutt-reisene — og sparer både tid og penger.",
-      "about-text-3": "I motsetning til tradisjonelle byråer er TravCen ikke en direkte reiseleverandør. I stedet fungerer vi som en transparent aggregator som gir brukerne frihet til å sammenligne og velge de mest passende reisealternativene fra pålitelige partnere.",
+      "about-text-3": "I motsetning til tradisjonelle byråer er TravCen ikke en direkte reiseleverandør. I stedet fungerer vi som en transparent aggregator som gir brugerne frihet til å sammenligne og velge de mest passende reisealternativene fra pålitelige partnere.",
       "about-text-4": "Vår misjon er enkel: å gjøre reiseplanlegging enklere, smartere og mer tilgjengelig for alle.",
       "about-text-5": "Har du spørsmål eller ønsker å samarbeide?<br>📬 Kontakt oss på info@travcen.com",
       "contact-title": "Kontakt oss",
@@ -405,11 +415,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const element = document.getElementById(key);
       if (element) {
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-          // Specialus atvejis - departure ir destination laukai
+          // Specialus atvejis - departure, destination ir departure-date laukai
           if (key === 'departure-placeholder') {
             document.getElementById('departure').placeholder = t[key];
           } else if (key === 'destination-placeholder') {
             document.getElementById('destination').placeholder = t[key];
+          } else if (key === 'departure-date-placeholder') {
+            document.getElementById('departure-date').placeholder = t[key];
           } else {
             element.placeholder = t[key];
           }
