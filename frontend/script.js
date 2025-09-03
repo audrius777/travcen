@@ -194,7 +194,7 @@ async function loadPartners() {
   }
 }
 
-// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA
+// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA (CENTRE BE STILIAUS PAKEITIMŲ)
 function showWarningMessage(errorMsg) {
   // Išvalyti senus įspėjimus
   const oldWarnings = document.querySelectorAll('.info-message-fixed');
@@ -207,17 +207,16 @@ function showWarningMessage(errorMsg) {
     <p><small>Error: ${errorMsg}</small></p>
   `;
   
+  // Pritaikome esamą stilių iš .info-message klasės, bet pridedame centravimą
+  warning.style.position = 'fixed';
+  warning.style.top = '50%';
+  warning.style.left = '50%';
+  warning.style.transform = 'translate(-50%, -50%)';
+  warning.style.zIndex = '10000';
+  warning.style.textAlign = 'center';
+  
   // Įterpti tiesiai į body pradžią
   document.body.appendChild(warning);
-  
-  // Papildomas užtikrinimas - priverstinai nustatyti poziciją
-  setTimeout(() => {
-    warning.style.position = 'fixed';
-    warning.style.top = '50%';
-    warning.style.left = '50%';
-    warning.style.transform = 'translate(-50%, -50%)';
-    warning.style.zIndex = '10000';
-  }, 10);
 }
 
 // Kortelių generavimas
