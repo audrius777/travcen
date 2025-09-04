@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-title": "Sobre TravCen",
       "about-text-1": "TravCen es una plataforma inteligente de búsqueda de viajes que reúne ofertas de múltiples agencias de viajes en un lugar conveniente.",
       "about-text-2": "Ayudamos a los viajeros a encontrar rápida y fácilmente las mejores vacaciones, viajes culturales, de aventura y de último minuto, ahorrando tiempo y dinero.",
-      "about-text-3": "A diferencia de las agencias tradicionales, TravCen no es un proveedor directo de viajes. En cambio, actuamos como un agregador transparente, dando a los usuarios la libertad de comparar y elegir las opciones de viaje más adecuadas de socios confiables.",
+      "about-text-3": "A diferencia de las agencias tradicionales, TravCen no es un proveedor directo de viajes. En cambio, actuamos como un agregador transparente, dando a los usuarios la libertad de comparar и elegir las opciones de viaje más adecuadas de socios confiables.",
       "about-text-4": "Nuestra misión es simple: hacer que la planificación de viajes sea más fácil, inteligente y accesible para todos.",
       "about-text-5": "¿Tienes preguntas o quieres colaborar?<br>📬 Contáctanos en info@travcen.com",
       "contact-title": "Contáctanos",
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-text-1": "TravCen är en smart resesökningsplattform som samlar erbjudanden från flera resebyråer på ett bekvämt ställe.",
       "about-text-2": "Vi hjälper resenärer att snabbt och enkelt hitta de bästa semestern, kultur-, äventyr- och sista minuten-resorna — och sparar både tid och pengar.",
       "about-text-3": "Till skillnad från traditionella byråer är TravCen ikke en direkt reseleverantör. Istället agerar vi som en transparent aggregator som ger användarna frihet att jämföre och välja de mest lämpliga resealternativen från pålitliga partners.",
-      "about-text-4": "Vårt uppdrag är enkelt: att göra reseplanering enklare, smartare och mer tillgängligt för alla.",
+      "about-text-4": "Vårt uppdrag är enkelt: att göre reseplanering enklare, smartare och mer tillgängligt för alla.",
       "about-text-5": "Har du frågor eller vill samarbeta?<br>📬 Kontakta oss på info@travcen.com",
       "contact-title": "Kontakta oss",
       "contact-text": "Kontakta oss på info@travcen.com"
@@ -382,6 +382,20 @@ document.addEventListener('DOMContentLoaded', () => {
       "contact-title": "Kontakt oss",
       "contact-text": "Kontakt oss på info@travcen.com"
     }
+  };
+
+  // Kalbų kodų atitikmenys datos kalendoriams
+  const DATE_LOCALES = {
+    en: 'en-US',
+    lt: 'lt-LT', 
+    fr: 'fr-FR',
+    es: 'es-ES',
+    de: 'de-DE',
+    zh: 'zh-CN',
+    ko: 'ko-KR',
+    da: 'da-DK',
+    sv: 'sv-SE',
+    no: 'nb-NO' // Norvegų kalba naudoja nb-NO locale
   };
 
   // Pagrindinė kalbos nustatymo funkcija
@@ -455,12 +469,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // HTML lang atributas
     document.documentElement.lang = langValue;
 
+    // Atnaujinti datos kalendoriaus kalbą
+    updateDateInputLanguage(langValue);
+
     // Google Analytics
     if (typeof gtag === 'function') {
       gtag('event', 'language_change', {
         'event_category': 'Language',
         'event_label': langValue
       });
+    }
+  }
+
+  // Funkcija datos įvesties lauko kalbos atnaujinimui
+  function updateDateInputLanguage(langCode) {
+    const dateInput = document.getElementById('departure-date');
+    if (!dateInput) return;
+    
+    // Nustatome kalbos atributą
+    dateInput.setAttribute('lang', langCode);
+    
+    // Pridedame papildomus atributus mobiliems įrenginiams
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      dateInput.setAttribute('title', window.translations[langCode]['departure-date-placeholder'] || 'Select date');
     }
   }
 
@@ -480,4 +511,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.setLanguage = setLanguage;
   setLanguage(savedLang);
+
+  // Papildoma: datos įvesties palaikymas mobiliuose įrenginiuose
+  const departureDateInput = document.getElementById('departure-date');
+  if (departureDateInput) {
+    // Pridedame papildomus atributus geresniam mobiliam palaikymui
+    departureDateInput.setAttribute('pattern', '[0-9]{4}-[0-9]{2}-[0-9]{2}');
+    departureDateInput.setAttribute('inputmode', 'numeric');
+    
+    // Jei mobiliame įrenginyje, pridedame papildomą informaciją
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+      departureDateInput.setAttribute('title', window.translations[currentLang]['departure-date-placeholder'] || 'Select date');
+    }
+  }
 });
