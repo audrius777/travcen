@@ -11,7 +11,7 @@ const MOCK_PARTNERS = [
     price: 299,
     type: "leisure",
     departureDate: "2023-06-15",
-    imageUrl: "https://source.unsplash.com/280x180/?greece",
+    imageUrl: "https://source.unsplash.com/featured/280x180/?greece",
     partnerUrl: "https://travel-lt.com"
   },
   {
@@ -22,7 +22,7 @@ const MOCK_PARTNERS = [
     price: 499,
     type: "adventure",
     departureDate: "2023-07-20",
-    imageUrl: "https://source.unsplash.com/280x180/?alps",
+    imageUrl: "https://source.unsplash.com/featured/280x180/?alps",
     partnerUrl: "https://baltictours.com"
   },
   {
@@ -33,7 +33,7 @@ const MOCK_PARTNERS = [
     price: 399,
     type: "cultural",
     departureDate: "2023-08-10",
-    imageUrl: "https://source.unsplash.com/280x180/?spain",
+    imageUrl: "https://source.unsplash.com/featured/280x180/?spain",
     partnerUrl: "https://euroadventures.com"
   }
 ];
@@ -191,34 +191,7 @@ async function loadPartners() {
     
     // Atvaizduoti mock duomenis
     renderCards(MOCK_PARTNERS);
-    
-    // Rodyti informatyvų pranešimą CENTRE - GARANTUOTAI
-    showWarningMessage(error.message);
   }
-}
-
-// GARANTUOTAI VEIKIANTI ĮSPĖJIMO RODYMO FUNKCIJA (CENTRE BE STILIAUS PAKEITIMŲ)
-function showWarningMessage(errorMsg) {
-  // Išvalyti senus įspėjimus
-  const oldWarnings = document.querySelectorAll('.info-message-fixed');
-  oldWarnings.forEach(warning => warning.remove());
-  
-  const warning = document.createElement('div');
-  warning.className = 'info-message-fixed';
-  warning.innerHTML = `
-    <p>⚠ Demo data shown. Real offers temporarily unavailable.</p>
-    <p><small>Error: ${errorMsg}</small></p>
-  `;
-  
-  // TIK centravimas - nieko daugiau
-  warning.style.position = 'fixed';
-  warning.style.top = '50%';
-  warning.style.left = '50%';
-  warning.style.transform = 'translate(-50%, -50%)';
-  warning.style.zIndex = '10000';
-  
-  // Įterpti tiesiai į body pradžią
-  document.body.appendChild(warning);
 }
 
 // Kortelių generavimas
@@ -242,8 +215,16 @@ function renderCards(partners) {
     const formattedDate = partner.departureDate ? 
       new Date(partner.departureDate).toLocaleDateString() : 'Date not specified';
     
+    // Sukuriame tinkamą paveikslėlio URL
+    let imageUrl = partner.imageUrl;
+    if (!imageUrl && partner.destination) {
+      // Jei nėra paveikslėlio URL, sukuriame naudodami Unsplash
+      const searchQuery = partner.destination.toLowerCase().replace(/\s+/g, '-');
+      imageUrl = `https://source.unsplash.com/featured/280x180/?${searchQuery}`;
+    }
+    
     card.innerHTML = `
-      <img src="${partner.imageUrl || `https://source.unsplash.com/280x180/?${partner.destination}`}" alt="${partner.destination}" />
+      <img src="${imageUrl}" alt="${partner.destination}" onerror="this.src='https://source.unsplash.com/featured/280x180/?travel'" />
       <div class="card-content">
         <h3>${partner.destination} from ${partner.departure}</h3>
         <p class="departure-date">Departure: ${formattedDate}</p>
