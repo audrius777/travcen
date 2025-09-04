@@ -38,6 +38,20 @@ const MOCK_PARTNERS = [
   }
 ];
 
+// Kalbų kodų atitikmenys
+const LANGUAGE_CODES = {
+  en: 'en-US',
+  lt: 'lt-LT',
+  fr: 'fr-FR',
+  es: 'es-ES',
+  de: 'de-DE',
+  zh: 'zh-CN',
+  ko: 'ko-KR',
+  da: 'da-DK',
+  sv: 'sv-SE',
+  no: 'no-NO'
+};
+
 // Paprastesnė reCAPTCHA įkėlimo funkcija
 function loadRecaptcha() {
   return new Promise((resolve) => {
@@ -62,6 +76,18 @@ function loadRecaptcha() {
     };
 
     document.head.appendChild(script);
+  });
+}
+
+// Funkcija datos formatavimui pagal pasirinktą kalbą
+function formatDateByLanguage(dateString, languageCode) {
+  const date = new Date(dateString);
+  const locale = LANGUAGE_CODES[languageCode] || 'en-US';
+  
+  return date.toLocaleDateString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   });
 }
 
@@ -201,6 +227,9 @@ function renderCards(partners) {
 
   container.innerHTML = '';
 
+  // Gauti pasirinktą kalbą
+  const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+
   partners.forEach(partner => {
     const card = document.createElement('div');
     card.className = 'card';
@@ -211,9 +240,9 @@ function renderCards(partners) {
     card.dataset.type = partner.type;
     card.dataset.date = partner.departureDate || '';
     
-    // Formatavame datą skaityti formatui
+    // Formatavame datą pagal pasirinktą kalbą
     const formattedDate = partner.departureDate ? 
-      new Date(partner.departureDate).toLocaleDateString() : 'Date not specified';
+      formatDateByLanguage(partner.departureDate, currentLang) : 'Date not specified';
     
     // Sukuriame tinkamą paveikslėlio URL
     let imageUrl = partner.imageUrl;
@@ -290,4 +319,30 @@ function filterCards() {
   filteredCards.forEach(card => {
     card.style.display = "block";
   });
+}
+
+// Perkrauti korteles, kai pasikeičia kalba
+if (window.setLanguage) {
+  const originalSetLanguage = window.setLanguage;
+  window.setLanguage = function(lang) {
+    originalSetLanguage(lang);
+    
+    // Perkrauname korteles su nauja kalba
+    const container = document.getElementById('card-list');
+    if (container && container.children.length > 0) {
+      const currentPartners = Array.from(container.children).map(card => {
+        return {
+          id: card.dataset.id,
+          departure: card.dataset.from,
+          destination: card.dataset.to,
+          price: card.dataset.price,
+          type: card.dataset.type,
+          departureDate: card.dataset.date,
+          company: card.querySelector('.company')?.textContent || ''
+        };
+      });
+      
+      renderCards(currentPartners);
+    }
+  };
 }
