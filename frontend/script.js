@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://travcen.onrender.com/api';
+const API_BASE_URL = 'https://travcen-backend.onrender.com/api';
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 
 // Mock partnerių duomenys atsarginiam variantui
