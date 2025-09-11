@@ -133,9 +133,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 */
 
-// 7. Saugumo middleware'iai
+// 7. Saugumo middleware'iai - SU PATAISA
 app.use(helmet({
   contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false, // 👈 PRIDĖTA
+  crossOriginEmbedderPolicy: false, // 👈 PRIDĖTA
+  crossOriginOpenerPolicy: false, // 👈 PRIDĖTA
   hsts: {
     maxAge: 63072000,
     includeSubDomains: true,
