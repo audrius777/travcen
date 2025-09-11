@@ -195,15 +195,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Partnerių užkrovimas su atsarginiu variantu
+// Partnerių užkrovimas su atsarginiu variantu ir pagerintu timeout valdymu
 async function loadPartners() {
   try {
     console.log('Bandome užkrauti partnerius iš:', API_BASE_URL + '/partners');
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sekundžių timeout
+    
     const response = await fetch(`${API_BASE_URL}/partners`, {
-      // Pridedame timeout
-      signal: AbortSignal.timeout(5000)
+      signal: controller.signal,
+      credentials: 'include'
     });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`HTTP klaida! status: ${response.status}`);
