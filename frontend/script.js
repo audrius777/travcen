@@ -91,8 +91,19 @@ function formatDateByLanguage(dateString, languageCode) {
   });
 }
 
+// Paveikslėlio klaidų apdorojimo funkcija
+function handleImageError(img) {
+  img.src = 'https://source.unsplash.com/featured/280x180/?travel';
+  img.onerror = null; // Užkirsti kelia begalinei kilpai
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   await loadPartners();
+
+  // Pridėti paveikslėlių klaidų apdorojimą
+  document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('error', () => handleImageError(img));
+  });
 
   // Modalų valdymas - SPECIFINIS PARTNERIO MODALO VALDYMAS
   const partnerModal = document.getElementById("partner-modal");
@@ -163,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        // Siųsti duomenis
+        // Siųsti duomenis tiesiogiai į API (be CORS proxy)
         const response = await fetch(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -195,7 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Partnerių užkrovimas su atsarginiu variantu ir pagerintu timeout valdymu
+// Partnerių užkrovimas be CORS proxy
 async function loadPartners() {
   try {
     console.log('Bandome užkrauti partnerius iš:', API_BASE_URL + '/partners');
@@ -203,10 +214,8 @@ async function loadPartners() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sekundžių timeout
     
-    // Naudojame CORS proxy, kad apeitume CSP problemas
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`${API_BASE_URL}/partners`)}`;
-    
-    const response = await fetch(proxyUrl, {
+    // Tiesioginis kreipimasis į API (be CORS proxy)
+    const response = await fetch(`${API_BASE_URL}/partners`, {
       signal: controller.signal
     });
     
@@ -260,7 +269,7 @@ function renderCards(partners) {
     }
     
     card.innerHTML = `
-      <img src="${imageUrl}" alt="${partner.destination}" onerror="this.src='https://source.unsplash.com/featured/280x180/?travel'" />
+      <img src="${imageUrl}" alt="${partner.destination}" />
       <div class="card-content">
         <h3>${partner.destination} from ${partner.departure}</h3>
         <p class="departure-date">Departure: ${formattedDate}</p>
@@ -268,6 +277,10 @@ function renderCards(partners) {
         ${partner.company ? `<p class="company">${partner.company}</p>` : ''}
       </div>
     `;
+    
+    // Pridėti paveikslėlio klaidų apdorojimą
+    const cardImg = card.querySelector('img');
+    cardImg.addEventListener('error', () => handleImageError(cardImg));
     
     card.addEventListener('click', () => {
       if (typeof gtag === 'function') {
