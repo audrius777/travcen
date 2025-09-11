@@ -6,7 +6,7 @@ module.exports = async function demoOffers() {
       to: "Roma",
       type: "cultural",
       price: 299,
-      url: "https://demo-partner.com/roma",
+      url: "https://www.colibri-reiseagentur.com/",
       image: "https://source.unsplash.com/280x180/?rome",
       partner: "DemoPartner" // Added for consistency
     }
