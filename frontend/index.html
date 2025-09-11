@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://www.google.com/recaptcha/api.js;
+    script-src 'self' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://www.google.com/recaptcha/api.js 'unsafe-hashes';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https://source.unsplash.com https://medpoint.ee;
     connect-src 'self' https://travcen.onrender.com https://travcen-backend.onrender.com;
@@ -175,12 +175,12 @@
 
   <div class="results" id="card-list">
     <div class="card" data-from="Vilnius" data-to="Greece" data-price="299">
-      <img src="https://source.unsplash.com/280x180/?beach" />
+      <img src="https://source.unsplash.com/280x180/?beach" alt="Greece beach" />
       <h3>Greece from Vilnius</h3>
       <p>Price: €299</p>
     </div>
     <div class="card" data-from="Kaunas" data-to="Alps" data-price="499">
-      <img src="https://source.unsplash.com/280x180/?mountains" />
+      <img src="https://source.unsplash.com/280x180/?mountains" alt="Alps mountains" />
       <h3>Alps from Kaunas</h3>
       <p>Price: €499</p>
     </div>
@@ -359,5 +359,22 @@
   <script src="translate.js"></script>
   <script src="script.js"></script>
   <script src="index.js"></script>
+  
+  <script>
+    // Paveikslėlių klaidų apdorojimo funkcija
+    function handleImageError(img) {
+      img.src = 'https://source.unsplash.com/featured/280x180/?travel';
+      img.onerror = null; // Užkirsti kelia begalinei kilpai
+    }
+    
+    // Pridėti paveikslėlių klaidų apdorojimą
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll('img').forEach(img => {
+        img.addEventListener('error', function() {
+          handleImageError(this);
+        });
+      });
+    });
+  </script>
 </body>
 </html>
