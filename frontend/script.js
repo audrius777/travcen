@@ -203,9 +203,11 @@ async function loadPartners() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sekundžių timeout
     
-    const response = await fetch(`${API_BASE_URL}/partners`, {
-      signal: controller.signal,
-      credentials: 'include'
+    // Naudojame CORS proxy, kad apeitume CSP problemas
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`${API_BASE_URL}/partners`)}`;
+    
+    const response = await fetch(proxyUrl, {
+      signal: controller.signal
     });
     
     clearTimeout(timeoutId);
