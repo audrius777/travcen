@@ -4,6 +4,12 @@ const PARTNERS_TABLE = document.getElementById("partners-table").querySelector("
 const LOGOUT_BTN = document.getElementById("logout-btn");
 const REFRESH_BTN = document.getElementById("refresh-btn");
 
+// Scrapinimo elementai
+const SCRAPING_MODAL = document.getElementById("scraping-modal");
+const SCRAPING_RESULTS = document.getElementById("scraping-results");
+const CLOSE_SCRAPING_MODAL = document.getElementById("close-scraping-modal");
+const EXPORT_SCRAPING_DATA = document.getElementById("export-scraping-data");
+
 // Formatavimo funkcijos
 function formatDate(dateString) {
   if (!dateString) return 'Nėra duomenų';
@@ -20,17 +26,67 @@ function getStatusClass(status) {
   }
 }
 
+// Scrapinimo funkcija
+async function scrapePartnerData(partnerId, partnerUrl, companyName) {
+  try {
+    SCRAPING_RESULTS.innerHTML = '<div class="loading-indicator">Vykdomas duomenų rinkimas...</div>';
+    SCRAPING_MODAL.style.display = 'block';
+
+    const response = await fetch(`${BACKEND_URL}/api/scrape`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: partnerUrl,
+        criteria: "visos kelionės",
+        rules: {}
+      })
+    });
+
+    if (!response.ok) throw new Error('Serverio klaida atliekant scrapinimą');
+
+    const data = await response.json();
+    
+    // Rodyti rezultatus modaliame lange
+    if (data.error) {
+      SCRAPING_RESULTS.innerHTML = `<div class="error-message">Klaida: ${data.error}</div>`;
+    } else {
+      SCRAPING_RESULTS.innerHTML = `
+        <h4>Rasti pasiūlymai iš ${companyName}:</h4>
+        <p>Surasta ${data.length} pasiūlymų</p>
+        <div style="max-height: 200px; overflow-y: auto;">
+          ${data.map(offer => `
+            <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
+              <strong>${offer.title}</strong><br>
+              Kaina: ${offer.price} €, Trukmė: ${offer.duration}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Scrapinimo klaida:', error);
+    SCRAPING_RESULTS.innerHTML = `<div class="error-message">Klaida: ${error.message}</div>`;
+  }
+}
+
 // Veiksmų apdorojimas
 function handleAction(e) {
   const partnerId = e.target.dataset.id;
-  const action = e.target.classList.contains('view-btn') ? 'view' : 'edit';
+  const action = e.target.dataset.action;
+  const partnerUrl = e.target.dataset.url;
+  const companyName = e.target.dataset.company;
   
   if (action === 'view') {
     // Peržiūros logika
     console.log(`Peržiūrima partnerio ID: ${partnerId}`);
-  } else {
+  } else if (action === 'edit') {
     // Redagavimo logika
     console.log(`Redaguojama partnerio ID: ${partnerId}`);
+  } else if (action === 'scrape') {
+    scrapePartnerData(partnerId, partnerUrl, companyName);
   }
 }
 
@@ -93,8 +149,9 @@ async function loadPartnerStatus() {
         </td>
         <td>${formatDate(p.lastUpdated)}</td>
         <td>
-          <button class="action-btn view-btn" data-id="${p.id}">Peržiūrėti</button>
-          <button class="action-btn edit-btn" data-id="${p.id}">Redaguoti</button>
+          <button class="action-btn view-btn" data-id="${p.id}" data-action="view">Peržiūrėti</button>
+          <button class="action-btn edit-btn" data-id="${p.id}" data-action="edit">Redaguoti</button>
+          <button class="action-btn scrape-btn" data-id="${p.id}" data-action="scrape" data-url="${p.url}" data-company="${p.company}">Rinkti duomenis</button>
         </td>
       </tr>
     `).join('');
@@ -114,6 +171,19 @@ async function loadPartnerStatus() {
       </tr>
     `;
   }
+}
+
+// Modalų valdymas
+if (CLOSE_SCRAPING_MODAL) {
+  CLOSE_SCRAPING_MODAL.addEventListener('click', () => {
+    if (SCRAPING_MODAL) SCRAPING_MODAL.style.display = 'none';
+  });
+}
+
+if (EXPORT_SCRAPING_DATA) {
+  EXPORT_SCRAPING_DATA.addEventListener('click', () => {
+    alert('Eksportavimo funkcija bus įgyvendinta vėliau');
+  });
 }
 
 // Atsijungimo logika
