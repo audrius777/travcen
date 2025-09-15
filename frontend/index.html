@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://www.google.com/recaptcha/api.js 'unsafe-hashes';
+    script-src 'self' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://www.google.com/recaptcha/api.js 'unsafe-hashes' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https://source.unsplash.com https://medpoint.ee;
     connect-src 'self' https://travcen.onrender.com https://travcen-backend.onrender.com;
     frame-src 'self' https://www.google.com;
+    worker-src 'self' blob:;
   ">
   <title>TravCen - Travel Offers Hub</title>
   <link rel="stylesheet" href="style.css" />
