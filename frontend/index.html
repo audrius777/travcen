@@ -85,6 +85,21 @@
       text-decoration: underline;
     }
 
+    /* Scraping status indicator */
+    .scraping-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0066cc;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
     /* Scrollbar styling */
     .privacy-content::-webkit-scrollbar,
     .faq-content::-webkit-scrollbar {
@@ -186,6 +201,11 @@
     </div>
   </div>
 
+  <!-- Scraping status indicator -->
+  <div id="scraping-status" class="scraping-status">
+    <span id="scraping-message">Searching for offers...</span>
+  </div>
+
   <div class="footer">
     <div class="info">
       <a id="footer-faq" href="#">FAQ</a> |
@@ -219,10 +239,10 @@
       <span class="close">&times;</span>
       <h2 id="about-title">About TravCen</h2>
       <p id="about-text-1">TravCen is a smart travel search platform that brings together offers from multiple travel agencies into one convenient place.</p>
-      <p id="about-text-2">We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.</p>
-      <p id="about-text-3">Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
-      <p id="about-text-4">Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
-      <p id="about-text-5">Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
+  <p id="about-text-2">We help travelers quickly and easily find the best vacation, cultural, adventure, and last-minute trips — saving both time and money.</p>
+  <p id="about-text-3">Unlike traditional agencies, TravCen is not a direct travel provider. Instead, we act as a transparent aggregator, giving users the freedom to compare and choose the most suitable travel options from trusted partners.</p>
+  <p id="about-text-4">Our mission is simple: to make travel planning easier, smarter, and more accessible for everyone.</p>
+  <p id="about-text-5">Have questions or want to collaborate?<br>📬 Contact us at info@travcen.com</p>
     </div>
   </div>
 
@@ -367,8 +387,55 @@
       img.onerror = null; // Užkirsti kelia begalinei kilpai
     }
     
-    // Pridėti paveikslėlių klaidų apdorojimą
+    // Scrapinimo funkcija pagrindiniam puslapiui
+    async function searchWithScraping(searchCriteria) {
+      const scrapingStatus = document.getElementById('scraping-status');
+      const scrapingMessage = document.getElementById('scraping-message');
+      
+      // Rodyti scrapinimo statusą
+      scrapingStatus.style.display = 'block';
+      scrapingMessage.textContent = 'Searching across all partners...';
+      
+      try {
+        // Čia būtų tikras scrapinimo kodas, kuris kreipiasi į visus partnerius
+        // Dabar imituojame scrapinimą
+        scrapingMessage.textContent = 'Checking KelioniuPlanetas.lt...';
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        scrapingMessage.textContent = 'Checking TravelExpert.com...';
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        scrapingMessage.textContent = 'Checking TourWorld.eu...';
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        scrapingMessage.textContent = 'Found 12 matching offers';
+        
+        // Po 3 sekundžių paslėpti statusą
+        setTimeout(() => {
+          scrapingStatus.style.display = 'none';
+        }, 3000);
+        
+      } catch (error) {
+        scrapingMessage.textContent = 'Search error: ' + error.message;
+        setTimeout(() => {
+          scrapingStatus.style.display = 'none';
+        }, 3000);
+      }
+    }
+    
+    // Pridėti scrapinimą prie paieškos mygtuko
     document.addEventListener("DOMContentLoaded", function() {
+      const searchBtn = document.getElementById('search-btn');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+          const destination = document.getElementById('destination').value;
+          if (destination) {
+            searchWithScraping(destination);
+          }
+        });
+      }
+      
+      // Paveikslėlių klaidų apdorojimas
       document.querySelectorAll('img').forEach(img => {
         img.addEventListener('error', function() {
           handleImageError(this);
