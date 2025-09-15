@@ -11,6 +11,7 @@ import MongoStore from 'connect-mongo';
 import { validationResult } from 'express-validator';
 import axios from 'axios';
 import partnerRoutes from './routes/partners.js';
+import puppeteer from 'puppeteer'; // Pridėta scrapinimui
 
 // 1. Express aplikacijos konfigūracija
 const app = express();
@@ -286,7 +287,62 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 13. Pagrindiniai API maršrutai
+// 13. Scrapinimo endpoint'as - PRIDĖTA NAUJA FUNKCIJA
+app.post('/api/scrape', async (req, res) => {
+  try {
+    const { url, criteria, rules } = req.body;
+    
+    // Patikriname, ar vartotojas yra admin
+    if (!req.session.user || req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Nepakankamos teisės. Tik administratoriai.' });
+    }
+    
+    // Čia būtų tikras scrapinimo kodas su Puppeteer
+    // Dabar imituojame scrapinimą
+    console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
+    
+    // Imituojame scrapinimo vėlavimą
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Imituojami scrapinti duomenys
+    const mockData = generateMockScrapingData(url, criteria);
+    
+    res.json(mockData);
+  } catch (error) {
+    console.error('Scrapinimo klaida:', error);
+    res.status(500).json({ error: 'Scrapinimo klaida: ' + error.message });
+  }
+});
+
+// Pagalbinė funkcija scrapinimo duomenims generuoti
+function generateMockScrapingData(url, criteria) {
+  const destinations = ['Ispanija', 'Graikija', 'Turkija', 'Egiptas', 'Italija', 'Prancūzija'];
+  const tripTypes = ['Pajūrio poilsis', 'Ekskursijos', 'Kalnų turizmas', 'Miesto kelionė'];
+  
+  const results = [];
+  const resultCount = Math.floor(Math.random() * 5) + 3;
+  
+  for (let i = 0; i < resultCount; i++) {
+    const destination = destinations[Math.floor(Math.random() * destinations.length)];
+    const duration = Math.floor(Math.random() * 7) + 4;
+    const price = Math.floor(Math.random() * 400) + 199;
+    
+    results.push({
+      id: Date.now() + i,
+      title: `${destination} - ${tripTypes[Math.floor(Math.random() * tripTypes.length)]}`,
+      price: price,
+      duration: `${duration} dienos`,
+      image: `https://source.unsplash.com/300x200/?${destination.toLowerCase()},vacation`,
+      link: `https://${url}/offer-${i}`,
+      source: url,
+      criteria: criteria
+    });
+  }
+  
+  return results;
+}
+
+// 14. Pagrindiniai API maršrutai
 const router = express.Router();
 
 // Sveikatos patikrinimas
@@ -358,11 +414,11 @@ router.post('/partner', csrfProtection, async (req, res) => {
   }
 });
 
-// 14. Partnerių maršrutų integracija
+// 15. Partnerių maršrutų integracija
 app.use('/api', router);
 app.use('/api/partners', partnerRoutes);
 
-// 15. Pagrindinis maršrutas
+// 16. Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -376,14 +432,15 @@ app.get('/', (req, res) => {
         user: '/api/user',
         partners: '/api/partners',
         logout: '/api/logout',
-        partnerRegister: '/api/partners/register'
+        partnerRegister: '/api/partners/register',
+        scrape: '/api/scrape' // Pridėtas naujas endpoint'as
       }
     },
     serverTime: new Date().toISOString()
   });
 });
 
-// 16. Klaidų apdorojimas
+// 17. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
@@ -418,7 +475,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 17. Serverio paleidimas
+// 18. Serverio paleidimas
 async function startServer() {
   await connectToDatabase();
   
@@ -426,6 +483,7 @@ async function startServer() {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
     console.log(`API pasiekiamas /api endpoint'uose`);
     console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Naujas scrapinimo endpoint'as: /api/scrape`);
   });
 }
 
