@@ -11,7 +11,11 @@ import MongoStore from 'connect-mongo';
 import { validationResult } from 'express-validator';
 import axios from 'axios';
 import partnerRoutes from './routes/partners.js';
-import puppeteer from 'puppeteer'; // Pridėta scrapinimui
+import puppeteer from 'puppeteer';
+import NodeCache from 'node-cache';
+
+// Inicializuoti talpyklą (1 valandos galiojimas)
+const scrapeCache = new NodeCache({ stdTTL: 3600 });
 
 // 1. Express aplikacijos konfigūracija
 const app = express();
@@ -99,47 +103,20 @@ app.use((req, res, next) => {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https://source.unsplash.com https://medpoint.ee",
     "connect-src 'self' https://travcen.onrender.com",
-    "frame-src 'self' https://www.google.com"
+    "frame-src 'self' https://www.google.com",
+    "worker-src 'self' blob:"
   ].join('; ');
 
   res.setHeader('Content-Security-Policy', csp);
   next();
 });
 
-// 6. UŽKOMENTUOKITE SENĄ CORS KONFIGŪRACIJĄ
-/*
-const allowedOrigins = [
-  'https://travcen.com',
-  'https://www.travcen.com', 
-  'https://travcen.vercel.app',
-  'https://www.travcen.vercel.app',
-  'http://localhost:3000'
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-  exposedHeaders: ['X-CSRF-Token'],
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
-*/
-
-// 7. Saugumo middleware'iai - SU PATAISA
+// 6. Saugumo middleware'iai - SU PATAISA
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginResourcePolicy: false, // 👈 PRIDĖTA
-  crossOriginEmbedderPolicy: false, // 👈 PRIDĖTA
-  crossOriginOpenerPolicy: false, // 👈 PRIDĖTA
+  crossOriginResourcePolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
   hsts: {
     maxAge: 63072000,
     includeSubDomains: true,
@@ -149,7 +126,7 @@ app.use(helmet({
   frameguard: { action: 'deny' }
 }));
 
-// 8. Rate limiting
+// 7. Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -161,11 +138,11 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// 9. Kūlo parseriai
+// 8. Kūlo parseriai
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// 10. Sesijos konfigūracija
+// 9. Sesijos konfigūracija
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -194,7 +171,7 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-// 11. Mongoose modeliai
+// 10. Mongoose modeliai
 const userSchema = new mongoose.Schema({
   email: { 
     type: String, 
@@ -263,7 +240,7 @@ const User = mongoose.model('User', userSchema);
 const Partner = mongoose.model('Partner', partnerSchema);
 const PendingPartner = mongoose.model('PendingPartner', pendingPartnerSchema);
 
-// 12. CSRF apsauga
+// 11. CSRF apsauga
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
@@ -287,7 +264,116 @@ app.use((req, res, next) => {
   return csrfProtection(req, res, next);
 });
 
-// 13. Scrapinimo endpoint'as - PRIDĖTA NAUJA FUNKCIJA
+// 12. Scrapinimo funkcija su Puppeteer
+async function scrapeWithPuppeteer(url, selectors, searchCriteria = '') {
+  const cacheKey = `scrape:${url}:${searchCriteria}`;
+  const cachedData = scrapeCache.get(cacheKey);
+  
+  if (cachedData) {
+    console.log('Gražinami talpyklos duomenys:', cacheKey);
+    return cachedData;
+  }
+
+  let browser = null;
+  try {
+    console.log(`Paleidžiama naršyklė scrapinimui: ${url}`);
+    
+    // Paleidžiame naršyklę su reikalingais nustatymais
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    });
+
+    const page = await browser.newPage();
+    
+    // Nustatome vartotojo agentą
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    
+    // Nustatome lango dydį
+    await page.setViewport({ width: 1280, height: 800 });
+
+    console.log(`Naviguojama į: ${url}`);
+    
+    // Einame į puslapį su timeout
+    await page.goto(url, { 
+      waitUntil: 'networkidle2',
+      timeout: 30000 
+    });
+
+    // Laukiam, kol puslapis pilnai užsikraus
+    await page.waitForSelector(selectors.offerSelector || 'body', { timeout: 10000 });
+
+    // Atliekame scrapinimą pagal nurodytus selektorius
+    const scrapedData = await page.evaluate((selectors, searchCriteria) => {
+      const results = [];
+      const offerElements = document.querySelectorAll(selectors.offerSelector);
+      
+      offerElements.forEach(element => {
+        try {
+          const titleElement = element.querySelector(selectors.titleSelector);
+          const priceElement = element.querySelector(selectors.priceSelector);
+          const imageElement = element.querySelector(selectors.imageSelector);
+          const linkElement = element.querySelector(selectors.linkSelector);
+          
+          if (titleElement && priceElement) {
+            const title = titleElement.textContent.trim();
+            const priceText = priceElement.textContent.trim();
+            
+            // Išskiriame skaičių iš kainos teksto
+            const priceMatch = priceText.match(/(\d+[\d,.]*)/);
+            const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
+            
+            const image = imageElement ? imageElement.src : '';
+            const link = linkElement ? linkElement.href : '';
+            
+            // Filtruojame pagal paieškos kriterijus
+            if (!searchCriteria || title.toLowerCase().includes(searchCriteria.toLowerCase())) {
+              results.push({
+                title,
+                price,
+                image,
+                link,
+                source: window.location.hostname
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Klaida apdorojant elementą:', error);
+        }
+      });
+      
+      return results;
+    }, selectors, searchCriteria);
+
+    console.log(`Sėkmingai išscrapinta ${scrapedData.length} elementų iš ${url}`);
+    
+    // Išsaugome talpykloje
+    scrapeCache.set(cacheKey, scrapedData);
+    
+    return scrapedData;
+
+  } catch (error) {
+    console.error('Scrapinimo klaida:', error);
+    throw new Error(`Nepavyko scrapinti ${url}: ${error.message}`);
+  } finally {
+    if (browser) {
+      await browser.close();
+      console.log('Naršyklė uždaryta');
+    }
+  }
+}
+
+// 13. Scrapinimo endpoint'as
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria, rules } = req.body;
@@ -297,50 +383,51 @@ app.post('/api/scrape', async (req, res) => {
       return res.status(403).json({ error: 'Nepakankamos teisės. Tik administratoriai.' });
     }
     
-    // Čia būtų tikras scrapinimo kodas su Puppeteer
-    // Dabar imituojame scrapinimą
+    // Tikriname, ar URL validus
+    if (!url || !url.startsWith('http')) {
+      return res.status(400).json({ error: 'Neteisingas URL formatas' });
+    }
+
     console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
     
-    // Imituojame scrapinimo vėlavimą
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Nustatome standartinius selektorius pagal domeną
+    let selectors = {
+      offerSelector: '.offer, .product, .item, .card, .listing',
+      titleSelector: 'h1, h2, h3, h4, .title, .name, [class*="title"], [class*="name"]',
+      priceSelector: '.price, .cost, .value, [class*="price"], [class*="cost"]',
+      imageSelector: 'img',
+      linkSelector: 'a'
+    };
+
+    // Pridedame specifinius selektorius pagal URL
+    if (url.includes('kelioniuplanetas.lt')) {
+      selectors = {
+        offerSelector: '.trip-offer, .offer-item',
+        titleSelector: '.offer-title, .title',
+        priceSelector: '.price-value, .price',
+        imageSelector: '.offer-image, img',
+        linkSelector: '.offer-link, a'
+      };
+    } else if (url.includes('travelexpert.com')) {
+      selectors = {
+        offerSelector: '.tour-item, .package-item',
+        titleSelector: '.tour-title, .title',
+        priceSelector: '.tour-price, .price',
+        imageSelector: '.tour-image, img',
+        linkSelector: '.tour-link, a'
+      };
+    }
+
+    // Atliekame scrapinimą
+    const scrapedData = await scrapeWithPuppeteer(url, selectors, criteria);
     
-    // Imituojami scrapinti duomenys
-    const mockData = generateMockScrapingData(url, criteria);
-    
-    res.json(mockData);
+    res.json(scrapedData);
+
   } catch (error) {
     console.error('Scrapinimo klaida:', error);
     res.status(500).json({ error: 'Scrapinimo klaida: ' + error.message });
   }
 });
-
-// Pagalbinė funkcija scrapinimo duomenims generuoti
-function generateMockScrapingData(url, criteria) {
-  const destinations = ['Ispanija', 'Graikija', 'Turkija', 'Egiptas', 'Italija', 'Prancūzija'];
-  const tripTypes = ['Pajūrio poilsis', 'Ekskursijos', 'Kalnų turizmas', 'Miesto kelionė'];
-  
-  const results = [];
-  const resultCount = Math.floor(Math.random() * 5) + 3;
-  
-  for (let i = 0; i < resultCount; i++) {
-    const destination = destinations[Math.floor(Math.random() * destinations.length)];
-    const duration = Math.floor(Math.random() * 7) + 4;
-    const price = Math.floor(Math.random() * 400) + 199;
-    
-    results.push({
-      id: Date.now() + i,
-      title: `${destination} - ${tripTypes[Math.floor(Math.random() * tripTypes.length)]}`,
-      price: price,
-      duration: `${duration} dienos`,
-      image: `https://source.unsplash.com/300x200/?${destination.toLowerCase()},vacation`,
-      link: `https://${url}/offer-${i}`,
-      source: url,
-      criteria: criteria
-    });
-  }
-  
-  return results;
-}
 
 // 14. Pagrindiniai API maršrutai
 const router = express.Router();
@@ -433,7 +520,7 @@ app.get('/', (req, res) => {
         partners: '/api/partners',
         logout: '/api/logout',
         partnerRegister: '/api/partners/register',
-        scrape: '/api/scrape' // Pridėtas naujas endpoint'as
+        scrape: '/api/scrape'
       }
     },
     serverTime: new Date().toISOString()
