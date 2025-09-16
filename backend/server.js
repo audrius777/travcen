@@ -10,21 +10,19 @@ import cors from 'cors';
 import MongoStore from 'connect-mongo';
 import { validationResult } from 'express-validator';
 import axios from 'axios';
-import partnerRoutes from './routes/partners.js';
-import puppeteer from 'puppeteer';
+import * as cheerio from 'cheerio';
 import NodeCache from 'node-cache';
 
-// Inicializuoti talpyklą (1 valandos galiojimas)
+// Inicializuoti talpyklą
 const scrapeCache = new NodeCache({ stdTTL: 3600 });
 
-// 1. Express aplikacijos konfigūracija
+// Express aplikacijos konfigūracija
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// 2. CRITICAL FIX - CORS pataisymas pačioje pradžioje
+// CORS konfigūracija
 app.use((req, res, next) => {
   console.log('Užklausa iš:', req.headers.origin);
-  console.log('Maršrutas:', req.path);
   
   const allowedOrigins = [
     'https://travcen.com',
@@ -37,7 +35,6 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    console.log('Nustatytas CORS origin:', origin);
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -46,394 +43,139 @@ app.use((req, res, next) => {
   res.setHeader('Vary', 'Origin');
   
   if (req.method === 'OPTIONS') {
-    console.log('OPTIONS užklausa - grąžinama 200');
     return res.sendStatus(200);
   }
   
   next();
 });
 
-// 3. Duomenų bazės konfigūracija
+// Duomenų bazės konfigūracija
 async function connectToDatabase() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      retryWrites: true,
-      w: 'majority',
-      maxPoolSize: 10,
-      minPoolSize: 2
     });
     console.log('Prisijungta prie MongoDB Atlas');
-    
-    mongoose.connection.on('connected', () => {
-      console.log('Mongoose ryšys su DB aktyvus');
-    });
-    
-    mongoose.connection.on('error', (err) => {
-      console.error('Mongoose ryšio klaida:', err);
-    });
-    
-    mongoose.connection.on('disconnected', () => {
-      console.warn('Mongoose atsijungė nuo DB');
-    });
-    
   } catch (err) {
     console.error('Kritinė duomenų bazės klaida:', err);
     process.exit(1);
   }
 }
 
-// 4. Middleware, kuris generuoja "nonce" kiekvienam request'ui
-app.use((req, res, next) => {
-  const nonce = crypto.randomBytes(16).toString('base64');
-  res.locals.nonce = nonce;
-  next();
-});
-
-// 5. Tik API endpointams - išjungti CSP
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api')) {
-    return next();
-  }
-  
-  const csp = [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${res.locals.nonce}' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://www.google.com/recaptcha/api.js`,
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https://source.unsplash.com https://medpoint.ee",
-    "connect-src 'self' https://travcen.onrender.com",
-    "frame-src 'self' https://www.google.com",
-    "worker-src 'self' blob:"
-  ].join('; ');
-
-  res.setHeader('Content-Security-Policy', csp);
-  next();
-});
-
-// 6. Saugumo middleware'iai - SU PATAISA
+// Middleware
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginResourcePolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: false,
-  hsts: {
-    maxAge: 63072000,
-    includeSubDomains: true,
-    preload: true
-  },
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  frameguard: { action: 'deny' }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// 7. Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Per daug užklausų iš šio IP, bandykite vėliau',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => req.ip === '::ffff:127.0.0.1'
-});
-
-app.use(limiter);
-
-// 8. Kūlo parseriai
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// 9. Sesijos konfigūracija
+// Sesijos konfigūracija
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
-  name: 'travcen.sid',
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000,
-    domain: process.env.NODE_ENV === 'production' ? '.travcen.com' : 'localhost',
-    path: '/',
-    signed: true
-  },
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60,
-    autoRemove: 'native',
-    crypto: {
-      secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
-    },
-    touchAfter: 24 * 3600
+    collectionName: 'sessions'
   })
 };
 
 app.use(session(sessionConfig));
 
-// 10. Mongoose modeliai
-const userSchema = new mongoose.Schema({
-  email: { 
-    type: String, 
-    unique: true, 
-    required: true,
-    validate: {
-      validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas`
-    }
-  },
-  name: { type: String, required: true, trim: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-const partnerSchema = new mongoose.Schema({
-  company: { type: String, required: true, trim: true },
-  url: { 
-    type: String, 
-    required: true, 
-    validate: {
-      validator: (v) => /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,6})([\/\w .-]*)*\/?$/.test(v),
-      message: props => `${props.value} nėra tinkamas URL`
-    }
-  },
-  email: { 
-    type: String, 
-    required: true, 
-    validate: {
-      validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas`
-    }
-  },
-  description: { type: String, maxlength: 500, trim: true },
-  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
-  expiresAt: { type: Date, index: { expires: 0 } },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-const pendingPartnerSchema = new mongoose.Schema({
-  company: { type: String, required: true, trim: true },
-  website: { 
-    type: String, 
-    required: true,
-    validate: {
-      validator: (v) => /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,6})([\/\w .-]*)*\/?$/.test(v),
-      message: props => `${props.value} nėra tinkamas URL`
-    }
-  },
-  email: { 
-    type: String, 
-    required: true,
-    validate: {
-      validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      message: props => `${props.value} nėra tinkamas el. pašto adresas`
-    }
-  },
-  description: { type: String, maxlength: 500, trim: true },
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-  ipAddress: { type: String, required: true },
-  attempts: { type: Number, default: 1 },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-const User = mongoose.model('User', userSchema);
-const Partner = mongoose.model('Partner', partnerSchema);
-const PendingPartner = mongoose.model('PendingPartner', pendingPartnerSchema);
-
-// 11. CSRF apsauga
-const csrfProtection = csrf({ 
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    signed: true,
-    domain: process.env.NODE_ENV === 'production' ? '.travcen.com' : 'localhost',
-    path: '/'
-  }
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Per daug užklausų iš šio IP',
 });
+app.use(limiter);
 
-// CSRF middleware
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/partners/register') || 
-      req.path === '/api/health' ||
-      req.path === '/' || 
-      req.path === '/favicon.ico' ||
-      req.path.startsWith('/static')) {
-    return next();
-  }
-  return csrfProtection(req, res, next);
-});
+// CSRF apsauga
+const csrfProtection = csrf({ cookie: true });
+app.use(csrfProtection);
 
-// 12. Scrapinimo funkcija su Puppeteer
-async function scrapeWithPuppeteer(url, selectors, searchCriteria = '') {
+// Scrapinimo funkcija su axios ir cheerio
+async function scrapeWebsite(url, searchCriteria = '') {
   const cacheKey = `scrape:${url}:${searchCriteria}`;
   const cachedData = scrapeCache.get(cacheKey);
   
   if (cachedData) {
-    console.log('Gražinami talpyklos duomenys:', cacheKey);
     return cachedData;
   }
 
-  let browser = null;
   try {
-    console.log(`Paleidžiama naršyklė scrapinimui: ${url}`);
+    console.log(`Scrapinama: ${url}`);
     
-    // Paleidžiame naršyklę su reikalingais nustatymais
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    const response = await axios.get(url, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
     });
-
-    const page = await browser.newPage();
     
-    // Nustatome vartotojo agentą
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    const $ = cheerio.load(response.data);
+    const results = [];
     
-    // Nustatome lango dydį
-    await page.setViewport({ width: 1280, height: 800 });
-
-    console.log(`Naviguojama į: ${url}`);
-    
-    // Einame į puslapį su timeout
-    await page.goto(url, { 
-      waitUntil: 'networkidle2',
-      timeout: 30000 
-    });
-
-    // Laukiam, kol puslapis pilnai užsikraus
-    await page.waitForSelector(selectors.offerSelector || 'body', { timeout: 10000 });
-
-    // Atliekame scrapinimą pagal nurodytus selektorius
-    const scrapedData = await page.evaluate((selectors, searchCriteria) => {
-      const results = [];
-      const offerElements = document.querySelectorAll(selectors.offerSelector);
+    // Bendri selektoriai daugumai svetainių
+    $('.offer, .product, .item, .card').each((i, element) => {
+      const title = $(element).find('h1, h2, h3, .title').first().text().trim();
+      const priceText = $(element).find('.price, .cost').first().text().trim();
+      const image = $(element).find('img').first().attr('src');
+      const link = $(element).find('a').first().attr('href');
       
-      offerElements.forEach(element => {
-        try {
-          const titleElement = element.querySelector(selectors.titleSelector);
-          const priceElement = element.querySelector(selectors.priceSelector);
-          const imageElement = element.querySelector(selectors.imageSelector);
-          const linkElement = element.querySelector(selectors.linkSelector);
-          
-          if (titleElement && priceElement) {
-            const title = titleElement.textContent.trim();
-            const priceText = priceElement.textContent.trim();
-            
-            // Išskiriame skaičių iš kainos teksto
-            const priceMatch = priceText.match(/(\d+[\d,.]*)/);
-            const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
-            
-            const image = imageElement ? imageElement.src : '';
-            const link = linkElement ? linkElement.href : '';
-            
-            // Filtruojame pagal paieškos kriterijus
-            if (!searchCriteria || title.toLowerCase().includes(searchCriteria.toLowerCase())) {
-              results.push({
-                title,
-                price,
-                image,
-                link,
-                source: window.location.hostname
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Klaida apdorojant elementą:', error);
+      if (title && priceText) {
+        const priceMatch = priceText.match(/(\d+[\d,.]*)/);
+        const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
+        
+        if (!searchCriteria || title.toLowerCase().includes(searchCriteria.toLowerCase())) {
+          results.push({
+            title,
+            price,
+            image: image ? new URL(image, url).href : '',
+            link: link ? new URL(link, url).href : '',
+            source: new URL(url).hostname
+          });
         }
-      });
-      
-      return results;
-    }, selectors, searchCriteria);
-
-    console.log(`Sėkmingai išscrapinta ${scrapedData.length} elementų iš ${url}`);
+      }
+    });
     
-    // Išsaugome talpykloje
-    scrapeCache.set(cacheKey, scrapedData);
+    console.log(`Rasta ${results.length} rezultatų iš ${url}`);
+    scrapeCache.set(cacheKey, results);
+    return results;
     
-    return scrapedData;
-
   } catch (error) {
-    console.error('Scrapinimo klaida:', error);
-    throw new Error(`Nepavyko scrapinti ${url}: ${error.message}`);
-  } finally {
-    if (browser) {
-      await browser.close();
-      console.log('Naršyklė uždaryta');
-    }
+    console.error(`Scrapinimo klaida ${url}:`, error.message);
+    return [];
   }
 }
 
-// 13. Scrapinimo endpoint'as
+// Scrapinimo endpoint'as
 app.post('/api/scrape', async (req, res) => {
   try {
-    const { url, criteria, rules } = req.body;
+    const { url, criteria } = req.body;
     
-    // Patikriname, ar vartotojas yra admin
     if (!req.session.user || req.session.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Nepakankamos teisės. Tik administratoriai.' });
+      return res.status(403).json({ error: 'Nepakankamos teisės' });
     }
     
-    // Tikriname, ar URL validus
     if (!url || !url.startsWith('http')) {
       return res.status(400).json({ error: 'Neteisingas URL formatas' });
     }
 
-    console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
-    
-    // Nustatome standartinius selektorius pagal domeną
-    let selectors = {
-      offerSelector: '.offer, .product, .item, .card, .listing',
-      titleSelector: 'h1, h2, h3, h4, .title, .name, [class*="title"], [class*="name"]',
-      priceSelector: '.price, .cost, .value, [class*="price"], [class*="cost"]',
-      imageSelector: 'img',
-      linkSelector: 'a'
-    };
-
-    // Pridedame specifinius selektorius pagal URL
-    if (url.includes('kelioniuplanetas.lt')) {
-      selectors = {
-        offerSelector: '.trip-offer, .offer-item',
-        titleSelector: '.offer-title, .title',
-        priceSelector: '.price-value, .price',
-        imageSelector: '.offer-image, img',
-        linkSelector: '.offer-link, a'
-      };
-    } else if (url.includes('travelexpert.com')) {
-      selectors = {
-        offerSelector: '.tour-item, .package-item',
-        titleSelector: '.tour-title, .title',
-        priceSelector: '.tour-price, .price',
-        imageSelector: '.tour-image, img',
-        linkSelector: '.tour-link, a'
-      };
-    }
-
-    // Atliekame scrapinimą
-    const scrapedData = await scrapeWithPuppeteer(url, selectors, criteria);
-    
+    const scrapedData = await scrapeWebsite(url, criteria);
     res.json(scrapedData);
 
   } catch (error) {
     console.error('Scrapinimo klaida:', error);
-    res.status(500).json({ error: 'Scrapinimo klaida: ' + error.message });
+    res.status(500).json({ error: 'Scrapinimo klaida' });
   }
 });
 
-// 14. Pagrindiniai API maršrutai
-const router = express.Router();
-
-// Sveikatos patikrinimas
-router.get('/health', (req, res) => {
+// Pagrindiniai API endpoint'ai
+app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
@@ -441,136 +183,41 @@ router.get('/health', (req, res) => {
   });
 });
 
-// CSRF token gavimas
-router.get('/csrf-token', csrfProtection, (req, res) => {
+app.get('/api/csrf-token', (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// Vartotojo duomenys
-router.get('/user', (req, res) => {
+app.get('/api/user', (req, res) => {
   if (req.session.user) {
-    res.json({ 
-      loggedIn: true,
-      user: req.session.user
-    });
+    res.json({ loggedIn: true, user: req.session.user });
   } else {
     res.status(401).json({ loggedIn: false });
   }
 });
 
-// Atsijungimas
-router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Sesijos sunaikinimo klaida:', err);
-      return res.status(500).json({ error: 'Atsijungimo klaida' });
-    }
-    res.clearCookie('travcen.sid', {
-      domain: process.env.NODE_ENV === 'production' ? '.travcen.com' : 'localhost',
-      path: '/'
-    });
-    res.json({ success: true });
-  });
-});
-
-// Partnerių valdymas (admin)
-router.post('/partner', csrfProtection, async (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Nepakankamos teisės' });
-  }
-
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const partnerData = {
-      ...req.body,
-      expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined
-    };
-
-    const partner = await Partner.create(partnerData);
-    res.status(201).json(partner);
-  } catch (err) {
-    console.error('Partnerio sukūrimo klaida:', err);
-    if (err.code === 11000) {
-      return res.status(400).json({ error: 'Partneris su tokiu el. paštu jau egzistuoja' });
-    }
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// 15. Partnerių maršrutų integracija
-app.use('/api', router);
-app.use('/api/partners', partnerRoutes);
-
-// 16. Pagrindinis maršrutas
+// Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
     service: 'Travcen Backend API',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    documentation: 'https://github.com/your-repo/docs',
-    availableEndpoints: {
-      api: {
-        health: '/api/health',
-        user: '/api/user',
-        partners: '/api/partners',
-        logout: '/api/logout',
-        partnerRegister: '/api/partners/register',
-        scrape: '/api/scrape'
-      }
-    },
-    serverTime: new Date().toISOString()
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// 17. Klaidų apdorojimas
+// Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  
-  if (err.name === 'MongoServerError') {
-    return res.status(400).json({ 
-      error: 'Duomenų bazės operacijos klaida',
-      details: err.message 
-    });
-  }
-  
-  if (err.name === 'ValidationError') {
-    const errors = {};
-    Object.keys(err.errors).forEach(key => {
-      errors[key] = err.errors[key].message;
-    });
-    return res.status(400).json({ 
-      error: 'Validacijos klaida',
-      details: errors 
-    });
-  }
-  
-  if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).json({ 
-      error: 'Negaliojanti CSRF sesija',
-      solution: 'Prašome atnaujinti puslapį ir bandyti dar kartą'
-    });
-  }
-  
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Vidinė serverio klaida',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+  res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// 18. Serverio paleidimas
+// Serverio paleidimas
 async function startServer() {
   await connectToDatabase();
   
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
-    console.log(`API pasiekiamas /api endpoint'uose`);
-    console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Naujas scrapinimo endpoint'as: /api/scrape`);
+    console.log(`Scrapinimo funkcija aktyvuota (axios + cheerio)`);
   });
 }
 
