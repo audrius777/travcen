@@ -8,7 +8,6 @@ import csrf from 'csurf';
 import crypto from 'crypto';
 import cors from 'cors';
 import MongoStore from 'connect-mongo';
-import { validationResult } from 'express-validator';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import NodeCache from 'node-cache';
@@ -29,18 +28,18 @@ app.use((req, res, next) => {
     'https://www.travcen.com', 
     'https://travcen.vercel.app',
     'https://www.travcen.vercel.app',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'https://travcen-backendas.onrender.com'
   ];
   
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
+  if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Vary', 'Origin');
   
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -72,7 +71,7 @@ app.use(helmet({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Sesijos konfigūracija
+// Sesijos konfigūracija - LABAI SVARBU CSRF
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -84,7 +83,8 @@ const sessionConfig = {
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    httpOnly: true
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 valandos
   }
 };
 
@@ -98,23 +98,29 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CSRF apsauga - SU TAIKYMO IŠIMTIMIS
-const csrfProtection = csrf({ 
+// CSRF apsauga - TEISINGA KONFIGŪRACIJA
+const csrfProtection = csrf({
   cookie: {
+    key: '_csrf',
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    httpOnly: true
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000
   }
 });
 
-// CSRF middleware su išimtimis
+// CSRF middleware su išimtimis API endpointams
 app.use((req, res, next) => {
+  // Išimtys - šie endpointai nereikalauja CSRF
   if (req.path === '/api/health' || 
-      req.path === '/api/scrape' || 
+      req.path === '/api/scrape' ||
+      req.path === '/api/csrf-token' ||
       req.method === 'OPTIONS') {
     return next();
   }
-  return csrfProtection(req, res, next);
+  
+  // Visi kiti endpointai naudoja CSRF apsaugą
+  csrfProtection(req, res, next);
 });
 
 // Scrapinimo funkcija su axios ir cheerio
@@ -203,7 +209,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
+// CSRF token gavimo endpointas
+app.get('/api/csrf-token', (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
@@ -232,18 +239,19 @@ app.get('/', (req, res) => {
     status: 'online',
     service: 'Travcen Backend API',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    csrfEnabled: true
   });
 });
 
 // Klaidų apdorojimas
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Klaida:', err.message);
   
   if (err.code === 'EBADCSRFTOKEN') {
     return res.status(403).json({ 
       error: 'Negaliojanti CSRF sesija',
-      solution: 'Gaukite naują CSRF tokeną'
+      solution: 'Gaukite naują CSRF tokeną iš /api/csrf-token'
     });
   }
   
@@ -257,6 +265,7 @@ async function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
     console.log(`Scrapinimo funkcija aktyvuota (axios + cheerio)`);
+    console.log(`CSRF apsauga įjungta`);
   });
 }
 
