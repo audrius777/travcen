@@ -1,5 +1,8 @@
-const API_BASE_URL = 'https://travcen-backend.onrender.com/api';
+const API_BASE_URL = 'https://travcen-backendas.onrender.com/api';
 const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
+
+// CSRF token valdymas
+let csrfToken = null;
 
 // Mock partnerių duomenys atsarginiam variantui
 const MOCK_PARTNERS = [
@@ -52,6 +55,66 @@ const LANGUAGE_CODES = {
   no: 'no-NO'
 };
 
+// Funkcija CSRF tokeno gavimui
+async function getCsrfToken() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/csrf-token`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP klaida! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    csrfToken = data.csrfToken;
+    console.log('CSRF token gautas:', csrfToken);
+    return csrfToken;
+  } catch (error) {
+    console.error('Klaida gaunant CSRF token:', error);
+    throw error;
+  }
+}
+
+// Funkcija užklausoms su CSRF apsauga
+async function fetchWithCsrf(url, options = {}) {
+  // Įsitikinti, kad turime CSRF tokeną
+  if (!csrfToken) {
+    await getCsrfToken();
+  }
+  
+  const defaultOptions = {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken
+    }
+  };
+  
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options.headers
+    }
+  };
+  
+  const response = await fetch(url, mergedOptions);
+  
+  // Jei CSRF tokenas nebegalioja, gaukite naują ir pakartokite
+  if (response.status === 403 && response.headers.get('content-type')?.includes('application/json')) {
+    const errorData = await response.json();
+    if (errorData.error && errorData.error.includes('CSRF')) {
+      console.log('CSRF tokenas nebegalioja, gaunamas naujas...');
+      csrfToken = null;
+      return fetchWithCsrf(url, options);
+    }
+  }
+  
+  return response;
+}
+
 // Paprastesnė reCAPTCHA įkėlimo funkcija
 function loadRecaptcha() {
   return new Promise((resolve) => {
@@ -91,7 +154,41 @@ function formatDateByLanguage(dateString, languageCode) {
   });
 }
 
+// Scrapinimo funkcija
+async function scrapeTravelOffers(destination) {
+  try {
+    console.log('Pradedamas scrapinimas:', destination);
+    
+    const response = await fetchWithCsrf(`${API_BASE_URL}/scrape`, {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://kelioniuplanetas.lt',
+        criteria: destination
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Scrapinimo klaida: ${response.status}`);
+    }
+    
+    const results = await response.json();
+    console.log('Scrapinimo rezultatai:', results);
+    return results;
+    
+  } catch (error) {
+    console.error('Scrapinimo klaida:', error);
+    throw error;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+  // Gauti CSRF tokeną iškart po puslapio užkrovimo
+  try {
+    await getCsrfToken();
+  } catch (error) {
+    console.warn('Nepavyko gauti CSRF tokeno, bandysime vėliau');
+  }
+  
   await loadPartners();
 
   // Modalų valdymas - SPECIFINIS PARTNERIO MODALO VALDYMAS
@@ -123,7 +220,51 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Paieškos funkcijos priskyrimas
   const searchBtn = document.getElementById("search-btn");
   if (searchBtn) {
-    searchBtn.addEventListener("click", filterCards);
+    searchBtn.addEventListener("click", async () => {
+      const destination = document.getElementById("destination").value;
+      
+      if (destination) {
+        try {
+          // Rodyti scrapinimo statusą
+          const scrapingStatus = document.getElementById('scraping-status');
+          const scrapingMessage = document.getElementById('scraping-message');
+          
+          scrapingStatus.style.display = 'block';
+          scrapingMessage.textContent = 'Searching across all partners...';
+          
+          // Atlikti scrapinimą
+          const scrapedResults = await scrapeTravelOffers(destination);
+          
+          // Atnaujinti rezultatus
+          if (scrapedResults && scrapedResults.length > 0) {
+            renderCards(scrapedResults);
+            scrapingMessage.textContent = `Found ${scrapedResults.length} matching offers`;
+          } else {
+            scrapingMessage.textContent = 'No offers found';
+          }
+          
+          // Paslėpti statusą po 3 sekundžių
+          setTimeout(() => {
+            scrapingStatus.style.display = 'none';
+          }, 3000);
+          
+        } catch (error) {
+          console.error('Paieškos klaida:', error);
+          const scrapingStatus = document.getElementById('scraping-status');
+          const scrapingMessage = document.getElementById('scraping-message');
+          
+          scrapingStatus.style.display = 'block';
+          scrapingMessage.textContent = 'Search error: ' + error.message;
+          
+          setTimeout(() => {
+            scrapingStatus.style.display = 'none';
+          }, 3000);
+        }
+      } else {
+        // Jei nėra paieškos kriterijų, tiesiog filtruoti esamus duomenis
+        filterCards();
+      }
+    });
   }
 
   // Partnerio registracijos formos valdymas
@@ -163,10 +304,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        // Siųsti duomenis
-        const response = await fetch(`${API_BASE_URL}/partners/register`, {
+        // Siųsti duomenis su CSRF apsauga
+        const response = await fetchWithCsrf(`${API_BASE_URL}/partners/register`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...formData,
             captchaToken
@@ -203,11 +343,9 @@ async function loadPartners() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sekundžių timeout
     
-    // Naudojame CORS proxy, kad apeitume CSP problemas
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`${API_BASE_URL}/partners`)}`;
-    
-    const response = await fetch(proxyUrl, {
-      signal: controller.signal
+    const response = await fetch(`${API_BASE_URL}/partners`, {
+      signal: controller.signal,
+      credentials: 'include'
     });
     
     clearTimeout(timeoutId);
@@ -252,7 +390,7 @@ function renderCards(partners) {
       formatDateByLanguage(partner.departureDate, currentLang) : 'Date not specified';
     
     // Sukuriame tinkamą paveikslėlio URL
-    let imageUrl = partner.imageUrl;
+    let imageUrl = partner.imageUrl || partner.image;
     if (!imageUrl && partner.destination) {
       // Jei nėra paveikslėlio URL, sukuriame naudodami Unsplash
       const searchQuery = partner.destination.toLowerCase().replace(/\s+/g, '-');
@@ -279,7 +417,7 @@ function renderCards(partners) {
         });
       }
 
-      window.open(partner.partnerUrl || `https://${partner.id}.travcen.com`, '_blank');
+      window.open(partner.partnerUrl || partner.link || `https://${partner.id}.travcen.com`, '_blank');
     });
 
     container.appendChild(card);
