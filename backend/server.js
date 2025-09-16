@@ -11,6 +11,13 @@ import MongoStore from 'connect-mongo';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import NodeCache from 'node-cache';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES modulių __dirname emuliacija
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Inicializuoti talpyklą
 const scrapeCache = new NodeCache({ stdTTL: 3600 });
@@ -18,6 +25,39 @@ const scrapeCache = new NodeCache({ stdTTL: 3600 });
 // Express aplikacijos konfigūracija
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// Multer konfigūracija
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// File filter funkcija
+const fileFilter = (req, file, cb) => {
+  // Leidžiami failų tipai
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  // Tikriname failo plėtinį
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  // Tikriname MIME tipą
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Leidžiami tik paveikslėlių failai (JPEG, JPG, PNG, GIF, WEBP)'));
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limitas
+  fileFilter: fileFilter
+});
 
 // CORS konfigūracija
 app.use((req, res, next) => {
@@ -71,6 +111,9 @@ app.use(helmet({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// Statinių failų servinimas
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Sesijos konfigūracija - LABAI SVARBU CSRF
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
@@ -101,11 +144,9 @@ app.use(limiter);
 // CSRF apsauga - TEISINGA KONFIGŪRACIJA
 const csrfProtection = csrf({
   cookie: {
-    key: '_csrf',
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
+    httpOnly: true
   }
 });
 
@@ -115,6 +156,7 @@ app.use((req, res, next) => {
   if (req.path === '/api/health' || 
       req.path === '/api/scrape' ||
       req.path === '/api/csrf-token' ||
+      req.path.startsWith('/uploads/') ||
       req.method === 'OPTIONS') {
     return next();
   }
@@ -200,6 +242,29 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
+// Failų įkėlimo endpoint'as
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nepasirinktas failas' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Failas sėkmingai įkeltas',
+      file: {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        path: `/uploads/${req.file.filename}`
+      }
+    });
+  } catch (error) {
+    console.error('Įkėlimo klaida:', error);
+    res.status(500).json({ error: 'Failo įkėlimo klaida' });
+  }
+});
+
 // Pagrindiniai API endpoint'ai
 app.get('/api/health', (req, res) => {
   res.json({
@@ -255,6 +320,13 @@ app.use((err, req, res, next) => {
     });
   }
   
+  // Multer klaidų apdorojimas
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Failas per didelis' });
+    }
+  }
+  
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
@@ -262,10 +334,18 @@ app.use((err, req, res, next) => {
 async function startServer() {
   await connectToDatabase();
   
+  // Įsitikiname, kad uploads katalogas egzistuoja
+  const fs = await import('fs');
+  const uploadsDir = path.join(__dirname, 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
     console.log(`Scrapinimo funkcija aktyvuota (axios + cheerio)`);
     console.log(`CSRF apsauga įjungta`);
+    console.log(`Failų įkėlimo funkcija aktyvuota`);
   });
 }
 
