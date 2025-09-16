@@ -80,7 +80,12 @@ const sessionConfig = {
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
     collectionName: 'sessions'
-  })
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    httpOnly: true
+  }
 };
 
 app.use(session(sessionConfig));
@@ -93,9 +98,24 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CSRF apsauga
-const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
+// CSRF apsauga - SU TAIKYMO IŠIMTIMIS
+const csrfProtection = csrf({ 
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    httpOnly: true
+  }
+});
+
+// CSRF middleware su išimtimis
+app.use((req, res, next) => {
+  if (req.path === '/api/health' || 
+      req.path === '/api/scrape' || 
+      req.method === 'OPTIONS') {
+    return next();
+  }
+  return csrfProtection(req, res, next);
+});
 
 // Scrapinimo funkcija su axios ir cheerio
 async function scrapeWebsite(url, searchCriteria = '') {
@@ -183,7 +203,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/csrf-token', (req, res) => {
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
@@ -193,6 +213,17 @@ app.get('/api/user', (req, res) => {
   } else {
     res.status(401).json({ loggedIn: false });
   }
+});
+
+// Atsijungimas
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Atsijungimo klaida' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ success: true });
+  });
 });
 
 // Pagrindinis maršrutas
@@ -208,6 +239,14 @@ app.get('/', (req, res) => {
 // Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ 
+      error: 'Negaliojanti CSRF sesija',
+      solution: 'Gaukite naują CSRF tokeną'
+    });
+  }
+  
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
