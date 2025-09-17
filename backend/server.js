@@ -67,14 +67,14 @@ const upload = multer({
 app.use((req, res, next) => {
   console.log('Užklausa iš:', req.headers.origin);
   
-  const allowedOrigins = [
-    'https://travcen.com',
-    'https://www.travcen.com', 
-    'https://travcen.vercel.app',
-    'https://www.travcen.vercel.app',
-    'http://localhost:3000',
-    'https://travcen-backendas.onrender.com'
-  ];
+const allowedOrigins = [
+  'https://travcen.com',
+  'https://www.travcen.com', 
+  'https://travcen.vercel.app',
+  'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app', // ← KONKRETUS DOMAINAS
+  'http://localhost:3000',
+  'https://travcen-backendas.onrender.com'
+];
   
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
