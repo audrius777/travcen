@@ -16,7 +16,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 // Po kitų importų pridėti:
-import { Partner } from './models/partnerModel.js';
+import { Partner } from './partnerModel.js';
 import { PendingPartner } from './models/PendingPartner.js';
 
 // ES modulių __dirname emuliacija
