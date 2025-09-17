@@ -102,7 +102,7 @@ async function connectToDatabase() {
     
     // Po mongoose.connect() pridėti modelų registravimą:
     mongoose.model('Partner', Partner.schema);
-    mongoose.model('PendingPartner', PendingPartner);
+    mongoose.model('PendingPartner', PendingPartner.schema);
     
     console.log('Prisijungta prie MongoDB Atlas');
   } catch (err) {
