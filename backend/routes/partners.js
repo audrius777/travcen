@@ -1,9 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import axios from 'axios';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { validateRecaptchaV3 } from '../utils/recaptcha.js';
+import { validatePartner, validatePartnerWebsite } from '../utils/validationLogic.js';
 
 const router = express.Router();
 
@@ -37,74 +38,6 @@ const upload = multer({
     }
   }
 });
-
-// reCAPTCHA v3 patikros funkcija
-async function validateRecaptchaV3(token) {
-  try {
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    
-    if (!secretKey) {
-      throw new Error('RECAPTCHA_SECRET_KEY not configured');
-    }
-
-    const response = await axios.post(
-      'https://www.google.com/recaptcha/api/siteverify',
-      new URLSearchParams({
-        secret: secretKey,
-        response: token
-      })
-    );
-
-    return {
-      success: response.data.success,
-      score: response.data.score || 0,
-      action: response.data.action || '',
-      hostname: response.data.hostname || '',
-      reasons: response.data['error-codes'] || []
-    };
-  } catch (error) {
-    console.error('reCAPTCHA verification error:', error);
-    return { 
-      success: false, 
-      score: 0, 
-      reasons: ['verification_failed'],
-      error: error.message 
-    };
-  }
-}
-
-// Vietinės validacijos funkcijos
-const validatePartnerWebsite = async (url) => {
-  try {
-    const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
-    const response = await axios.get(formattedUrl, { 
-      timeout: 5000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
-    return { exists: response.status === 200 };
-  } catch (error) {
-    return { exists: false, error: 'Svetainė nepasiekiama' };
-  }
-};
-
-const validatePartner = async (companyName, website, email, ipAddress) => {
-  if (!companyName || !website || !email) {
-    return { isValid: false, error: 'Visi laukai privalomi' };
-  }
-  
-  // Papildoma validacijos logika
-  if (companyName.length < 2 || companyName.length > 100) {
-    return { isValid: false, error: 'Įmonės pavadinimas turi būti tarp 2 ir 100 simbolių' };
-  }
-  
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { isValid: false, error: 'Netinkamas el. pašto formatas' };
-  }
-  
-  return { isValid: true };
-};
 
 // 1. Svetainės validacija (GET /api/validate-website?url=...)
 router.get('/validate-website', async (req, res) => {
