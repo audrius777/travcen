@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const PendingPartnerSchema = new mongoose.Schema({
-  company: { 
+  companyName: { // Pakeista iš 'company'
     type: String, 
     required: true, 
     trim: true,
@@ -33,6 +33,45 @@ const PendingPartnerSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  contactPerson: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  phone: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  address: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  city: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  country: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  services: [{ // Pridėtas naujas laukas
+    type: String
+  }],
+  specialization: { // Pridėtas naujas laukas
+    type: String,
+    default: ''
+  },
+  targetAudience: [{ // Pridėtas naujas laukas
+    type: String
+  }],
+  logo: { // Pridėtas naujas laukas
+    type: String,
+    default: ''
   },
   status: { 
     type: String, 
