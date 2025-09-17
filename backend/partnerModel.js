@@ -1,18 +1,18 @@
 import mongoose from 'mongoose';
 
 const partnerSchema = new mongoose.Schema({
-  company: { 
+  companyName: { // Pakeista iš 'company'
     type: String, 
     required: true, 
     unique: true,
-    trim: true // Pridėtas trim
+    trim: true
   },
   slug: { 
     type: String, 
     required: true, 
     unique: true 
   },
-  website: { // Pakeista iš 'url' į 'website' pagal formą
+  website: { 
     type: String, 
     required: true,
     validate: {
@@ -32,10 +32,49 @@ const partnerSchema = new mongoose.Schema({
       message: props => `${props.value} nėra tinkamas el. pašto adresas`
     }
   },
-  description: { // Pridėtas naujas laukas pagal formą
+  description: {
     type: String,
     required: true,
     trim: true
+  },
+  contactPerson: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  phone: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  address: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  city: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  country: { // Pridėtas naujas laukas
+    type: String,
+    required: true,
+    trim: true
+  },
+  services: [{ // Pridėtas naujas laukas
+    type: String
+  }],
+  specialization: { // Pridėtas naujas laukas
+    type: String,
+    default: ''
+  },
+  targetAudience: [{ // Pridėtas naujas laukas
+    type: String
+  }],
+  logo: { // Pridėtas naujas laukas
+    type: String,
+    default: ''
   },
   apiKey: { 
     type: String, 
@@ -43,24 +82,24 @@ const partnerSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['active', 'inactive', 'pending'], // Pridėtas 'pending' statusas
-    default: 'pending' // Pakeistas į 'pending'
+    enum: ['active', 'inactive', 'pending'],
+    default: 'pending'
   },
   lastSync: Date,
-  ipAddress: { // Pridėtas IP adreso laukas
+  ipAddress: {
     type: String,
     required: true
   },
-  attempts: { // Pridėtas bandymų skaičius
+  attempts: {
     type: Number,
     default: 1
   }
 }, { timestamps: true });
 
-// Automatinis slug generavimas (liko nepakeista)
+// Automatinis slug generavimas
 partnerSchema.pre('save', function(next) {
   if (!this.slug) {
-    this.slug = this.company
+    this.slug = this.companyName // Pakeista iš this.company
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
