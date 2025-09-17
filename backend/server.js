@@ -15,6 +15,10 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Po kitų importų pridėti:
+import { Partner } from './models/partnerModel.js';
+import { PendingPartner } from './models/PendingPartner.js';
+
 // ES modulių __dirname emuliacija
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,6 +99,11 @@ async function connectToDatabase() {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
+    
+    // Po mongoose.connect() pridėti modelų registravimą:
+    mongoose.model('Partner', Partner.schema);
+    mongoose.model('PendingPartner', PendingPartner);
+    
     console.log('Prisijungta prie MongoDB Atlas');
   } catch (err) {
     console.error('Kritinė duomenų bazės klaida:', err);
@@ -164,6 +173,10 @@ app.use((req, res, next) => {
   // Visi kiti endpointai naudoja CSRF apsaugą
   csrfProtection(req, res, next);
 });
+
+// Po kitų endpointų pridėti partnerių endpoint'us:
+import partnerRoutes from './routes/partners.js';
+app.use('/api', partnerRoutes);
 
 // Scrapinimo funkcija su axios ir cheerio
 async function scrapeWebsite(url, searchCriteria = '') {
@@ -346,6 +359,7 @@ async function startServer() {
     console.log(`Scrapinimo funkcija aktyvuota (axios + cheerio)`);
     console.log(`CSRF apsauga įjungta`);
     console.log(`Failų įkėlimo funkcija aktyvuota`);
+    console.log(`Partnerių endpoint'ai aktyvuoti`);
   });
 }
 
