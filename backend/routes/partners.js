@@ -1,8 +1,42 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import axios from 'axios';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const router = express.Router();
+
+// ES modulių __dirname emuliacija
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Multer konfigūracija logo įkėlimui
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'logo-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Leidžiami tik paveikslėlių failai'));
+    }
+  }
+});
 
 // reCAPTCHA v3 patikros funkcija
 async function validateRecaptchaV3(token) {
@@ -42,20 +76,33 @@ async function validateRecaptchaV3(token) {
 // Vietinės validacijos funkcijos
 const validatePartnerWebsite = async (url) => {
   try {
-    const response = await axios.get(
-      url.startsWith('http') ? url : `http://${url}`,
-      { timeout: 5000 }
-    );
+    const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+    const response = await axios.get(formattedUrl, { 
+      timeout: 5000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
     return { exists: response.status === 200 };
-  } catch {
-    return { exists: false };
+  } catch (error) {
+    return { exists: false, error: 'Svetainė nepasiekiama' };
   }
 };
 
-const validatePartner = async (company, website, email, ipAddress) => {
-  if (!company || !website || !email) {
-    return { isValid: false, error: 'Privalomi laukai neužpildyti' };
+const validatePartner = async (companyName, website, email, ipAddress) => {
+  if (!companyName || !website || !email) {
+    return { isValid: false, error: 'Visi laukai privalomi' };
   }
+  
+  // Papildoma validacijos logika
+  if (companyName.length < 2 || companyName.length > 100) {
+    return { isValid: false, error: 'Įmonės pavadinimas turi būti tarp 2 ir 100 simbolių' };
+  }
+  
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { isValid: false, error: 'Netinkamas el. pašto formatas' };
+  }
+  
   return { isValid: true };
 };
 
@@ -76,9 +123,24 @@ router.get('/validate-website', async (req, res) => {
 });
 
 // 2. Partnerio registracija (POST /api/partners/register) - SU V3
-router.post('/partners/register', async (req, res) => {
+router.post('/partners/register', upload.single('logo'), async (req, res) => {
   try {
-    const { company, website, email, description, captchaToken } = req.body;
+    const { 
+      companyName, 
+      website, 
+      email, 
+      description, 
+      contactPerson,
+      phone,
+      address,
+      city,
+      country,
+      services,
+      specialization,
+      targetAudience,
+      captchaToken 
+    } = req.body;
+    
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
     if (!captchaToken) {
@@ -102,21 +164,38 @@ router.post('/partners/register', async (req, res) => {
       });
     }
 
+    // Logo failo apdorojimas
+    let logoPath = '';
+    if (req.file) {
+      logoPath = `/uploads/${req.file.filename}`;
+    }
+
     // Partnerio duomenų validacija
-    const validation = await validatePartner(company, website, email, ipAddress);
+    const validation = await validatePartner(companyName, website, email, ipAddress);
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
     }
 
     // Išsaugojimas MongoDB
     const newPartner = new mongoose.models.PendingPartner({
-      company,
+      companyName,
       website,
       email,
       description,
+      contactPerson,
+      phone,
+      address,
+      city,
+      country,
+      services: Array.isArray(services) ? services : JSON.parse(services || '[]'),
+      specialization,
+      targetAudience: Array.isArray(targetAudience) ? targetAudience : JSON.parse(targetAudience || '[]'),
+      logo: logoPath,
       ipAddress,
+      captchaToken,
       status: 'pending'
     });
+    
     await newPartner.save();
 
     res.json({ success: true, message: 'Registracija sėkminga' });
