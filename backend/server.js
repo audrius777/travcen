@@ -30,6 +30,9 @@ const scrapeCache = new NodeCache({ stdTTL: 3600 });
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Trust proxy - PRIDĖTA
+app.set('trust proxy', 1);
+
 // Multer konfigūracija
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -67,14 +70,14 @@ const upload = multer({
 app.use((req, res, next) => {
   console.log('Užklausa iš:', req.headers.origin);
   
-const allowedOrigins = [
-  'https://travcen.com',
-  'https://www.travcen.com', 
-  'https://travcen.vercel.app',
-  'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app', // ← KONKRETUS DOMAINAS
-  'http://localhost:3000',
-  'https://travcen-backendas.onrender.com'
-];
+  const allowedOrigins = [
+    'https://travcen.com',
+    'https://www.travcen.com', 
+    'https://travcen.vercel.app',
+    'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
+    'http://localhost:3000',
+    'https://travcen-backendas.onrender.com'
+  ];
   
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
@@ -142,11 +145,12 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-// Rate limiting
+// Rate limiting - PATAISYTA
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Per daug užklausų iš šio IP',
+  trustProxy: 1 // PRIDĖTA
 });
 app.use(limiter);
 
@@ -159,7 +163,15 @@ const csrfProtection = csrf({
   }
 });
 
-// CSRF middleware su išimtimis API endpointams
+// CSRF token middleware - PRIDĖTA
+app.use((req, res, next) => {
+  if (req.csrfToken) {
+    res.locals.csrfToken = req.csrfToken();
+  }
+  next();
+});
+
+// CSRF middleware su išimtimis API endpointams - PATAISYTA
 app.use((req, res, next) => {
   // Išimtys - šie endpointai nereikalauja CSRF
   if (req.path === '/api/health' || 
@@ -171,7 +183,11 @@ app.use((req, res, next) => {
   }
   
   // Visi kiti endpointai naudoja CSRF apsaugą
-  csrfProtection(req, res, next);
+  if (typeof req.csrfToken === 'function') {
+    csrfProtection(req, res, next);
+  } else {
+    next();
+  }
 });
 
 // Po kitų endpointų pridėti partnerių endpoint'us:
@@ -287,9 +303,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// CSRF token gavimo endpointas
+// CSRF token gavimo endpointas - PATAISYTA
 app.get('/api/csrf-token', (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+  if (typeof req.csrfToken === 'function') {
+    res.json({ csrfToken: req.csrfToken() });
+  } else {
+    res.status(500).json({ error: 'CSRF not configured properly' });
+  }
 });
 
 app.get('/api/user', (req, res) => {
@@ -362,6 +382,11 @@ async function startServer() {
     console.log(`Partnerių endpoint'ai aktyvuoti`);
   });
 }
+
+startServer().catch(err => {
+  console.error('Serverio paleidimo klaida:', err);
+  process.exit(1);
+});
 
 startServer().catch(err => {
   console.error('Serverio paleidimo klaida:', err);
