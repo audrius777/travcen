@@ -4,7 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { validateRecaptchaV3 } from '../utils/recaptcha.js';
-import { validatePartner, validatePartnerWebsite } from '../utils/validationLogic.js';
+import { validatePartner, validatePartnerWebsite } from '../services/validationLogic.js'; // Pakeistas kelias
 
 const router = express.Router();
 
