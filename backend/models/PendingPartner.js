@@ -69,11 +69,6 @@ const PendingPartnerSchema = new mongoose.Schema({
         type: String,
         default: '',
         maxlength: [200, 'Admin pastabos per ilgos (maks. 200 simbolių)']
-    },
-    captchaToken: {
-        type: String,
-        required: true,
-        select: false
     }
 }, { 
     timestamps: true 
@@ -117,7 +112,6 @@ PendingPartnerSchema.virtual('daysSinceRequest').get(function() {
 // Statinis metodas - gauti visus laukiančius partnerius
 PendingPartnerSchema.statics.getPendingPartners = function() {
     return this.find({ status: 'pending' })
-        .select('-captchaToken')
         .sort({ requestDate: -1 });
 };
 
