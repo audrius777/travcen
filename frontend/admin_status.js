@@ -1,5 +1,5 @@
 // admin_status.js
-const BACKEND_URL = "https://travcen.onrender.com";
+const BACKEND_URL = "https://travcen-backendas.onrender.com";
 const PARTNERS_TABLE = document.getElementById("partners-table").querySelector("tbody");
 const LOGOUT_BTN = document.getElementById("logout-btn");
 const REFRESH_BTN = document.getElementById("refresh-btn");
