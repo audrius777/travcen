@@ -1,3 +1,5 @@
+[file name]: server (12).js
+[file content begin]
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
@@ -76,7 +78,7 @@ app.use((req, res, next) => {
     'https://travcen.vercel.app',
     'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
     'http://localhost:3000',
-    'https://travcen-backendas.onrender.com'
+    'https://travcen-backendas.onrender.com',
     'null'
   ];
   
@@ -389,3 +391,4 @@ startServer().catch(err => {
   console.error('Serverio paleidimo klaida:', err);
   process.exit(1);
 });
+[file content end]
