@@ -383,11 +383,7 @@ async function startServer() {
   });
 }
 
-startServer().catch(err => {
-  console.error('Serverio paleidimo klaida:', err);
-  process.exit(1);
-});
-
+// PATAISYTA: Tik VIENĄ KARTĄ iškviečiame startServer()
 startServer().catch(err => {
   console.error('Serverio paleidimo klaida:', err);
   process.exit(1);
