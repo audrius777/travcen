@@ -119,11 +119,12 @@ const csrfProtection = csrf({
   }
 });
 
+// PIRMA: PRIDĖTI CSRF MIDDLEWARE PRIEŠ KITUS ROUTES
+app.use(csrfProtection);
+
 // CSRF token middleware
 app.use((req, res, next) => {
-  if (req.csrfToken) {
-    res.locals.csrfToken = req.csrfToken();
-  }
+  res.locals.csrfToken = req.csrfToken();
   next();
 });
 
@@ -136,12 +137,7 @@ app.use((req, res, next) => {
       req.method === 'OPTIONS') {
     return next();
   }
-  
-  if (typeof req.csrfToken === 'function') {
-    csrfProtection(req, res, next);
-  } else {
-    next();
-  }
+  next();
 });
 
 // Partnerių endpoint'ai
@@ -258,11 +254,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/csrf-token', (req, res) => {
   try {
-    if (typeof req.csrfToken === 'function') {
-      res.json({ csrfToken: req.csrfToken() });
-    } else {
-      res.status(500).json({ error: 'CSRF not configured properly' });
-    }
+    res.json({ csrfToken: req.csrfToken() });
   } catch (error) {
     console.error('CSRF token generation error:', error);
     res.status(500).json({ error: 'Failed to generate CSRF token' });
