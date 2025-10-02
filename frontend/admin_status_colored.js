@@ -1,5 +1,5 @@
 // admin_status_colored.js
-const BACKEND_URL = "https://travcen.onrender.com";
+const BACKEND_URL = "https://travcen-backendas.onrender.com";
 const STATUS_TABLE = document.querySelector("#status-table tbody");
 const LOGOUT_BTN = document.getElementById("logout-btn");
 const REFRESH_BTN = document.getElementById("refresh-btn");
