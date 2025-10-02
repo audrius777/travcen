@@ -257,10 +257,15 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/csrf-token', (req, res) => {
-  if (typeof req.csrfToken === 'function') {
-    res.json({ csrfToken: req.csrfToken() });
-  } else {
-    res.status(500).json({ error: 'CSRF not configured properly' });
+  try {
+    if (typeof req.csrfToken === 'function') {
+      res.json({ csrfToken: req.csrfToken() });
+    } else {
+      res.status(500).json({ error: 'CSRF not configured properly' });
+    }
+  } catch (error) {
+    console.error('CSRF token generation error:', error);
+    res.status(500).json({ error: 'Failed to generate CSRF token' });
   }
 });
 
