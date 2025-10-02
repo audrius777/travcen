@@ -61,23 +61,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Duomenų bazės konfigūracija
-async function connectToDatabase() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('Prisijungta prie MongoDB Atlas');
-  } catch (err) {
-    console.error('Kritinė duomenų bazės klaida:', err);
-    process.exit(1);
-  }
-}
-
-// Middleware
+// Atnaujinti CSP nustatymus
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://www.googletagmanager.com", "https://apis.google.com", "https://www.gstatic.com", "https://www.google.com/recaptcha/api.js"],
+      fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://travcen-backendas.onrender.com"],
+      imgSrc: ["'self'", "data:", "https:"]
+    }
+  },
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
@@ -293,6 +288,20 @@ async function startServer() {
     console.log(`CSRF apsauga įjungta`);
     console.log(`Partnerių endpoint'ai aktyvuoti`);
   });
+}
+
+// Duomenų bazės konfigūracija
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('Prisijungta prie MongoDB Atlas');
+  } catch (err) {
+    console.error('Kritinė duomenų bazės klaida:', err);
+    process.exit(1);
+  }
 }
 
 startServer().catch(err => {
