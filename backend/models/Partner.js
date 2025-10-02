@@ -42,21 +42,8 @@ router.get('/validate-website', async (req, res) => {
 // 2. Partnerio registracija (POST /api/partners/register)
 router.post('/partners/register', async (req, res) => {
   try {
-    const { company, website, email, description, captchaToken } = req.body;
+    const { company, website, email, description } = req.body;
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-
-    // CAPTCHA patikra
-    const captchaResponse = await axios.post(
-      'https://www.google.com/recaptcha/api/siteverify',
-      new URLSearchParams({
-        secret: process.env.RECAPTCHA_SECRET_KEY,
-        response: captchaToken
-      })
-    );
-
-    if (!captchaResponse.data.success) {
-      return res.status(400).json({ error: 'Neteisinga CAPTCHA' });
-    }
 
     // Partnerio duomenų validacija
     const validation = await validatePartner(company, website, email, ipAddress);
@@ -106,4 +93,4 @@ router.get('/pending', async (req, res) => {
   res.json(partners);
 });
 
-export default router;rt default router;
+export default router;
