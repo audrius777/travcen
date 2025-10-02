@@ -55,6 +55,137 @@ const LANGUAGE_CODES = {
   no: 'no-NO'
 };
 
+// PAPILDYTA: Funkcija partnerių svetainių gavimui
+async function getPartnerWebsites() {
+  try {
+    console.log('Gaunamos partnerių svetainės...');
+    const response = await fetch(`${API_BASE_URL}/partners`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP klaida! status: ${response.status}`);
+    }
+    
+    const partners = await response.json();
+    const websites = partners.map(partner => partner.website);
+    console.log('Gautos partnerių svetainės:', websites);
+    return websites;
+    
+  } catch (error) {
+    console.warn('Nepavyko gauti partnerių svetainių, naudojami demo website:', error);
+    return [
+      'https://kelioniuplanetas.lt',
+      'https://travelexpert.com', 
+      'https://tourworld.eu'
+    ];
+  }
+}
+
+// PAPILDYTA: Funkcija vienos svetainės scrapinimui
+async function scrapeWebsite(websiteUrl, searchCriteria) {
+  try {
+    console.log(`Scrapinama: ${websiteUrl} su kriterijais: ${searchCriteria}`);
+    
+    const response = await fetchWithCsrf(`${API_BASE_URL}/scrape`, {
+      method: 'POST',
+      body: JSON.stringify({
+        url: websiteUrl,
+        criteria: searchCriteria
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Scrapinimo klaida: ${response.status}`);
+    }
+    
+    const results = await response.json();
+    console.log(`Rasta ${results.length} rezultatų iš ${websiteUrl}`);
+    return results;
+    
+  } catch (error) {
+    console.error(`Klaida scrapinant ${websiteUrl}:`, error);
+    return []; // Grąžiname tuščią masyvą, kad nepakirstų viso scrapinimo
+  }
+}
+
+// PAPILDYTA: Pagrindinė scrapinimo funkcija visiems partneriams
+async function scrapeAllPartners(searchCriteria) {
+  try {
+    const websites = await getPartnerWebsites();
+    const allResults = [];
+    let completed = 0;
+    
+    console.log(`Pradedamas scrapinimas ${websites.length} partnerių...`);
+    
+    // Scrapiname kiekvieną svetainę
+    for (const website of websites) {
+      try {
+        // Atnaujinti progreso statusą
+        const scrapingMessage = document.getElementById('scraping-message');
+        if (scrapingMessage) {
+          scrapingMessage.textContent = `Searching ${website}... (${completed + 1}/${websites.length})`;
+        }
+        
+        const results = await scrapeWebsite(website, searchCriteria);
+        
+        // Pridėti šaltinio informaciją prie rezultatų
+        const resultsWithSource = results.map(offer => ({
+          ...offer,
+          source: website,
+          partnerName: website.replace('https://', '').replace('www.', '')
+        }));
+        
+        allResults.push(...resultsWithSource);
+        completed++;
+        
+        console.log(`✅ Apdorota ${completed}/${websites.length}: ${website} - ${results.length} rezultatų`);
+        
+      } catch (error) {
+        console.error(`❌ Klaida scrapinant ${website}:`, error);
+        completed++;
+      }
+    }
+    
+    console.log(`Scrapinimas baigtas. Iš viso rasta: ${allResults.length} rezultatų`);
+    return allResults;
+    
+  } catch (error) {
+    console.error('Bendra scrapinimo klaida:', error);
+    throw error;
+  }
+}
+
+// ATNAUJINTA: Scrapinimo funkcija (pervadinta iš scrapeTravelOffers)
+async function scrapeTravelOffers(searchCriteria) {
+  try {
+    console.log('Pradedamas scrapinimas visuose partneriuose:', searchCriteria);
+    
+    // Gauti rezultatus iš visų partnerių
+    const scrapedResults = await scrapeAllPartners(searchCriteria);
+    
+    // Konvertuoti scrapinimo rezultatus į mūsų kortelių formatą
+    const convertedResults = scrapedResults.map((offer, index) => ({
+      id: `scraped-${Date.now()}-${index}`,
+      company: offer.partnerName || offer.source,
+      departure: 'Various', // Scrapinimas dažniausiai nerodo išvykimo vietos
+      destination: offer.title || 'Travel Offer',
+      price: offer.price || 0,
+      type: "leisure", // Numatytasis tipas
+      departureDate: '', // Scrapinimas dažniausiai nerodo datos
+      imageUrl: offer.image || `https://source.unsplash.com/featured/280x180/?travel`,
+      partnerUrl: offer.link || offer.source
+    }));
+    
+    console.log('Konvertuoti rezultatai:', convertedResults);
+    return convertedResults;
+    
+  } catch (error) {
+    console.error('Scrapinimo klaida:', error);
+    throw error;
+  }
+}
+
 // Funkcija CSRF tokeno gavimui
 async function getCsrfToken() {
   try {
@@ -154,33 +285,6 @@ function formatDateByLanguage(dateString, languageCode) {
   });
 }
 
-// Scrapinimo funkcija
-async function scrapeTravelOffers(destination) {
-  try {
-    console.log('Pradedamas scrapinimas:', destination);
-    
-    const response = await fetchWithCsrf(`${API_BASE_URL}/scrape`, {
-      method: 'POST',
-      body: JSON.stringify({
-        url: 'https://kelioniuplanetas.lt',
-        criteria: destination
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Scrapinimo klaida: ${response.status}`);
-    }
-    
-    const results = await response.json();
-    console.log('Scrapinimo rezultatai:', results);
-    return results;
-    
-  } catch (error) {
-    console.error('Scrapinimo klaida:', error);
-    throw error;
-  }
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   // Gauti CSRF tokeną iškart po puslapio užkrovimo
   try {
@@ -217,13 +321,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Paieškos funkcijos priskyrimas
+  // ATNAUJINTA: Paieškos funkcijos priskyrimas
   const searchBtn = document.getElementById("search-btn");
   if (searchBtn) {
     searchBtn.addEventListener("click", async () => {
       const destination = document.getElementById("destination").value;
+      const departure = document.getElementById("departure").value;
       
-      if (destination) {
+      // Sudarome paieškos kriterijus iš visų laukų
+      let searchCriteria = '';
+      if (departure) searchCriteria += departure + ' ';
+      if (destination) searchCriteria += destination + ' ';
+      
+      // Pridedame kelionės tipą, jei pasirinktas
+      const tripType = document.getElementById("trip-type").value;
+      if (tripType) {
+        searchCriteria += tripType + ' ';
+      }
+      
+      searchCriteria = searchCriteria.trim();
+      
+      if (searchCriteria) {
         try {
           // Rodyti scrapinimo statusą
           const scrapingStatus = document.getElementById('scraping-status');
@@ -232,8 +350,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           scrapingStatus.style.display = 'block';
           scrapingMessage.textContent = 'Searching across all partners...';
           
-          // Atlikti scrapinimą
-          const scrapedResults = await scrapeTravelOffers(destination);
+          // Atlikti scrapinimą VISUOSE partneriuose
+          const scrapedResults = await scrapeTravelOffers(searchCriteria);
           
           // Atnaujinti rezultatus
           if (scrapedResults && scrapedResults.length > 0) {
@@ -241,6 +359,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             scrapingMessage.textContent = `Found ${scrapedResults.length} matching offers`;
           } else {
             scrapingMessage.textContent = 'No offers found';
+            // Jei nerasta, rodyti standartinius rezultatus
+            await loadPartners();
           }
           
           // Paslėpti statusą po 3 sekundžių
@@ -255,6 +375,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           
           scrapingStatus.style.display = 'block';
           scrapingMessage.textContent = 'Search error: ' + error.message;
+          
+          // Jei scrapinimas nepavyko, rodyti standartinius rezultatus
+          await loadPartners();
           
           setTimeout(() => {
             scrapingStatus.style.display = 'none';
