@@ -1,6 +1,5 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { validateRecaptchaV3 } from '../utils/recaptcha.js';
 import { validatePartner, validatePartnerWebsite } from '../services/validationLogic.js';
 
 const router = express.Router();
@@ -29,32 +28,10 @@ router.post('/partners/register', async (req, res) => {
             website, 
             email, 
             contactPerson,
-            description,
-            captchaToken 
+            description
         } = req.body;
         
         const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-
-        // CAPTCHA patikra
-        if (!captchaToken) {
-            return res.status(400).json({ error: 'CAPTCHA token reikalingas' });
-        }
-
-        const captchaResult = await validateRecaptchaV3(captchaToken);
-        
-        if (!captchaResult.success) {
-            return res.status(400).json({ 
-                error: 'Neteisinga CAPTCHA',
-                details: captchaResult.reasons 
-            });
-        }
-
-        if (captchaResult.score < 0.5) {
-            return res.status(400).json({ 
-                error: 'Aptiktas didelis rizikos lygis',
-                score: captchaResult.score 
-            });
-        }
 
         // Partnerio duomenų validacija
         const validation = await validatePartner(companyName, website, email, ipAddress);
@@ -70,7 +47,6 @@ router.post('/partners/register', async (req, res) => {
             contactPerson,
             description: description || '',
             ipAddress,
-            captchaToken,
             status: 'pending'
         });
         
