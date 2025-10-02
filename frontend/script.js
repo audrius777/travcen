@@ -207,7 +207,7 @@ async function getCsrfToken() {
   }
 }
 
-// Funkcija užklausoms su CSRF apsauga
+// Funkcija užklausams su CSRF apsauga
 async function fetchWithCsrf(url, options = {}) {
   // Įsitikinti, kad turime CSRF tokeną
   if (!csrfToken) {
