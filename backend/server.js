@@ -77,6 +77,7 @@ app.use((req, res, next) => {
     'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
     'http://localhost:3000',
     'https://travcen-backendas.onrender.com'
+    'null'
   ];
   
   const origin = req.headers.origin;
