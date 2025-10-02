@@ -1,6 +1,8 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { validatePartner, validatePartnerWebsite } from '../services/validationLogic.js';
+import PendingPartner from '../models/PendingPartner.js';
+import Partner from '../models/Partner.js';
 
 const router = express.Router();
 
@@ -40,7 +42,7 @@ router.post('/partners/register', async (req, res) => {
         }
 
         // Išsaugojimas MongoDB
-        const newPartner = new mongoose.models.PendingPartner({
+        const newPartner = new PendingPartner({
             companyName,
             website,
             email,
@@ -75,7 +77,7 @@ router.post('/partners/register', async (req, res) => {
 // 3. Aktyvių partnerių sąrašas (GET /api/partners)
 router.get('/partners', async (req, res) => {
     try {
-        const partners = await mongoose.models.Partner.find({ status: 'active' })
+        const partners = await Partner.find({ status: 'active' })
             .select('companyName website email contactPerson description')
             .sort({ createdAt: -1 });
         res.json(partners);
@@ -99,7 +101,7 @@ router.get('/partners/pending', async (req, res) => {
             ];
         }
         
-        const partners = await mongoose.models.PendingPartner.find(query)
+        const partners = await PendingPartner.find(query)
             .select('companyName website email contactPerson description requestDate')
             .sort({ requestDate: -1 });
             
@@ -115,13 +117,13 @@ router.put('/partners/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const pendingPartner = await mongoose.models.PendingPartner.findById(id);
+        const pendingPartner = await PendingPartner.findById(id);
         if (!pendingPartner) {
             return res.status(404).json({ error: 'Partneris nerastas' });
         }
 
         // Sukuriamas naujas aktyvus partneris
-        const newPartner = new mongoose.models.Partner({
+        const newPartner = new Partner({
             companyName: pendingPartner.companyName,
             website: pendingPartner.website,
             email: pendingPartner.email,
@@ -134,7 +136,7 @@ router.put('/partners/:id/approve', async (req, res) => {
         await newPartner.save();
         
         // Pašalinamas iš laukiančių
-        await mongoose.models.PendingPartner.findByIdAndDelete(id);
+        await PendingPartner.findByIdAndDelete(id);
 
         res.json({ 
             success: true, 
@@ -154,7 +156,7 @@ router.delete('/partners/:id/reject', async (req, res) => {
         const { id } = req.params;
         const { reason } = req.body;
 
-        const partner = await mongoose.models.PendingPartner.findByIdAndDelete(id);
+        const partner = await PendingPartner.findByIdAndDelete(id);
         
         if (!partner) {
             return res.status(404).json({ error: 'Partneris nerastas' });
