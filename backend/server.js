@@ -1,5 +1,3 @@
-[file name]: server (12).js
-[file content begin]
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
@@ -17,10 +15,6 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Po kitų importų pridėti:
-import { Partner } from './partnerModel.js';
-import PendingPartner from './models/PendingPartner.js';
-
 // ES modulių __dirname emuliacija
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,39 +28,6 @@ const PORT = process.env.PORT || 10000;
 
 // Trust proxy - PRIDĖTA
 app.set('trust proxy', 1);
-
-// Multer konfigūracija
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// File filter funkcija
-const fileFilter = (req, file, cb) => {
-  // Leidžiami failų tipai
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  // Tikriname failo plėtinį
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  // Tikriname MIME tipą
-  const mimetype = allowedTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb(new Error('Leidžiami tik paveikslėlių failai (JPEG, JPG, PNG, GIF, WEBP)'));
-  }
-};
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limitas
-  fileFilter: fileFilter
-});
 
 // CORS konfigūracija
 app.use((req, res, next) => {
@@ -85,6 +46,8 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -105,11 +68,6 @@ async function connectToDatabase() {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    
-    // Po mongoose.connect() pridėti modelų registravimą:
-    mongoose.model('Partner', Partner.schema);
-    mongoose.model('PendingPartner', PendingPartner.schema);
-    
     console.log('Prisijungta prie MongoDB Atlas');
   } catch (err) {
     console.error('Kritinė duomenų bazės klaida:', err);
@@ -129,7 +87,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Statinių failų servinimas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Sesijos konfigūracija - LABAI SVARBU CSRF
+// Sesijos konfigūracija
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -142,22 +100,22 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 valandos
+    maxAge: 24 * 60 * 60 * 1000
   }
 };
 
 app.use(session(sessionConfig));
 
-// Rate limiting - PATAISYTA
+// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Per daug užklausų iš šio IP',
-  trustProxy: 1 // PRIDĖTA
+  trustProxy: 1
 });
 app.use(limiter);
 
-// CSRF apsauga - TEISINGA KONFIGŪRACIJA
+// CSRF apsauga
 const csrfProtection = csrf({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
@@ -166,7 +124,7 @@ const csrfProtection = csrf({
   }
 });
 
-// CSRF token middleware - PRIDĖTA
+// CSRF token middleware
 app.use((req, res, next) => {
   if (req.csrfToken) {
     res.locals.csrfToken = req.csrfToken();
@@ -174,9 +132,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// CSRF middleware su išimtimis API endpointams - PATAISYTA
+// CSRF middleware su išimtimis
 app.use((req, res, next) => {
-  // Išimtys - šie endpointai nereikalauja CSRF
   if (req.path === '/api/health' || 
       req.path === '/api/scrape' ||
       req.path === '/api/csrf-token' ||
@@ -185,7 +142,6 @@ app.use((req, res, next) => {
     return next();
   }
   
-  // Visi kiti endpointai naudoja CSRF apsaugą
   if (typeof req.csrfToken === 'function') {
     csrfProtection(req, res, next);
   } else {
@@ -193,11 +149,11 @@ app.use((req, res, next) => {
   }
 });
 
-// Po kitų endpointų pridėti partnerių endpoint'us:
+// Partnerių endpoint'ai
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// Scrapinimo funkcija su axios ir cheerio
+// Scrapinimo funkcija
 async function scrapeWebsite(url, searchCriteria = '') {
   const cacheKey = `scrape:${url}:${searchCriteria}`;
   const cachedData = scrapeCache.get(cacheKey);
@@ -208,7 +164,6 @@ async function scrapeWebsite(url, searchCriteria = '') {
 
   try {
     console.log(`Scrapinama: ${url}`);
-    
     const response = await axios.get(url, {
       timeout: 10000,
       headers: {
@@ -219,7 +174,6 @@ async function scrapeWebsite(url, searchCriteria = '') {
     const $ = cheerio.load(response.data);
     const results = [];
     
-    // Bendri selektoriai daugumai svetainių
     $('.offer, .product, .item, .card').each((i, element) => {
       const title = $(element).find('h1, h2, h3, .title').first().text().trim();
       const priceText = $(element).find('.price, .cost').first().text().trim();
@@ -274,29 +228,6 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
-// Failų įkėlimo endpoint'as
-app.post('/api/upload', upload.single('image'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Nepasirinktas failas' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Failas sėkmingai įkeltas',
-      file: {
-        filename: req.file.filename,
-        originalName: req.file.originalname,
-        size: req.file.size,
-        path: `/uploads/${req.file.filename}`
-      }
-    });
-  } catch (error) {
-    console.error('Įkėlimo klaida:', error);
-    res.status(500).json({ error: 'Failo įkėlimo klaida' });
-  }
-});
-
 // Pagrindiniai API endpoint'ai
 app.get('/api/health', (req, res) => {
   res.json({
@@ -306,7 +237,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// CSRF token gavimo endpointas - PATAISYTA
 app.get('/api/csrf-token', (req, res) => {
   if (typeof req.csrfToken === 'function') {
     res.json({ csrfToken: req.csrfToken() });
@@ -323,25 +253,13 @@ app.get('/api/user', (req, res) => {
   }
 });
 
-// Atsijungimas
-app.post('/api/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Atsijungimo klaida' });
-    }
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
-  });
-});
-
 // Pagrindinis maršrutas
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
     service: 'Travcen Backend API',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    csrfEnabled: true
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -356,13 +274,6 @@ app.use((err, req, res, next) => {
     });
   }
   
-  // Multer klaidų apdorojimas
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'Failas per didelis' });
-    }
-  }
-  
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
@@ -370,7 +281,6 @@ app.use((err, req, res, next) => {
 async function startServer() {
   await connectToDatabase();
   
-  // Įsitikiname, kad uploads katalogas egzistuoja
   const fs = await import('fs');
   const uploadsDir = path.join(__dirname, 'uploads');
   if (!fs.existsSync(uploadsDir)) {
@@ -379,16 +289,13 @@ async function startServer() {
   
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveris paleistas http://localhost:${PORT}`);
-    console.log(`Scrapinimo funkcija aktyvuota (axios + cheerio)`);
+    console.log(`Scrapinimo funkcija aktyvuota`);
     console.log(`CSRF apsauga įjungta`);
-    console.log(`Failų įkėlimo funkcija aktyvuota`);
     console.log(`Partnerių endpoint'ai aktyvuoti`);
   });
 }
 
-// PATAISYTA: Tik VIENĄ KARTĄ iškviečiame startServer()
 startServer().catch(err => {
   console.error('Serverio paleidimo klaida:', err);
   process.exit(1);
 });
-[file content end]
