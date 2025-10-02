@@ -223,6 +223,34 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
+// Autentifikacijos endpoint'ai
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  // Laikinas admin prisijungimas - pakeiskite saugesniu būdu
+  if (username === 'admin' && password === 'admin123') {
+    req.session.user = {
+      id: 1,
+      username: 'admin',
+      role: 'admin',
+      loggedIn: true
+    };
+    return res.json({ success: true, user: req.session.user });
+  }
+  
+  res.status(401).json({ success: false, error: 'Netinkami prisijungimo duomenys' });
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: 'Atsijungimo klaida' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ success: true, message: 'Sėkmingai atsijungta' });
+  });
+});
+
 // Pagrindiniai API endpoint'ai
 app.get('/api/health', (req, res) => {
   res.json({
@@ -245,6 +273,118 @@ app.get('/api/user', (req, res) => {
     res.json({ loggedIn: true, user: req.session.user });
   } else {
     res.status(401).json({ loggedIn: false });
+  }
+});
+
+// Failų įkėlimo konfigūracija
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Leidžiami tik vaizdo ir dokumentų failai'));
+    }
+  }
+});
+
+// Failų įkėlimo endpoint'as
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Nepakankamos teisės' });
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nepasirinktas failas' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Failas sėkmingai įkeltas',
+      file: {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        path: `/uploads/${req.file.filename}`
+      }
+    });
+  } catch (error) {
+    console.error('Įkėlimo klaida:', error);
+    res.status(500).json({ error: 'Failo įkėlimo klaida' });
+  }
+});
+
+// Failų sąrašo gavimo endpoint'as
+app.get('/api/files', (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Nepakankamos teisės' });
+    }
+    
+    const fs = await import('fs');
+    const uploadsDir = path.join(__dirname, 'uploads');
+    
+    if (!fs.existsSync(uploadsDir)) {
+      return res.json({ files: [] });
+    }
+    
+    const files = fs.readdirSync(uploadsDir).map(filename => {
+      const filePath = path.join(uploadsDir, filename);
+      const stats = fs.statSync(filePath);
+      
+      return {
+        filename,
+        path: `/uploads/${filename}`,
+        size: stats.size,
+        uploaded: stats.mtime
+      };
+    });
+    
+    res.json({ files });
+  } catch (error) {
+    console.error('Failų sąrašo klaida:', error);
+    res.status(500).json({ error: 'Failų sąrašo gavimo klaida' });
+  }
+});
+
+// Failo ištrynimo endpoint'as
+app.delete('/api/files/:filename', (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Nepakankamos teisės' });
+    }
+    
+    const { filename } = req.params;
+    const fs = await import('fs');
+    const filePath = path.join(__dirname, 'uploads', filename);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Failas nerastas' });
+    }
+    
+    fs.unlinkSync(filePath);
+    res.json({ success: true, message: 'Failas sėkmingai ištrintas' });
+  } catch (error) {
+    console.error('Failo ištrynimo klaida:', error);
+    res.status(500).json({ error: 'Failo ištrynimo klaida' });
   }
 });
 
@@ -287,6 +427,7 @@ async function startServer() {
     console.log(`Scrapinimo funkcija aktyvuota`);
     console.log(`CSRF apsauga įjungta`);
     console.log(`Partnerių endpoint'ai aktyvuoti`);
+    console.log(`Failų įkėlimo sistema paruošta`);
   });
 }
 
