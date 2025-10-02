@@ -201,14 +201,15 @@ async function scrapeWebsite(url, searchCriteria = '') {
   }
 }
 
-// Scrapinimo endpoint'as
+// Scrapinimo endpoint'as - PAKEISTA: pašalintas admin tikrinimas
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
     
-    if (!req.session.user || req.session.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Nepakankamos teisės' });
-    }
+    // ❌ PAŠALINTA: Admin tikrinimas - dabar scrapina visi
+    // if (!req.session.user || req.session.user.role !== 'admin') {
+    //   return res.status(403).json({ error: 'Nepakankamos teisės' });
+    // }
     
     if (!url || !url.startsWith('http')) {
       return res.status(400).json({ error: 'Neteisingas URL formatas' });
