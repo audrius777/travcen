@@ -540,7 +540,9 @@ function renderCards(partners) {
         });
       }
 
-      window.open(partner.partnerUrl || partner.link || `https://${partner.id}.travcen.com`, '_blank');
+      // PATAISYTA: Saugesnis URL generavimas
+      const partnerUrl = partner.partnerUrl || partner.link || `https://travel-offer-${partner.id}.com`;
+      window.open(partnerUrl, '_blank');
     });
 
     container.appendChild(card);
