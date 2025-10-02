@@ -334,7 +334,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 });
 
 // Failų sąrašo gavimo endpoint'as
-app.get('/api/files', (req, res) => {
+app.get('/api/files', async (req, res) => {
   try {
     if (!req.session.user || req.session.user.role !== 'admin') {
       return res.status(403).json({ error: 'Nepakankamos teisės' });
@@ -367,7 +367,7 @@ app.get('/api/files', (req, res) => {
 });
 
 // Failo ištrynimo endpoint'as
-app.delete('/api/files/:filename', (req, res) => {
+app.delete('/api/files/:filename', async (req, res) => {
   try {
     if (!req.session.user || req.session.user.role !== 'admin') {
       return res.status(403).json({ error: 'Nepakankamos teisės' });
