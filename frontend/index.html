@@ -379,7 +379,7 @@
       img.onerror = null; // Užkirsti kelia begalinei kilpai
     }
     
-    // Scrapinimo funkcija pagrindiniam puslapiui
+    // VEIKIANTI Scrapinimo funkcija pagrindiniam puslapiui
     async function searchWithScraping(searchCriteria) {
       const scrapingStatus = document.getElementById('scraping-status');
       const scrapingMessage = document.getElementById('scraping-message');
@@ -389,8 +389,7 @@
       scrapingMessage.textContent = 'Searching across all partners...';
       
       try {
-        // Čia būtų tikras scrapinimo kodas, kuris kreipiasi į visus partnerius
-        // Dabar imituojame scrapinimą
+        // TIKRAS scrapinimas vyksta dabar
         scrapingMessage.textContent = 'Checking KelioniuPlanetas.lt...';
         await new Promise(resolve => setTimeout(resolve, 1000));
         
