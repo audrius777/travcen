@@ -119,14 +119,14 @@ const csrfProtection = csrf({
   }
 });
 
-// PIRMA: PRIDĖTI CSRF MIDDLEWARE PRIEŠ KITUS ROUTES
-app.use(csrfProtection);
-
-// CSRF token middleware
+// CSRF token middleware - PERKELTA AUKŠČIAU
 app.use((req, res, next) => {
-  res.locals.csrfToken = req.csrfToken();
+  res.locals.csrfToken = req.csrfToken;
   next();
 });
+
+// PIRMA: PRIDĖTI CSRF MIDDLEWARE PRIEŠ KITUS ROUTES
+app.use(csrfProtection);
 
 // CSRF middleware su išimtimis
 app.use((req, res, next) => {
