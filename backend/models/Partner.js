@@ -61,7 +61,5 @@ const PartnerSchema = new mongoose.Schema({
 
 // Indexai optimizavimui
 PartnerSchema.index({ status: 1, createdAt: -1 });
-PartnerSchema.index({ email: 1 }, { unique: true });
-PartnerSchema.index({ website: 1 }, { unique: true });
 
 export default mongoose.model('Partner', PartnerSchema);
