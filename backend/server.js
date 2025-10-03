@@ -17,15 +17,20 @@ const PORT = process.env.PORT || 10000;
 // 1. Trust proxy
 app.set('trust proxy', 1);
 
-// 2. CORS konfigūracija (supaprastinta)
+// 2. CORS konfigūracija (PATAISYTA)
 app.use(cors({
   origin: [
     'https://travcen.com',
     'https://www.travcen.com', 
     'https://travcen.vercel.app',
-    'http://localhost:3000'
+    'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
+    'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
+    'http://localhost:3000',
+    'https://localhost:3000'
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
 }));
 
 // 3. JSON parseris
@@ -54,10 +59,7 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-// 6. CSRF APSAUGOS IŠJUNGIMAS (laikinai)
-// VISIŠKAI pašaliname visus CSRF middleware
-
-// 7. Health check endpoint'ai (prieš route'us)
+// 6. Health check endpoint'ai (prieš route'us)
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -73,11 +75,11 @@ app.get('/api/csrf-token', (req, res) => {
   });
 });
 
-// 8. Partnerių route'ai
+// 7. Partnerių route'ai
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 9. Scrapinimo endpoint'as
+// 8. Scrapinimo endpoint'as
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -99,7 +101,7 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
-// 10. Autentifikacijos endpoint'ai
+// 9. Autentifikacijos endpoint'ai
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   
@@ -126,7 +128,7 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// 11. Pagrindinis route'as
+// 10. Pagrindinis route'as
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -136,18 +138,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// 12. Klaidų apdorojimas
+// 11. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error('Serverio klaida:', err.message);
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// 13. 404 handler
+// 12. 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Endpoint nerastas' });
 });
 
-// 14. Serverio paleidimas
+// 13. Serverio paleidimas
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -159,7 +161,7 @@ async function startServer() {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveris paleistas porte: ${PORT}`);
       console.log(`🔗 Health check: /api/health`);
-      console.log(`⚡ CSRF išjungtas laikinai`);
+      console.log(`🌍 CORS įjungtas Vercel domain'ams`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
