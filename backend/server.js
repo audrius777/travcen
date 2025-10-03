@@ -76,7 +76,7 @@ app.get('/api/csrf-token', (req, res) => {
 });
 
 // 7. Partnerių route'ai
-import partnerRoutes from './routes/partners.js';
+import partnerRoutes from './backend/routes/partners.js';
 app.use('/api', partnerRoutes);
 
 // 8. Scrapinimo endpoint'as
