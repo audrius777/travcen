@@ -128,8 +128,6 @@ PendingPartnerSchema.methods.canSubmitNewRequest = function() {
 
 // Indexai optimizavimui
 PendingPartnerSchema.index({ status: 1, requestDate: -1 });
-PendingPartnerSchema.index({ email: 1 }, { unique: true });
-PendingPartnerSchema.index({ website: 1 }, { unique: true });
 PendingPartnerSchema.index({ ipAddress: 1, requestDate: -1 });
 
 export default mongoose.model('PendingPartner', PendingPartnerSchema);
