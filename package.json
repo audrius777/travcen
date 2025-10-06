@@ -52,7 +52,8 @@
     "travel",
     "express",
     "mongodb",
-    "authentication"
+    "authentication",
+    "scraping"
   ],
   "repository": {
     "type": "git",
