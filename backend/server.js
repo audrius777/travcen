@@ -79,11 +79,11 @@ app.get('/api/csrf-token', (req, res) => {
   });
 });
 
-// 7. Partnerių route'ai
+// 7. Partnerių route'ai (PIRMA UŽKRAUNAMI ROUTE'AI)
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. Scrapinimo endpoint'as (PAŠALINTAS KELIONIU PLANETAS)
+// 8. Scrapinimo endpoint'as
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
