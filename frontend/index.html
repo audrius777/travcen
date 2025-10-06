@@ -180,17 +180,9 @@
   <div class="ads ads-left">Ad Left</div>
   <div class="ads ads-right">Ad Right</div>
 
+  <!-- PATAISYTA: Pašalinti hardcoded demo korteles -->
   <div class="results" id="card-list">
-    <div class="card" data-from="Vilnius" data-to="Greece" data-price="299">
-      <img src="https://source.unsplash.com/280x180/?beach" alt="Greece beach" />
-      <h3>Greece from Vilnius</h3>
-      <p>Price: €299</p>
-    </div>
-    <div class="card" data-from="Kaunas" data-to="Alps" data-price="499">
-      <img src="https://source.unsplash.com/280x180/?mountains" alt="Alps mountains" />
-      <h3>Alps from Kaunas</h3>
-      <p>Price: €499</p>
-    </div>
+    <!-- Kortelės bus įkeltos dinamiškai per JavaScript -->
   </div>
 
   <!-- Scraping status indicator -->
@@ -379,53 +371,8 @@
       img.onerror = null; // Užkirsti kelia begalinei kilpai
     }
     
-    // VEIKIANTI Scrapinimo funkcija pagrindiniam puslapiui
-    async function searchWithScraping(searchCriteria) {
-      const scrapingStatus = document.getElementById('scraping-status');
-      const scrapingMessage = document.getElementById('scraping-message');
-      
-      // Rodyti scrapinimo statusą
-      scrapingStatus.style.display = 'block';
-      scrapingMessage.textContent = 'Searching across all partners...';
-      
-      try {
-        // TIKRAS scrapinimas vyksta dabar
-        scrapingMessage.textContent = 'Checking KelioniuPlanetas.lt...';
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        scrapingMessage.textContent = 'Checking TravelExpert.com...';
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        scrapingMessage.textContent = 'Checking TourWorld.eu...';
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        scrapingMessage.textContent = 'Found 12 matching offers';
-        
-        // Po 3 sekundžių paslėpti statusą
-        setTimeout(() => {
-          scrapingStatus.style.display = 'none';
-        }, 3000);
-        
-      } catch (error) {
-        scrapingMessage.textContent = 'Search error: ' + error.message;
-        setTimeout(() => {
-          scrapingStatus.style.display = 'none';
-        }, 3000);
-      }
-    }
-    
-    // Pridėti scrapinimą prie paieškos mygtuko
+    // Paveikslėlių klaidų apdorojimas
     document.addEventListener("DOMContentLoaded", function() {
-      const searchBtn = document.getElementById('search-btn');
-      if (searchBtn) {
-        searchBtn.addEventListener('click', function() {
-          const destination = document.getElementById('destination').value;
-          if (destination) {
-            searchWithScraping(destination);
-          }
-        });
-      }
-      
       // Paveikslėlių klaidų apdorojimas
       document.querySelectorAll('img').forEach(img => {
         img.addEventListener('error', function() {
