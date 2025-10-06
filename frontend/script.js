@@ -4,57 +4,6 @@ const RECAPTCHA_SITE_KEY = '6LcbL5wrAAAAACbOLaU5S-dnUMRfJsdeiF6MhmmI';
 // CSRF token valdymas
 let csrfToken = null;
 
-// Mock partnerių duomenys atsarginiam variantui
-const MOCK_PARTNERS = [
-  {
-    id: 1,
-    company: "Travel Agency LT",
-    departure: "Vilnius",
-    destination: "Greece",
-    price: 299,
-    type: "leisure",
-    departureDate: "2023-06-15",
-    imageUrl: "https://source.unsplash.com/featured/280x180/?greece",
-    partnerUrl: "https://travel-lt.com"
-  },
-  {
-    id: 2,
-    company: "Baltic Tours",
-    departure: "Kaunas",
-    destination: "Alps",
-    price: 499,
-    type: "adventure",
-    departureDate: "2023-07-20",
-    imageUrl: "https://source.unsplash.com/featured/280x180/?alps",
-    partnerUrl: "https://baltictours.com"
-  },
-  {
-    id: 3,
-    company: "Euro Adventures",
-    departure: "Riga",
-    destination: "Spain",
-    price: 399,
-    type: "cultural",
-    departureDate: "2023-08-10",
-    imageUrl: "https://source.unsplash.com/featured/280x180/?spain",
-    partnerUrl: "https://euroadventures.com"
-  }
-];
-
-// Kalbų kodų atitikmenys
-const LANGUAGE_CODES = {
-  en: 'en-US',
-  lt: 'lt-LT',
-  fr: 'fr-FR',
-  es: 'es-ES',
-  de: 'de-DE',
-  zh: 'zh-CN',
-  ko: 'ko-KR',
-  da: 'da-DK',
-  sv: 'sv-SE',
-  no: 'no-NO'
-};
-
 // PAPILDYTA: Funkcija partnerių svetainių gavimui
 async function getPartnerWebsites() {
   try {
@@ -129,8 +78,15 @@ async function scrapeAllPartners(searchCriteria) {
         
         const results = await scrapeWebsite(website, searchCriteria);
         
+        // Filtruojame tik realius rezultatus (be klaidų pranešimų)
+        const validResults = results.filter(offer => 
+          offer.price > 0 && 
+          !offer.title.includes('Nerasta') && 
+          !offer.title.includes('Klaida')
+        );
+        
         // Pridėti šaltinio informaciją prie rezultatų
-        const resultsWithSource = results.map(offer => ({
+        const resultsWithSource = validResults.map(offer => ({
           ...offer,
           source: website,
           partnerName: website.replace('https://', '').replace('www.', '')
@@ -139,7 +95,7 @@ async function scrapeAllPartners(searchCriteria) {
         allResults.push(...resultsWithSource);
         completed++;
         
-        console.log(`✅ Apdorota ${completed}/${websites.length}: ${website} - ${results.length} rezultatų`);
+        console.log(`✅ Apdorota ${completed}/${websites.length}: ${website} - ${validResults.length} rezultatų`);
         
       } catch (error) {
         console.error(`❌ Klaida scrapinant ${website}:`, error);
@@ -156,13 +112,18 @@ async function scrapeAllPartners(searchCriteria) {
   }
 }
 
-// ATNAUJINTA: Scrapinimo funkcija (pervadinta iš scrapeTravelOffers)
+// ATNAUJINTA: Scrapinimo funkcija (visiškai pervadinta - be mock duomenų)
 async function scrapeTravelOffers(searchCriteria) {
   try {
     console.log('Pradedamas scrapinimas visuose partneriuose:', searchCriteria);
     
     // Gauti rezultatus iš visų partnerių
     const scrapedResults = await scrapeAllPartners(searchCriteria);
+    
+    if (scrapedResults.length === 0) {
+      console.log('Nerasta jokių rezultatų iš partnerių svetainių');
+      return [];
+    }
     
     // Konvertuoti scrapinimo rezultatus į mūsų kortelių formatą
     const convertedResults = scrapedResults.map((offer, index) => ({
@@ -182,7 +143,8 @@ async function scrapeTravelOffers(searchCriteria) {
     
   } catch (error) {
     console.error('Scrapinimo klaida:', error);
-    throw error;
+    // Grąžiname tuščią masyvą, o ne error - kad vartotojas matytų, kad nieko nerasta
+    return [];
   }
 }
 
@@ -275,6 +237,8 @@ function loadRecaptcha() {
 
 // Funkcija datos formatavimui pagal pasirinktą kalbą
 function formatDateByLanguage(dateString, languageCode) {
+  if (!dateString) return 'Date not specified';
+  
   const date = new Date(dateString);
   const locale = LANGUAGE_CODES[languageCode] || 'en-US';
   
@@ -284,6 +248,20 @@ function formatDateByLanguage(dateString, languageCode) {
     day: 'numeric'
   });
 }
+
+// Kalbų kodų atitikmenys
+const LANGUAGE_CODES = {
+  en: 'en-US',
+  lt: 'lt-LT',
+  fr: 'fr-FR',
+  es: 'es-ES',
+  de: 'de-DE',
+  zh: 'zh-CN',
+  ko: 'ko-KR',
+  da: 'da-DK',
+  sv: 'sv-SE',
+  no: 'no-NO'
+};
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Gauti CSRF tokeną iškart po puslapio užkrovimo
@@ -347,8 +325,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           const scrapingStatus = document.getElementById('scraping-status');
           const scrapingMessage = document.getElementById('scraping-message');
           
-          scrapingStatus.style.display = 'block';
-          scrapingMessage.textContent = 'Searching across all partners...';
+          if (scrapingStatus) scrapingStatus.style.display = 'block';
+          if (scrapingMessage) scrapingMessage.textContent = 'Searching across all partners...';
           
           // Atlikti scrapinimą VISUOSE partneriuose
           const scrapedResults = await scrapeTravelOffers(searchCriteria);
@@ -356,16 +334,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           // Atnaujinti rezultatus
           if (scrapedResults && scrapedResults.length > 0) {
             renderCards(scrapedResults);
-            scrapingMessage.textContent = `Found ${scrapedResults.length} matching offers`;
+            if (scrapingMessage) scrapingMessage.textContent = `Found ${scrapedResults.length} matching offers`;
           } else {
-            scrapingMessage.textContent = 'No offers found';
+            if (scrapingMessage) scrapingMessage.textContent = 'No offers found from partners';
             // Jei nerasta, rodyti standartinius rezultatus
             await loadPartners();
           }
           
           // Paslėpti statusą po 3 sekundžių
           setTimeout(() => {
-            scrapingStatus.style.display = 'none';
+            if (scrapingStatus) scrapingStatus.style.display = 'none';
           }, 3000);
           
         } catch (error) {
@@ -373,14 +351,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           const scrapingStatus = document.getElementById('scraping-status');
           const scrapingMessage = document.getElementById('scraping-message');
           
-          scrapingStatus.style.display = 'block';
-          scrapingMessage.textContent = 'Search error: ' + error.message;
+          if (scrapingStatus) scrapingStatus.style.display = 'block';
+          if (scrapingMessage) scrapingMessage.textContent = 'Search error: ' + error.message;
           
           // Jei scrapinimas nepavyko, rodyti standartinius rezultatus
           await loadPartners();
           
           setTimeout(() => {
-            scrapingStatus.style.display = 'none';
+            if (scrapingStatus) scrapingStatus.style.display = 'none';
           }, 3000);
         }
       } else {
@@ -438,7 +416,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (response.ok) {
           alert('Užklausa išsiųsta! Administratorius susisieks per 24 val.');
-          partnerModal.style.display = 'none';
+          if (partnerModal) partnerModal.style.display = 'none';
           partnerForm.reset();
         } else {
           // Jei serveris neveikia, parodyti pranešimą
@@ -481,10 +459,16 @@ async function loadPartners() {
     renderCards(partners);
     
   } catch (error) {
-    console.warn("Klaida užkraunant partnerius, naudojami mock duomenys:", error);
+    console.warn("Klaida užkraunant partnerius:", error);
     
-    // Atvaizduoti mock duomenis
-    renderCards(MOCK_PARTNERS);
+    // Rodyti tuščią sąrašą, o ne mock duomenis
+    renderCards([]);
+    
+    // Informuoti vartotoją
+    const container = document.getElementById('card-list');
+    if (container) {
+      container.innerHTML = '<div class="info-message"><p>Unable to load travel offers at the moment.</p><small>Please try again later or use the search function.</small></div>';
+    }
   }
 }
 
@@ -494,6 +478,11 @@ function renderCards(partners) {
   if (!container) return;
 
   container.innerHTML = '';
+
+  if (partners.length === 0) {
+    container.innerHTML = '<div class="info-message"><p>No travel offers available.</p><small>Try using the search function to find offers from partners.</small></div>';
+    return;
+  }
 
   // Gauti pasirinktą kalbą
   const currentLang = localStorage.getItem('selectedLanguage') || 'en';
