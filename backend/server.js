@@ -6,6 +6,8 @@ import cors from 'cors';
 import MongoStore from 'connect-mongo';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 // ES modulių __dirname emuliacija
 const __filename = fileURLToPath(import.meta.url);
@@ -79,7 +81,7 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. Scrapinimo endpoint'as
+// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTA - pašalinti mock duomenys)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -88,16 +90,64 @@ app.post('/api/scrape', async (req, res) => {
       return res.status(400).json({ error: 'Neteisingas URL formatas' });
     }
 
-    // Paprastas atsakymas kol scrapinimas neveikia
-    res.json([{ 
-      title: 'Scrapinimas laikinai išjungtas',
-      price: 0,
-      source: 'system'
-    }]);
+    console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
+
+    // Tikras scrapinimas su axios ir cheerio
+    const response = await axios.get(url, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
+    const offers = [];
+
+    // Bendras scrapinimo logika skirtingiems puslapiams
+    $('.offer, .product, .item, .tour, .package, .trip').each((index, element) => {
+      const $el = $(element);
+      
+      const title = $el.find('h1, h2, h3, .title, .name').first().text().trim();
+      const priceText = $el.find('.price, .cost, [class*="price"]').first().text().trim();
+      const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+      const image = $el.find('img').first().attr('src') || '';
+      const link = $el.find('a').first().attr('href') || '';
+
+      if (title && price > 0) {
+        offers.push({
+          title,
+          price,
+          image: image.startsWith('http') ? image : new URL(image, url).href,
+          link: link.startsWith('http') ? link : new URL(link, url).href,
+          source: url
+        });
+      }
+    });
+
+    console.log(`Rasta ${offers.length} pasiūlymų iš ${url}`);
+
+    if (offers.length === 0) {
+      return res.json([{
+        title: 'Nerasta atitinkančių pasiūlymų',
+        price: 0,
+        source: url,
+        note: 'Scrapinimas veikia, bet nerasta rezultatų'
+      }]);
+    }
+
+    res.json(offers);
 
   } catch (error) {
-    console.error('Scrapinimo klaida:', error);
-    res.status(500).json({ error: 'Scrapinimo klaida' });
+    console.error('Scrapinimo klaida:', error.message);
+    
+    // Grąžiname tuščią masyvą, o ne klaidos pranešimą
+    // Kad frontendas galėtų tęsti darbą su kitomis svetainėmis
+    res.json([{
+      title: 'Scrapinimo klaida',
+      price: 0,
+      source: 'system',
+      error: error.message
+    }]);
   }
 });
 
@@ -162,6 +212,7 @@ async function startServer() {
       console.log(`🚀 Serveris paleistas porte: ${PORT}`);
       console.log(`🔗 Health check: /api/health`);
       console.log(`🌍 CORS įjungtas Vercel domain'ams`);
+      console.log(`🔍 Tikras scrapinimas įJUNGTAS`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
