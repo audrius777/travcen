@@ -19,9 +19,10 @@ const PORT = process.env.PORT || 10000;
 // 1. Trust proxy
 app.set('trust proxy', 1);
 
-// 2. CORS konfigūracija (GRĄŽINAMA Į PAPRASTESNĘ VERSIJĄ)
+// 2. CORS konfigūracija
 app.use(cors({
   origin: [
+    'null',
     'https://travcen.com',
     'https://www.travcen.com', 
     'https://travcen.vercel.app',
@@ -29,8 +30,7 @@ app.use(cors({
     'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
     'https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app',
     'http://localhost:3000',
-    'https://localhost:3000',
-    'null' // PRIDĖTA - leidžiama local HTML failams
+    'https://localhost:3000'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -44,7 +44,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // 4. Statinių failų servinimas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 5. Sesijos konfigūracija (GRĄŽINAMA Į ORIGINALĄ)
+// 5. Sesijos konfigūracija
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
@@ -83,7 +83,7 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. Scrapinimo endpoint'as (LIKO TOKS PAT)
+// 8. Scrapinimo endpoint'as (PAŠALINTAS KELIONIU PLANETAS)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -108,6 +108,7 @@ app.post('/api/scrape', async (req, res) => {
     const $ = cheerio.load(response.data);
     const offers = [];
 
+    // TIK NOVATURAS SCRAPINIMAS
     if (url.includes('novaturas.lt')) {
       $('.offer-item, .tour-item, .product-item, .trip-card').each((index, element) => {
         const $el = $(element);
@@ -149,27 +150,8 @@ app.post('/api/scrape', async (req, res) => {
         });
       }
     }
-    else if (url.includes('kelioniuplanetas.lt')) {
-      $('.tour, .offer, .package, .product').each((index, element) => {
-        const $el = $(element);
-        const title = $el.find('.title, h3, h4').first().text().trim();
-        const priceText = $el.find('.price, .amount').first().text().trim();
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-        const image = $el.find('img').first().attr('src') || '';
-        const link = $el.find('a').first().attr('href') || '';
-
-        if (title && price > 0) {
-          offers.push({
-            title,
-            price,
-            image: image.startsWith('http') ? image : new URL(image, url).href,
-            link: link.startsWith('http') ? link : new URL(link, url).href,
-            source: 'KelioniuPlanetas'
-          });
-        }
-      });
-    }
     else {
+      // BENDRA SCRAPINIMO LOGIKA KITOMS SVETAINĖMS
       $('.product, .item, .card, .offer, .tour').each((index, element) => {
         const $el = $(element);
         const title = $el.find('h1, h2, h3, .title, .name').first().text().trim();
@@ -249,30 +231,9 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// 10. Testinis endpoint'as demo duomenims
+// 10. Testinis endpoint'as demo duomenims (PAŠALINTAS)
 app.get('/api/demo/partners', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(403).json({ error: 'Demo duomenys nepasiekiami production' });
-  }
-  
-  const demoPartners = [
-    {
-      id: 1,
-      companyName: "Novaturas",
-      website: "https://www.novaturas.lt",
-      email: "info@novaturas.lt",
-      description: "Didžiausia kelionių operatorė Baltijos šalyse"
-    },
-    {
-      id: 2, 
-      companyName: "KelioniuPlanetas",
-      website: "https://kelioniuplanetas.lt",
-      email: "info@kelioniuplanetas.lt",
-      description: "Kelionių organizavimo platforma"
-    }
-  ];
-  
-  res.json(demoPartners);
+  return res.status(403).json({ error: 'Demo duomenys nepasiekiami' });
 });
 
 // 11. Pagrindinis route'as
@@ -281,15 +242,7 @@ app.get('/', (req, res) => {
     status: 'online',
     service: 'Travcen Backend API',
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    cors: {
-      enabled: true,
-      domains: [
-        'travcen.com',
-        'travcen.vercel.app',
-        'travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app'
-      ]
-    }
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -318,11 +271,6 @@ async function startServer() {
       console.log(`🔗 Health check: /api/health`);
       console.log(`🌍 CORS įjungtas Vercel domain'ams`);
       console.log(`🔍 Tikras scrapinimas įJUNGTAS`);
-      console.log(`📡 CORS leidžiamos svetainės:`);
-      console.log(`   - https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app`);
-      console.log(`   - https://travcen.vercel.app`);
-      console.log(`   - https://travcen.com`);
-      console.log(`   - null (local HTML files)`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
