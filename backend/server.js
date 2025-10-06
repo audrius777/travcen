@@ -19,29 +19,19 @@ const PORT = process.env.PORT || 10000;
 // 1. Trust proxy
 app.set('trust proxy', 1);
 
-// 2. CORS konfigūracija (PATAISYTA - sutvarkytas origin formatas)
+// 2. CORS konfigūracija (GRĄŽINAMA Į PAPRASTESNĘ VERSIJĄ)
 app.use(cors({
-  origin: function (origin, callback) {
-    // Leidžiami domain'ai
-    const allowedOrigins = [
-      'https://travcen.com',
-      'https://www.travcen.com', 
-      'https://travcen.vercel.app',
-      'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
-      'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
-      'https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app',
-      'http://localhost:3000',
-      'https://localhost:3000'
-    ];
-    
-    // Leidžiame requests be origin (pvz., Postman) ir leidžiamus domain'us
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS klaida: Neleidžiamas origin:', origin);
-      callback(new Error('CORS klaida: Origin neleidžiamas'));
-    }
-  },
+  origin: [
+    'https://travcen.com',
+    'https://www.travcen.com', 
+    'https://travcen.vercel.app',
+    'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
+    'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
+    'https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app',
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'null' // PRIDĖTA - leidžiama local HTML failams
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
@@ -54,7 +44,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // 4. Statinių failų servinimas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 5. Sesijos konfigūracija (PATAISYTA - sutvarkytas cookie nustatymas)
+// 5. Sesijos konfigūracija (GRĄŽINAMA Į ORIGINALĄ)
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
@@ -71,15 +61,9 @@ const sessionConfig = {
   }
 };
 
-// Pataisymas development aplinkai
-if (process.env.NODE_ENV !== 'production') {
-  sessionConfig.cookie.secure = false;
-  sessionConfig.cookie.sameSite = 'lax';
-}
-
 app.use(session(sessionConfig));
 
-// 6. Health check endpoint'ai (prieš route'us)
+// 6. Health check endpoint'ai
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -99,7 +83,7 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTA - pridėtas error handling)
+// 8. Scrapinimo endpoint'as (LIKO TOKS PAT)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -110,7 +94,6 @@ app.post('/api/scrape', async (req, res) => {
 
     console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
 
-    // Tikras scrapinimas su axios ir cheerio
     const response = await axios.get(url, {
       timeout: 15000,
       headers: {
@@ -125,9 +108,7 @@ app.post('/api/scrape', async (req, res) => {
     const $ = cheerio.load(response.data);
     const offers = [];
 
-    // KONKRETŪS SCRAPINIMO TAISYKLĖS POPULIARIOMS SVETAINĖMS
     if (url.includes('novaturas.lt')) {
-      // Novaturas scrapinimas
       $('.offer-item, .tour-item, .product-item, .trip-card').each((index, element) => {
         const $el = $(element);
         
@@ -148,7 +129,6 @@ app.post('/api/scrape', async (req, res) => {
         }
       });
       
-      // Jei nerandame pagal specifinius selektorius, bandome bendresnius
       if (offers.length === 0) {
         $('a[href*="kelione"], a[href*="tour"], .card, .item').each((index, element) => {
           const $el = $(element);
@@ -170,7 +150,6 @@ app.post('/api/scrape', async (req, res) => {
       }
     }
     else if (url.includes('kelioniuplanetas.lt')) {
-      // KelioniuPlanetas scrapinimas
       $('.tour, .offer, .package, .product').each((index, element) => {
         const $el = $(element);
         const title = $el.find('.title, h3, h4').first().text().trim();
@@ -191,7 +170,6 @@ app.post('/api/scrape', async (req, res) => {
       });
     }
     else {
-      // Bendras scrapinimas kitoms svetainėms
       $('.product, .item, .card, .offer, .tour').each((index, element) => {
         const $el = $(element);
         const title = $el.find('h1, h2, h3, .title, .name').first().text().trim();
@@ -214,14 +192,11 @@ app.post('/api/scrape', async (req, res) => {
 
     console.log(`Rasta ${offers.length} pasiūlymų iš ${url}`);
 
-    // Jei nerandame pasiūlymų, bandome alternatyvų būdą
     if (offers.length === 0) {
       console.log('Bandome alternatyvų scrapinimo būdą...');
       
-      // Ieškome tekste, kuris atitinka paieškos kriterijus
       const bodyText = $('body').text();
       if (criteria && bodyText.toLowerCase().includes(criteria.toLowerCase())) {
-        // Jei svetainėje yra paieškos kriterijų, bet negalime išgauti struktūruotų duomenų
         offers.push({
           title: `Rasta pasiūlymų ${criteria} temoje`,
           price: 0,
@@ -237,7 +212,6 @@ app.post('/api/scrape', async (req, res) => {
   } catch (error) {
     console.error('Scrapinimo klaida:', error.message);
     
-    // Grąžiname informatyvų klaidos pranešimą
     res.status(500).json([{
       title: 'Scrapinimo klaida',
       price: 0,
@@ -248,7 +222,7 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
-// 9. Autentifikacijos endpoint'ai (PALIKTA BE PAKEITIMŲ)
+// 9. Autentifikacijos endpoint'ai
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   
@@ -275,7 +249,7 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// 10. Testinis endpoint'as demo duomenims (PALIKTA BE PAKEITIMŲ)
+// 10. Testinis endpoint'as demo duomenims
 app.get('/api/demo/partners', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ error: 'Demo duomenys nepasiekiami production' });
@@ -301,7 +275,7 @@ app.get('/api/demo/partners', (req, res) => {
   res.json(demoPartners);
 });
 
-// 11. Pagrindinis route'as (PALIKTA BE PAKEITIMŲ)
+// 11. Pagrindinis route'as
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -319,18 +293,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// 12. Klaidų apdorojimas (PALIKTA BE PAKEITIMŲ)
+// 12. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error('Serverio klaida:', err.message);
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// 13. 404 handler (PALIKTA BE PAKEITIMŲ)
+// 13. 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Endpoint nerastas' });
 });
 
-// 14. Serverio paleidimas (PALIKTA BE PAKEITIMŲ)
+// 14. Serverio paleidimas
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -348,6 +322,7 @@ async function startServer() {
       console.log(`   - https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app`);
       console.log(`   - https://travcen.vercel.app`);
       console.log(`   - https://travcen.com`);
+      console.log(`   - null (local HTML files)`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
