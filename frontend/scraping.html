@@ -316,6 +316,7 @@
           </div>
           
           <div id="partners-list">
+            <!-- Partneriai bus įkelti dinamiškai -->
             <div class="status-item">
               <div class="status-icon" style="background-color: #2ecc71;">
                 <i class="fas fa-check"></i>
@@ -325,28 +326,6 @@
                 <small class="text-muted">https://kelioniuplanetas.lt</small>
               </div>
               <span class="status-badge status-active">Aktyvus</span>
-            </div>
-            
-            <div class="status-item">
-              <div class="status-icon" style="background-color: #2ecc71;">
-                <i class="fas fa-check"></i>
-              </div>
-              <div>
-                <h6 class="mb-1">TravelExpert.com</h6>
-                <small class="text-muted">https://travelexpert.com</small>
-              </div>
-              <span class="status-badge status-active">Aktyvus</span>
-            </div>
-            
-            <div class="status-item">
-              <div class="status-icon" style="background-color: #f39c12;">
-                <i class="fas fa-clock"></i>
-              </div>
-              <div>
-                <h6 class="mb-1">TourWorld.eu</h6>
-                <small class="text-muted">https://tourworld.eu</small>
-              </div>
-              <span class="status-badge status-pending">Laukiama</span>
             </div>
           </div>
         </div>
@@ -360,14 +339,14 @@
           <div class="form-group">
             <label for="partner-select">Pasirinkite partnerį</label>
             <select class="form-control" id="partner-select">
-              <option value="kelioniuplanetas">KelioniuPlanetas.lt</option>
-              <option value="travelexpert">TravelExpert.com</option>
-              <option value="tourworld">TourWorld.eu</option>
+              <option value="https://kelioniuplanetas.lt">KelioniuPlanetas.lt</option>
+              <option value="https://travelexpert.com">TravelExpert.com</option>
+              <option value="https://tourworld.eu">TourWorld.eu</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label for="test-criteria">Paieškos kriterijai (testavimui)</label>
+            <label for="test-criteria">Paieškos kriterijai</label>
             <input type="text" class="form-control" placeholder="Pvz.: Ispanija, 7 dienos" id="test-criteria">
           </div>
           
@@ -397,7 +376,7 @@
       </div>
       <div class="card-body">
         <div class="scraping-results" id="scraping-results">
-          <p class="text-center text-muted my-4">Rezultatai bus rodomi čia</p>
+          <p class="text-center text-muted my-4">Rezultatai bus rodomi čia po scrapinimo</p>
         </div>
       </div>
     </div>
@@ -424,7 +403,7 @@
             </div>
             <div>
               <h6 class="mb-0">Talpyklos būsena</h6>
-              <small class="text-muted">0.5MB / 10MB</small>
+              <small class="text-muted">0MB / 10MB</small>
             </div>
           </div>
           
@@ -483,69 +462,25 @@
   </div>
 
   <script>
+    const API_BASE_URL = 'https://travcen-backendas.onrender.com/api';
+
     // Web Scraping modulis partnerių svetainėms
     class TravCenScraper {
       constructor() {
         this.backendUrl = 'https://travcen-backend.onrender.com';
         this.activeRequests = 0;
-        this.requestQueue = [];
         this.cache = new Map();
         this.requestDelay = 2000;
-        
-        this.scrapingRules = {
-          'kelioniuplanetas.lt': {
-            offerSelector: '.trip-offer',
-            titleSelector: '.offer-title',
-            priceSelector: '.price-value',
-            imageSelector: '.offer-image',
-            linkSelector: '.offer-link'
-          },
-          'travelexpert.com': {
-            offerSelector: '.tour-item',
-            titleSelector: '.tour-title',
-            priceSelector: '.tour-price',
-            imageSelector: '.tour-image',
-            linkSelector: '.tour-link'
-          },
-          'tourworld.eu': {
-            offerSelector: '.vacation-package',
-            titleSelector: '.package-title',
-            priceSelector: '.package-cost',
-            imageSelector: '.package-img',
-            linkSelector: '.package-link'
-          }
-        };
-      }
-      
-      getScrapingRules(url) {
-        for (const [domain, rules] of Object.entries(this.scrapingRules)) {
-          if (url.includes(domain)) {
-            return rules;
-          }
-        }
-        
-        return {
-          offerSelector: '.offer, .product, .item',
-          titleSelector: 'h2, h3, .title, .name',
-          priceSelector: '.price, .cost, [class*="price"]',
-          imageSelector: 'img',
-          linkSelector: 'a'
-        };
       }
       
       async scrapePartnerData(partnerUrl, searchCriteria = '') {
         const cacheKey = `${partnerUrl}-${searchCriteria}`;
-        const cachedData = this.getFromCache(cacheKey);
-        
-        if (cachedData) {
-          console.log('Gražinami talpyklos duomenys:', cacheKey);
-          return cachedData;
-        }
         
         if (this.activeRequests >= 3) {
           return new Promise((resolve) => {
-            this.requestQueue.push({ partnerUrl, searchCriteria, resolve });
-            this.updateSystemStatus();
+            setTimeout(() => {
+              this.scrapePartnerData(partnerUrl, searchCriteria).then(resolve);
+            }, this.requestDelay);
           });
         }
         
@@ -553,96 +488,55 @@
         this.updateSystemStatus();
         
         try {
-          // Imituojame serverio užklausą
           console.log(`Scrapinama: ${partnerUrl} su kriterijais: ${searchCriteria}`);
-          await new Promise(resolve => setTimeout(resolve, 1500));
           
-          const mockData = this.generateMockData(partnerUrl, searchCriteria);
-          this.saveToCache(cacheKey, mockData, 10);
+          // TIKRAS scrapinimas per backend API
+          const response = await fetch(`${this.backendUrl}/api/scrape`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: partnerUrl,
+              criteria: searchCriteria
+            })
+          });
           
-          return mockData;
+          if (!response.ok) {
+            throw new Error(`Scrapinimo klaida: ${response.status}`);
+          }
+          
+          const results = await response.json();
+          
+          // Filtruojame tik realius rezultatus
+          const validResults = results.filter(offer => 
+            offer.price > 0 && 
+            !offer.title.includes('Nerasta') && 
+            !offer.title.includes('Klaida') &&
+            !offer.title.includes('Scrapinimas')
+          );
+          
+          return validResults;
+          
         } catch (error) {
           console.error('Scraping klaida:', error);
-          throw error;
+          return [];
         } finally {
           this.activeRequests--;
-          this.processQueue();
           this.updateSystemStatus();
         }
       }
       
-      generateMockData(partnerUrl, searchCriteria) {
-        const destinations = ['Ispanija', 'Graikija', 'Turkija', 'Egiptas', 'Italija', 'Prancūzija'];
-        const tripTypes = ['Pajūrio poilsis', 'Ekskursijos', 'Kalnų turizmas', 'Miesto kelionė'];
-        
-        const results = [];
-        const resultCount = Math.floor(Math.random() * 5) + 3;
-        
-        for (let i = 0; i < resultCount; i++) {
-          const destination = destinations[Math.floor(Math.random() * destinations.length)];
-          const duration = Math.floor(Math.random() * 7) + 4;
-          const price = Math.floor(Math.random() * 400) + 199;
-          
-          results.push({
-            id: Date.now() + i,
-            title: `${destination} - ${tripTypes[Math.floor(Math.random() * tripTypes.length)]}`,
-            price: price,
-            duration: `${duration} dienos`,
-            image: `https://source.unsplash.com/300x200/?${destination.toLowerCase()},vacation`,
-            link: `https://${partnerUrl}/offer-${i}`,
-            source: partnerUrl
-          });
-        }
-        
-        return results;
-      }
-      
-      processQueue() {
-        if (this.requestQueue.length > 0 && this.activeRequests < 3) {
-          const nextRequest = this.requestQueue.shift();
-          setTimeout(() => {
-            this.scrapePartnerData(nextRequest.partnerUrl, nextRequest.searchCriteria)
-              .then(data => nextRequest.resolve(data))
-              .catch(error => nextRequest.resolve({ error: error.message }));
-          }, this.requestDelay);
-        }
-      }
-      
-      saveToCache(key, data, minutes) {
-        const expiry = Date.now() + minutes * 60 * 1000;
-        this.cache.set(key, { data, expiry });
-        this.cleanCache();
-        this.updateCacheStatus();
-      }
-      
-      getFromCache(key) {
-        const item = this.cache.get(key);
-        if (!item) return null;
-        
-        if (Date.now() > item.expiry) {
-          this.cache.delete(key);
-          return null;
-        }
-        
-        return item.data;
-      }
-      
-      cleanCache() {
-        for (const [key, item] of this.cache.entries()) {
-          if (Date.now() > item.expiry) {
-            this.cache.delete(key);
-          }
-        }
-      }
-      
-      updateCacheStatus() {
-        const cacheSize = Math.round((JSON.stringify([...this.cache]).length / 1024 / 1024) * 100) / 100;
-        document.querySelectorAll('.status-item')[1].querySelector('small').textContent = `${cacheSize}MB / 10MB`;
-      }
-      
       updateSystemStatus() {
-        document.querySelectorAll('.status-item')[3].querySelector('small').textContent = this.activeRequests;
-        document.querySelectorAll('.status-item')[2].querySelector('small').textContent = new Date().toLocaleTimeString('lt-LT');
+        const activeRequestsElement = document.querySelectorAll('.status-item')[3];
+        if (activeRequestsElement) {
+          activeRequestsElement.querySelector('small').textContent = this.activeRequests;
+        }
+        
+        const lastUpdateElement = document.querySelectorAll('.status-item')[2];
+        if (lastUpdateElement) {
+          lastUpdateElement.querySelector('small').textContent = new Date().toLocaleTimeString('lt-LT');
+        }
       }
       
       setRequestDelay(frequency) {
@@ -668,24 +562,10 @@
     // UI valdymo funkcijos
     document.addEventListener('DOMContentLoaded', function() {
       // Testavimo mygtuko funkcionalumas
-      document.getElementById('run-scraping-btn').addEventListener('click', function() {
+      document.getElementById('run-scraping-btn').addEventListener('click', async function() {
         const partnerSelect = document.getElementById('partner-select');
         const criteria = document.getElementById('test-criteria').value;
-        
-        let partnerUrl;
-        switch(partnerSelect.value) {
-          case 'kelioniuplanetas':
-            partnerUrl = 'kelioniuplanetas.lt';
-            break;
-          case 'travelexpert':
-            partnerUrl = 'travelexpert.com';
-            break;
-          case 'tourworld':
-            partnerUrl = 'tourworld.eu';
-            break;
-          default:
-            partnerUrl = 'kelioniuplanetas.lt';
-        }
+        const partnerUrl = partnerSelect.value;
         
         // Rodyti progresą
         const progressBar = document.getElementById('scraping-progress');
@@ -694,22 +574,28 @@
         let progress = 0;
         const progressInterval = setInterval(() => {
           progress += 5;
+          if (progress > 90) progress = 90; // Sustabdome 90%, laukiama rezultatų
           progressBar.querySelector('.progress-bar').style.width = `${progress}%`;
-          if (progress >= 100) clearInterval(progressInterval);
         }, 100);
         
-        // Paleisti scrapingą
-        scraper.scrapePartnerData(partnerUrl, criteria)
-          .then(data => {
-            clearInterval(progressInterval);
+        try {
+          // Paleisti scrapingą
+          const data = await scraper.scrapePartnerData(partnerUrl, criteria);
+          
+          clearInterval(progressInterval);
+          progressBar.querySelector('.progress-bar').style.width = '100%';
+          
+          setTimeout(() => {
             progressBar.style.display = 'none';
-            displayResults(data);
-          })
-          .catch(error => {
-            clearInterval(progressInterval);
-            progressBar.style.display = 'none';
-            displayError(error);
-          });
+          }, 500);
+          
+          displayResults(data);
+          
+        } catch (error) {
+          clearInterval(progressInterval);
+          progressBar.style.display = 'none';
+          displayError(error);
+        }
       });
 
       // Rezultatų atvaizdavimas
@@ -717,21 +603,27 @@
         const resultsContainer = document.getElementById('scraping-results');
         
         if (!offers || offers.length === 0) {
-          resultsContainer.innerHTML = '<p class="text-center text-muted my-4">Nerasta jokių pasiūlymų</p>';
+          resultsContainer.innerHTML = `
+            <div class="offer-card">
+              <h6 class="card-title">Nerasta jokių pasiūlymų</h6>
+              <p class="text-muted">Scrapinimas veikia, bet šiuo metu nerasta atitinkančių pasiūlymų.</p>
+            </div>
+          `;
           return;
         }
         
         resultsContainer.innerHTML = offers.map(offer => `
           <div class="offer-card">
             <div class="d-flex">
-              <img src="${offer.image}" alt="${offer.title}" style="width: 100px; height: 70px; object-fit: cover; border-radius: 5px;" class="me-3">
+              <img src="${offer.image}" alt="${offer.title}" style="width: 100px; height: 70px; object-fit: cover; border-radius: 5px;" class="me-3"
+                   onerror="this.src='https://source.unsplash.com/featured/100x70/?travel'">
               <div class="flex-grow-1">
                 <h6 class="card-title">${offer.title}</h6>
                 <div class="d-flex justify-content-between">
                   <span class="text-primary fw-bold">${offer.price} €</span>
-                  <span class="text-muted">${offer.duration}</span>
                 </div>
                 <small class="text-muted">Šaltinis: ${offer.source}</small>
+                ${offer.link ? `<br><small><a href="${offer.link}" target="_blank">Peržiūrėti pasiūlymą</a></small>` : ''}
               </div>
             </div>
           </div>
@@ -744,7 +636,7 @@
         resultsContainer.innerHTML = `
           <div class="alert alert-danger">
             <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Klaida:</strong> ${error.message || 'Įvyko klaida'}
+            <strong>Klaida:</strong> ${error.message || 'Įvyko klaida scrapinimo metu'}
           </div>
         `;
       }
