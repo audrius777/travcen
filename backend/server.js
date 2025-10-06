@@ -22,6 +22,7 @@ app.set('trust proxy', 1);
 // 2. CORS konfigūracija (PATAISYTA - pridėtas naujas domain)
 app.use(cors({
   origin: [
+    'null',
     'https://travcen.com',
     'https://www.travcen.com', 
     'https://travcen.vercel.app',
