@@ -19,19 +19,29 @@ const PORT = process.env.PORT || 10000;
 // 1. Trust proxy
 app.set('trust proxy', 1);
 
-// 2. CORS konfigūracija (PATAISYTA - pridėtas naujas domain)
+// 2. CORS konfigūracija (PATAISYTA - sutvarkytas origin formatas)
 app.use(cors({
-  origin: [
-    'null',
-    'https://travcen.com',
-    'https://www.travcen.com', 
-    'https://travcen.vercel.app',
-    'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
-    'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
-    'https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app', // PRIDĖTA
-    'http://localhost:3000',
-    'https://localhost:3000'
-  ],
+  origin: function (origin, callback) {
+    // Leidžiami domain'ai
+    const allowedOrigins = [
+      'https://travcen.com',
+      'https://www.travcen.com', 
+      'https://travcen.vercel.app',
+      'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
+      'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
+      'https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app',
+      'http://localhost:3000',
+      'https://localhost:3000'
+    ];
+    
+    // Leidžiame requests be origin (pvz., Postman) ir leidžiamus domain'us
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS klaida: Neleidžiamas origin:', origin);
+      callback(new Error('CORS klaida: Origin neleidžiamas'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
@@ -44,7 +54,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // 4. Statinių failų servinimas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 5. Sesijos konfigūracija
+// 5. Sesijos konfigūracija (PATAISYTA - sutvarkytas cookie nustatymas)
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
@@ -60,6 +70,12 @@ const sessionConfig = {
     maxAge: 24 * 60 * 60 * 1000
   }
 };
+
+// Pataisymas development aplinkai
+if (process.env.NODE_ENV !== 'production') {
+  sessionConfig.cookie.secure = false;
+  sessionConfig.cookie.sameSite = 'lax';
+}
 
 app.use(session(sessionConfig));
 
@@ -83,7 +99,7 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTA - konkretūs selektoriai)
+// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTA - pridėtas error handling)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -222,7 +238,7 @@ app.post('/api/scrape', async (req, res) => {
     console.error('Scrapinimo klaida:', error.message);
     
     // Grąžiname informatyvų klaidos pranešimą
-    res.json([{
+    res.status(500).json([{
       title: 'Scrapinimo klaida',
       price: 0,
       source: 'system',
@@ -232,7 +248,7 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
-// 9. Autentifikacijos endpoint'ai
+// 9. Autentifikacijos endpoint'ai (PALIKTA BE PAKEITIMŲ)
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   
@@ -259,7 +275,7 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// 10. Testinis endpoint'as demo duomenims (tik development)
+// 10. Testinis endpoint'as demo duomenims (PALIKTA BE PAKEITIMŲ)
 app.get('/api/demo/partners', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ error: 'Demo duomenys nepasiekiami production' });
@@ -285,7 +301,7 @@ app.get('/api/demo/partners', (req, res) => {
   res.json(demoPartners);
 });
 
-// 11. Pagrindinis route'as
+// 11. Pagrindinis route'as (PALIKTA BE PAKEITIMŲ)
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -303,18 +319,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// 12. Klaidų apdorojimas
+// 12. Klaidų apdorojimas (PALIKTA BE PAKEITIMŲ)
 app.use((err, req, res, next) => {
   console.error('Serverio klaida:', err.message);
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// 13. 404 handler
+// 13. 404 handler (PALIKTA BE PAKEITIMŲ)
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Endpoint nerastas' });
 });
 
-// 14. Serverio paleidimas
+// 14. Serverio paleidimas (PALIKTA BE PAKEITIMŲ)
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
