@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 10000;
 // 1. Trust proxy
 app.set('trust proxy', 1);
 
-// 2. CORS konfigūracija
+// 2. CORS konfigūracija (PATAISYTA - pridėtas null ir naujas domain)
 app.use(cors({
   origin: [
     'null',
@@ -63,7 +63,7 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-// 6. Health check endpoint'ai
+// 6. Health check endpoint'ai (prieš route'us)
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -79,11 +79,11 @@ app.get('/api/csrf-token', (req, res) => {
   });
 });
 
-// 7. Partnerių route'ai (PIRMA UŽKRAUNAMI ROUTE'AI)
+// 7. Partnerių route'ai
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. Scrapinimo endpoint'as
+// 8. TIKRAS Scrapinimo endpoint'as (ATSTATYTAS)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -94,6 +94,7 @@ app.post('/api/scrape', async (req, res) => {
 
     console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
 
+    // Tikras scrapinimas su axios ir cheerio
     const response = await axios.get(url, {
       timeout: 15000,
       headers: {
@@ -108,8 +109,9 @@ app.post('/api/scrape', async (req, res) => {
     const $ = cheerio.load(response.data);
     const offers = [];
 
-    // TIK NOVATURAS SCRAPINIMAS
+    // KONKRETŪS SCRAPINIMO TAISYKLĖS POPULIARIOMS SVETAINĖMS
     if (url.includes('novaturas.lt')) {
+      // Novaturas scrapinimas
       $('.offer-item, .tour-item, .product-item, .trip-card').each((index, element) => {
         const $el = $(element);
         
@@ -130,6 +132,7 @@ app.post('/api/scrape', async (req, res) => {
         }
       });
       
+      // Jei nerandame pagal specifinius selektorius, bandome bendresnius
       if (offers.length === 0) {
         $('a[href*="kelione"], a[href*="tour"], .card, .item').each((index, element) => {
           const $el = $(element);
@@ -151,7 +154,7 @@ app.post('/api/scrape', async (req, res) => {
       }
     }
     else {
-      // BENDRA SCRAPINIMO LOGIKA KITOMS SVETAINĖMS
+      // Bendras scrapinimas kitoms svetainėms
       $('.product, .item, .card, .offer, .tour').each((index, element) => {
         const $el = $(element);
         const title = $el.find('h1, h2, h3, .title, .name').first().text().trim();
@@ -174,11 +177,14 @@ app.post('/api/scrape', async (req, res) => {
 
     console.log(`Rasta ${offers.length} pasiūlymų iš ${url}`);
 
+    // Jei nerandame pasiūlymų, bandome alternatyvų būdą
     if (offers.length === 0) {
       console.log('Bandome alternatyvų scrapinimo būdą...');
       
+      // Ieškome tekste, kuris atitinka paieškos kriterijus
       const bodyText = $('body').text();
       if (criteria && bodyText.toLowerCase().includes(criteria.toLowerCase())) {
+        // Jei svetainėje yra paieškos kriterijų, bet negalime išgauti struktūruotų duomenų
         offers.push({
           title: `Rasta pasiūlymų ${criteria} temoje`,
           price: 0,
@@ -194,6 +200,7 @@ app.post('/api/scrape', async (req, res) => {
   } catch (error) {
     console.error('Scrapinimo klaida:', error.message);
     
+    // Grąžiname informatyvų klaidos pranešimą
     res.status(500).json([{
       title: 'Scrapinimo klaida',
       price: 0,
@@ -231,12 +238,7 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// 10. Testinis endpoint'as demo duomenims (PAŠALINTAS)
-app.get('/api/demo/partners', (req, res) => {
-  return res.status(403).json({ error: 'Demo duomenys nepasiekiami' });
-});
-
-// 11. Pagrindinis route'as
+// 10. Pagrindinis route'as
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -246,18 +248,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// 12. Klaidų apdorojimas
+// 11. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error('Serverio klaida:', err.message);
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// 13. 404 handler
+// 12. 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Endpoint nerastas' });
 });
 
-// 14. Serverio paleidimas
+// 13. Serverio paleidimas
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
