@@ -80,7 +80,11 @@ router.get('/partners', async (req, res) => {
         const partners = await Partner.find({ status: 'active' })
             .select('companyName website email contactPerson description')
             .sort({ createdAt: -1 });
+        
+        // Jei nėra aktyvių partnerių, grąžiname tuščią masyvą
+        // NEgrąžiname mock duomenų
         res.json(partners);
+        
     } catch (error) {
         console.error('Partnerių gavimo klaida:', error);
         res.status(500).json({ error: 'Serverio klaida' });
