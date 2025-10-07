@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-date-placeholder": "Išvykimo data",
       "trip-type-default": "Kelionės tipas",
       "trip-type-leisure": "Poilsinė",
-      "trip-type-adventure": "Prielinksninė",
+      "trip-type-adventure": "Nuotykinė",
       "trip-type-cultural": "Pažintinė",
       "trip-type-last-minute": "Last Minute",
       "price-sort-default": "Rikiuoti pagal kainą",
