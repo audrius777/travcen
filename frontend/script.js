@@ -16,18 +16,14 @@ async function getPartnerWebsites() {
       throw new Error(`HTTP klaida! status: ${response.status}`);
     }
     
-    const partners = await response.json();
-    const websites = partners.map(partner => partner.website);
+    const data = await response.json();
+    const websites = data.data ? data.data.map(partner => partner.website) : [];
     console.log('Gautos partnerių svetainės:', websites);
     return websites;
     
   } catch (error) {
-    console.warn('Nepavyko gauti partnerių svetainių, naudojami demo website:', error);
-    return [
-      'https://kelioniuplanetas.lt',
-      'https://travelexpert.com', 
-      'https://tourworld.eu'
-    ];
+    console.warn('Nepavyko gauti partnerių svetainių:', error);
+    return []; // Grąžiname tuščią masyvą vietoj netikrų demo svetainių
   }
 }
 
@@ -48,7 +44,8 @@ async function scrapeWebsite(websiteUrl, searchCriteria) {
       throw new Error(`Scrapinimo klaida: ${response.status}`);
     }
     
-    const results = await response.json();
+    const data = await response.json();
+    const results = data.results || [];
     console.log(`Rasta ${results.length} rezultatų iš ${websiteUrl}`);
     return results;
     
@@ -62,6 +59,12 @@ async function scrapeWebsite(websiteUrl, searchCriteria) {
 async function scrapeAllPartners(searchCriteria) {
   try {
     const websites = await getPartnerWebsites();
+    
+    if (websites.length === 0) {
+      console.log('Nėra aktyvių partnerių scrapinimui');
+      return [];
+    }
+    
     const allResults = [];
     let completed = 0;
     
@@ -80,7 +83,9 @@ async function scrapeAllPartners(searchCriteria) {
         
         // Filtruojame tik realius rezultatus (be klaidų pranešimų)
         const validResults = results.filter(offer => 
+          offer && 
           offer.price > 0 && 
+          offer.title && 
           !offer.title.includes('Nerasta') && 
           !offer.title.includes('Klaida')
         );
@@ -89,7 +94,7 @@ async function scrapeAllPartners(searchCriteria) {
         const resultsWithSource = validResults.map(offer => ({
           ...offer,
           source: website,
-          partnerName: website.replace('https://', '').replace('www.', '')
+          partnerName: new URL(website).hostname.replace('www.', '')
         }));
         
         allResults.push(...resultsWithSource);
@@ -108,11 +113,11 @@ async function scrapeAllPartners(searchCriteria) {
     
   } catch (error) {
     console.error('Bendra scrapinimo klaida:', error);
-    throw error;
+    return []; // Grąžiname tuščią masyvą vietoj error
   }
 }
 
-// ATNAUJINTA: Scrapinimo funkcija (visiškai pervadinta - be mock duomenų)
+// ATNAUJINTA: Scrapinimo funkcija (be mock duomenų)
 async function scrapeTravelOffers(searchCriteria) {
   try {
     console.log('Pradedamas scrapinimas visuose partneriuose:', searchCriteria);
@@ -129,13 +134,13 @@ async function scrapeTravelOffers(searchCriteria) {
     const convertedResults = scrapedResults.map((offer, index) => ({
       id: `scraped-${Date.now()}-${index}`,
       company: offer.partnerName || offer.source,
-      departure: 'Various', // Scrapinimas dažniausiai nerodo išvykimo vietos
-      destination: offer.title || 'Travel Offer',
+      departure: offer.departure || 'Various',
+      destination: offer.title || offer.destination || 'Travel Offer',
       price: offer.price || 0,
-      type: "leisure", // Numatytasis tipas
-      departureDate: '', // Scrapinimas dažniausiai nerodo datos
-      imageUrl: offer.image || `https://source.unsplash.com/featured/280x180/?travel`,
-      partnerUrl: offer.link || offer.source
+      type: offer.type || "leisure",
+      departureDate: offer.date || offer.departureDate || '',
+      imageUrl: offer.image || `https://source.unsplash.com/featured/280x180/?${encodeURIComponent(searchCriteria)}`,
+      partnerUrl: offer.link || offer.url || offer.source
     }));
     
     console.log('Konvertuoti rezultatai:', convertedResults);
@@ -143,7 +148,6 @@ async function scrapeTravelOffers(searchCriteria) {
     
   } catch (error) {
     console.error('Scrapinimo klaida:', error);
-    // Grąžiname tuščią masyvą, o ne error - kad vartotojas matytų, kad nieko nerasta
     return [];
   }
 }
@@ -196,7 +200,7 @@ async function fetchWithCsrf(url, options = {}) {
   const response = await fetch(url, mergedOptions);
   
   // Jei CSRF tokenas nebegalioja, gaukite naują ir pakartokite
-  if (response.status === 403 && response.headers.get('content-type')?.includes('application/json')) {
+  if (response.status === 403) {
     const errorData = await response.json();
     if (errorData.error && errorData.error.includes('CSRF')) {
       console.log('CSRF tokenas nebegalioja, gaunamas naujas...');
@@ -228,7 +232,7 @@ function loadRecaptcha() {
 
     script.onerror = () => {
       console.warn('Nepavyko įkelti reCAPTCHA, naudojamas testavimo režimas');
-      resolve(); // Išsprendžiama net ir su klaida
+      resolve();
     };
 
     document.head.appendChild(script);
@@ -273,7 +277,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   await loadPartners();
 
-  // Modalų valdymas - SPECIFINIS PARTNERIO MODALO VALDYMAS
+  // Modalų valdymas
   const partnerModal = document.getElementById("partner-modal");
   const partnerLink = document.getElementById("footer-partner");
   const partnerCloseBtn = partnerModal ? partnerModal.querySelector(".close") : null;
@@ -306,7 +310,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const destination = document.getElementById("destination").value;
       const departure = document.getElementById("departure").value;
       
-      // Sudarome paieškos kriterijus iš visų laukų
+      // Sudarome paieškos kriterijus
       let searchCriteria = '';
       if (departure) searchCriteria += departure + ' ';
       if (destination) searchCriteria += destination + ' ';
@@ -337,8 +341,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (scrapingMessage) scrapingMessage.textContent = `Found ${scrapedResults.length} matching offers`;
           } else {
             if (scrapingMessage) scrapingMessage.textContent = 'No offers found from partners';
-            // Jei nerasta, rodyti standartinius rezultatus
-            await loadPartners();
+            // Jei nerasta, rodyti informacinį pranešimą
+            showNoResultsMessage();
           }
           
           // Paslėpti statusą po 3 sekundžių
@@ -354,16 +358,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (scrapingStatus) scrapingStatus.style.display = 'block';
           if (scrapingMessage) scrapingMessage.textContent = 'Search error: ' + error.message;
           
-          // Jei scrapinimas nepavyko, rodyti standartinius rezultatus
-          await loadPartners();
+          // Rodyti informacinį pranešimą
+          showNoResultsMessage();
           
           setTimeout(() => {
             if (scrapingStatus) scrapingStatus.style.display = 'none';
           }, 3000);
         }
       } else {
-        // Jei nėra paieškos kriterijų, tiesiog filtruoti esamus duomenis
-        filterCards();
+        // Jei nėra paieškos kriterijų, tiesiog perkrauti partnerius
+        await loadPartners();
       }
     });
   }
@@ -419,7 +423,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (partnerModal) partnerModal.style.display = 'none';
           partnerForm.reset();
         } else {
-          // Jei serveris neveikia, parodyti pranešimą
           if (response.status === 502) {
             alert('Registracija laikinai neveikia. Prašome bandyti vėliau arba susisiekti tiesiogiai.');
           } else {
@@ -436,13 +439,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Partnerių užkrovimas su atsarginiu variantu ir pagerintu timeout valdymu
+// Partnerių užkrovimas
 async function loadPartners() {
   try {
     console.log('Bandome užkrauti partnerius iš:', API_BASE_URL + '/partners');
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sekundžių timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     
     const response = await fetch(`${API_BASE_URL}/partners`, {
       signal: controller.signal,
@@ -455,20 +458,26 @@ async function loadPartners() {
       throw new Error(`HTTP klaida! status: ${response.status}`);
     }
     
-    const partners = await response.json();
+    const data = await response.json();
+    const partners = data.data || [];
     renderCards(partners);
     
   } catch (error) {
     console.warn("Klaida užkraunant partnerius:", error);
-    
-    // Rodyti tuščią sąrašą, o ne mock duomenis
-    renderCards([]);
-    
-    // Informuoti vartotoją
-    const container = document.getElementById('card-list');
-    if (container) {
-      container.innerHTML = '<div class="info-message"><p>Unable to load travel offers at the moment.</p><small>Please try again later or use the search function.</small></div>';
-    }
+    showNoResultsMessage();
+  }
+}
+
+// Funkcija rodyti "nerasta" pranešimą
+function showNoResultsMessage() {
+  const container = document.getElementById('card-list');
+  if (container) {
+    container.innerHTML = `
+      <div class="info-message">
+        <p>No travel offers available at the moment.</p>
+        <small>Try using the search function or check back later.</small>
+      </div>
+    `;
   }
 }
 
@@ -480,7 +489,7 @@ function renderCards(partners) {
   container.innerHTML = '';
 
   if (partners.length === 0) {
-    container.innerHTML = '<div class="info-message"><p>No travel offers available.</p><small>Try using the search function to find offers from partners.</small></div>';
+    showNoResultsMessage();
     return;
   }
 
@@ -490,7 +499,7 @@ function renderCards(partners) {
   partners.forEach(partner => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.dataset.id = partner.id;
+    card.dataset.id = partner.id || partner._id;
     card.dataset.from = partner.departure;
     card.dataset.to = partner.destination;
     card.dataset.price = partner.price;
@@ -504,7 +513,6 @@ function renderCards(partners) {
     // Sukuriame tinkamą paveikslėlio URL
     let imageUrl = partner.imageUrl || partner.image;
     if (!imageUrl && partner.destination) {
-      // Jei nėra paveikslėlio URL, sukuriame naudodami Unsplash
       const searchQuery = partner.destination.toLowerCase().replace(/\s+/g, '-');
       imageUrl = `https://source.unsplash.com/featured/280x180/?${searchQuery}`;
     }
@@ -529,9 +537,11 @@ function renderCards(partners) {
         });
       }
 
-      // PATAISYTA: Saugesnis URL generavimas
-      const partnerUrl = partner.partnerUrl || partner.link || `https://travel-offer-${partner.id}.com`;
-      window.open(partnerUrl, '_blank');
+      // Saugesnis URL generavimas
+      const partnerUrl = partner.partnerUrl || partner.link || partner.website || '#';
+      if (partnerUrl !== '#') {
+        window.open(partnerUrl, '_blank');
+      }
     });
 
     container.appendChild(card);
