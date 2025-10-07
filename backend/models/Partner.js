@@ -54,6 +54,18 @@ const PartnerSchema = new mongoose.Schema({
     ipAddress: {
         type: String,
         required: true
+    },
+    slug: {
+        type: String,
+        unique: true,
+        sparse: true,
+        default: function() {
+            const baseSlug = this.companyName
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-');
+            return `${baseSlug}-${Date.now()}`;
+        }
     }
 }, { 
     timestamps: true 
