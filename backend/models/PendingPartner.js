@@ -139,5 +139,6 @@ PendingPartnerSchema.methods.canSubmitNewRequest = function() {
 // Indexai optimizavimui
 PendingPartnerSchema.index({ status: 1, requestDate: -1 });
 PendingPartnerSchema.index({ ipAddress: 1, requestDate: -1 });
+PendingPartnerSchema.index({ slug: 1 }); // PRIDĖTA: Slug indeksas
 
 export default mongoose.model('PendingPartner', PendingPartnerSchema);
