@@ -69,6 +69,16 @@ const PendingPartnerSchema = new mongoose.Schema({
         type: String,
         default: '',
         maxlength: [200, 'Admin pastabos per ilgos (maks. 200 simbolių)']
+    },
+    slug: {
+        type: String,
+        default: function() {
+            const baseSlug = this.companyName
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-');
+            return `${baseSlug}-${Date.now()}`;
+        }
     }
 }, { 
     timestamps: true 
