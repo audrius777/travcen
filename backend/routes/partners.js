@@ -78,7 +78,7 @@ router.post('/partners/register', async (req, res) => {
 router.get('/partners', async (req, res) => {
     try {
         const partners = await Partner.find({ status: 'active' })
-            .select('companyName website email contactPerson description')
+            .select('companyName website email contactPerson description slug')
             .sort({ createdAt: -1 });
         
         // Jei nėra aktyvių partnerių, grąžiname tuščią masyvą
@@ -106,7 +106,7 @@ router.get('/partners/pending', async (req, res) => {
         }
         
         const partners = await PendingPartner.find(query)
-            .select('companyName website email contactPerson description requestDate')
+            .select('companyName website email contactPerson description requestDate slug')
             .sort({ requestDate: -1 });
             
         res.json(partners);
@@ -126,7 +126,7 @@ router.put('/partners/:id/approve', async (req, res) => {
             return res.status(404).json({ error: 'Partneris nerastas' });
         }
 
-        // Sukuriamas naujas aktyvus partneris
+        // Sukuriamas naujas aktyvus partneris su slug
         const newPartner = new Partner({
             companyName: pendingPartner.companyName,
             website: pendingPartner.website,
@@ -134,6 +134,7 @@ router.put('/partners/:id/approve', async (req, res) => {
             contactPerson: pendingPartner.contactPerson,
             description: pendingPartner.description,
             ipAddress: pendingPartner.ipAddress,
+            slug: pendingPartner.slug, // Perduodamas slug iš laukiančio partnerio
             status: 'active'
         });
 
@@ -150,6 +151,36 @@ router.put('/partners/:id/approve', async (req, res) => {
 
     } catch (error) {
         console.error('Partnerio patvirtinimo klaida:', error);
+        
+        // Slug dublikavimo klaidos apdorojimas
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.slug) {
+            // Generuojamas naujas unikalus slug
+            const pendingPartner = await PendingPartner.findById(req.params.id);
+            if (pendingPartner) {
+                const newSlug = `${pendingPartner.companyName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                
+                const newPartner = new Partner({
+                    companyName: pendingPartner.companyName,
+                    website: pendingPartner.website,
+                    email: pendingPartner.email,
+                    contactPerson: pendingPartner.contactPerson,
+                    description: pendingPartner.description,
+                    ipAddress: pendingPartner.ipAddress,
+                    slug: newSlug,
+                    status: 'active'
+                });
+
+                await newPartner.save();
+                await PendingPartner.findByIdAndDelete(req.params.id);
+
+                return res.json({ 
+                    success: true, 
+                    message: 'Partneris sėkmingai patvirtintas',
+                    partner: newPartner 
+                });
+            }
+        }
+        
         res.status(500).json({ error: 'Serverio klaida' });
     }
 });
@@ -193,7 +224,7 @@ router.get('/admin/pending-partners', async (req, res) => {
         }
         
         const partners = await PendingPartner.find(query)
-            .select('companyName website email contactPerson description requestDate ipAddress attempts')
+            .select('companyName website email contactPerson description requestDate ipAddress attempts slug')
             .sort({ requestDate: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
@@ -222,7 +253,7 @@ router.put('/admin/partners/:id/approve', async (req, res) => {
             return res.status(404).json({ error: 'Partneris nerastas' });
         }
 
-        // Sukuriamas naujas aktyvus partneris
+        // Sukuriamas naujas aktyvus partneris su slug
         const newPartner = new Partner({
             companyName: pendingPartner.companyName,
             website: pendingPartner.website,
@@ -230,6 +261,7 @@ router.put('/admin/partners/:id/approve', async (req, res) => {
             contactPerson: pendingPartner.contactPerson,
             description: pendingPartner.description,
             ipAddress: pendingPartner.ipAddress,
+            slug: pendingPartner.slug, // Perduodamas slug iš laukiančio partnerio
             status: 'active'
         });
 
@@ -246,6 +278,36 @@ router.put('/admin/partners/:id/approve', async (req, res) => {
 
     } catch (error) {
         console.error('Admin partnerio patvirtinimo klaida:', error);
+        
+        // Slug dublikavimo klaidos apdorojimas
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.slug) {
+            // Generuojamas naujas unikalus slug
+            const pendingPartner = await PendingPartner.findById(req.params.id);
+            if (pendingPartner) {
+                const newSlug = `${pendingPartner.companyName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                
+                const newPartner = new Partner({
+                    companyName: pendingPartner.companyName,
+                    website: pendingPartner.website,
+                    email: pendingPartner.email,
+                    contactPerson: pendingPartner.contactPerson,
+                    description: pendingPartner.description,
+                    ipAddress: pendingPartner.ipAddress,
+                    slug: newSlug,
+                    status: 'active'
+                });
+
+                await newPartner.save();
+                await PendingPartner.findByIdAndDelete(req.params.id);
+
+                return res.json({ 
+                    success: true, 
+                    message: 'Partneris sėkmingai patvirtintas',
+                    partner: newPartner 
+                });
+            }
+        }
+        
         res.status(500).json({ error: 'Serverio klaida' });
     }
 });
