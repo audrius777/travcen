@@ -73,5 +73,6 @@ const PartnerSchema = new mongoose.Schema({
 
 // Indexai optimizavimui
 PartnerSchema.index({ status: 1, createdAt: -1 });
+PartnerSchema.index({ slug: 1 }); // PRIDĖTA: Slug indeksas
 
 export default mongoose.model('Partner', PartnerSchema);
