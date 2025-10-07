@@ -18,82 +18,64 @@ export default async function() {
     const $ = cheerio.load(response.data);
     const offers = [];
 
-    // BENDRA SCRAPINIMO LOGIKA
-    $('.product, .item, .card, .offer, .tour, .package, [class*="product"], [class*="item"]').each((index, element) => {
-      try {
-        const $el = $(element);
-        const title = $el.find('h1, h2, h3, .title, .name').first().text().trim();
-        const priceText = $el.find('.price, .cost, [class*="price"]').first().text().trim();
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-        const image = $el.find('img').first().attr('src') || '';
-        const link = $el.find('a').first().attr('href') || '';
+    // IŠPLĖSTA SCRAPINIMO LOGIKA - DAUGIAU SELEKTORIŲ
+    const selectors = [
+      '.tour-item', '.offer-item', '.product-item', '.trip-card',
+      '.card', '.item', '[class*="tour"]', '[class*="offer"]',
+      '.product', '.package', '.vacation-item', '.hotel-item',
+      '.js-product-card', '.c-product-card', '.b-tour', '.b-offer',
+      '.js-tour-item', '.c-tour'
+    ];
 
-        if (title && title.length > 10 && price > 0) {
-          const fullImage = image.startsWith('http') ? image : 
-                           image.startsWith('//') ? 'https:' + image : 
-                           image ? new URL(image, '{{URL}}').href : 
-                           'https://source.unsplash.com/featured/300x200/?travel';
-          
-          const fullLink = link.startsWith('http') ? link : 
-                          link.startsWith('//') ? 'https:' + link : 
-                          link ? new URL(link, '{{URL}}').href : '{{URL}}';
+    for (const selector of selectors) {
+      const elements = $(selector);
+      console.log('📊 {{COMPANY}} ' + selector + ': ' + elements.length + ' elementų');
+      
+      elements.each((index, element) => {
+        try {
+          const $el = $(element);
+          const title = $el.find('.title, .name, h2, h3, h4, [class*="title"], [class*="name"]').first().text().trim();
+          const priceText = $el.find('.price, .cost, [class*="price"], [class*="cost"], .amount').first().text().trim();
+          const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+          const image = $el.find('img').first().attr('src') || '';
+          const link = $el.find('a').first().attr('href') || '';
 
-          offers.push({
-            title: title.substring(0, 100),
-            from: "Vilnius",
-            to: "Kelionė",
-            type: "cultural",
-            price: price,
-            url: fullLink,
-            image: fullImage,
-            partner: '{{COMPANY}}'
-          });
-        }
-      } catch (err) {
-        console.log('Klaida apdorojant elementą:', err.message);
-      }
-    });
+          if (title && title.length > 10 && price > 0 && !title.includes('undefined')) {
+            const fullImage = image.startsWith('http') ? image : 
+                             image.startsWith('//') ? 'https:' + image : 
+                             image ? new URL(image, '{{URL}}').href : 
+                             'https://source.unsplash.com/featured/300x200/?travel';
+            
+            const fullLink = link.startsWith('http') ? link : 
+                            link.startsWith('//') ? 'https:' + link : 
+                            link ? new URL(link, '{{URL}}').href : '{{URL}}';
 
-    // Jei nerandame struktūruotų duomenų, bandome alternatyvų būdą
-    if (offers.length === 0) {
-      $('a').each((index, element) => {
-        const $el = $(element);
-        const text = $el.text().trim();
-        const href = $el.attr('href') || '';
-        
-        if (text.length > 20 && href) {
-          offers.push({
-            title: text.substring(0, 80),
-            from: "Vilnius", 
-            to: "Kelionė",
-            type: "cultural",
-            price: 0,
-            url: href.startsWith('http') ? href : new URL(href, '{{URL}}').href,
-            image: 'https://source.unsplash.com/featured/300x200/?travel',
-            partner: '{{COMPANY}}',
-            note: 'Rasta per bendrą paiešką'
-          });
+            offers.push({
+              title: title.substring(0, 100),
+              from: "Vilnius",
+              to: "Kelionė",
+              type: "cultural",
+              price: price,
+              url: fullLink,
+              image: fullImage,
+              partner: '{{COMPANY}}'
+            });
+          }
+        } catch (err) {
+          console.log('Klaida apdorojant elementą:', err.message);
         }
       });
+
+      if (offers.length > 10) break; // Sustojame jei radome pakankamai pasiūlymų
     }
 
-    console.log('✅ Rasta ' + offers.length + ' pasiūlymų iš {{COMPANY}}');
+    console.log('✅ {{COMPANY}}: Rasta ' + offers.length + ' pasiūlymų');
     return offers;
 
   } catch (err) {
     console.error('❌ Klaida scrapinant {{COMPANY}}:', err.message);
     
-    // Grąžiname tuščią masyvą, bet su klaidos informacija
-    return [{
-      title: 'Scrapinimo klaida: ' + err.message,
-      from: "Vilnius",
-      to: "Klaida",
-      type: "cultural", 
-      price: 0,
-      url: '{{URL}}',
-      image: 'https://source.unsplash.com/featured/300x200/?error',
-      partner: '{{COMPANY}}',
-      error: true
-    }];
+    // Grąžiname tuščią masyvą
+    return [];
   }
 }
