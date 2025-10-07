@@ -83,7 +83,7 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. TIKRAS Scrapinimo endpoint'as (ATSTATYTAS)
+// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTA SCRAPINIMO LOGIKA)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -92,113 +92,212 @@ app.post('/api/scrape', async (req, res) => {
       return res.status(400).json({ error: 'Neteisingas URL formatas' });
     }
 
-    console.log(`Scrapinama: ${url} su kriterijais: ${criteria}`);
+    console.log(`🔍 Scrapinama: ${url} su kriterijais: ${criteria || 'visi'}`);
 
     // Tikras scrapinimas su axios ir cheerio
     const response = await axios.get(url, {
       timeout: 15000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8',
+        'Accept-Language': 'lt-LT,lt;q=0.9,en;q=0.8',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none'
       }
     });
 
     const $ = cheerio.load(response.data);
     const offers = [];
 
-    // KONKRETŪS SCRAPINIMO TAISYKLĖS POPULIARIOMS SVETAINĖMS
+    // ATNAUJINTI SCRAPINIMO TAISYKLĖS
     if (url.includes('novaturas.lt')) {
-      // Novaturas scrapinimas
-      $('.offer-item, .tour-item, .product-item, .trip-card').each((index, element) => {
-        const $el = $(element);
-        
-        const title = $el.find('.title, .name, h2, h3').first().text().trim();
-        const priceText = $el.find('.price, .cost, [class*="price"]').first().text().trim();
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-        const image = $el.find('img').first().attr('src') || '';
-        const link = $el.find('a').first().attr('href') || '';
-
-        if (title && price > 0) {
-          offers.push({
-            title,
-            price,
-            image: image.startsWith('http') ? image : new URL(image, url).href,
-            link: link.startsWith('http') ? link : new URL(link, url).href,
-            source: 'Novaturas'
-          });
-        }
-      });
+      console.log('🔄 Taikomos Novaturas scrapinimo taisyklės');
       
-      // Jei nerandame pagal specifinius selektorius, bandome bendresnius
-      if (offers.length === 0) {
-        $('a[href*="kelione"], a[href*="tour"], .card, .item').each((index, element) => {
-          const $el = $(element);
-          const title = $el.text().trim();
-          const priceMatch = title.match(/(\d+[\.,]\d+)\s*€/);
-          const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
-          const link = $el.attr('href') || '';
-          
-          if (title.length > 10 && price > 0 && criteria && title.toLowerCase().includes(criteria.toLowerCase())) {
-            offers.push({
-              title,
-              price,
-              image: `https://source.unsplash.com/featured/300x200/?${criteria}`,
-              link: link.startsWith('http') ? link : new URL(link, url).href,
-              source: 'Novaturas'
-            });
+      // Novaturas - bandome įvairius selektorius
+      const selectors = [
+        '.tour-item', '.offer-item', '.product-item', '.trip-card',
+        '.card', '.item', '[class*="tour"]', '[class*="offer"]',
+        '.product', '.package', '.vacation-item'
+      ];
+
+      for (const selector of selectors) {
+        $(selector).each((index, element) => {
+          try {
+            const $el = $(element);
+            const title = $el.find('.title, .name, h2, h3, h4, [class*="title"], [class*="name"]').first().text().trim();
+            const priceText = $el.find('.price, .cost, [class*="price"], [class*="cost"]').first().text().trim();
+            const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+            const image = $el.find('img').first().attr('src') || '';
+            const link = $el.find('a').first().attr('href') || '';
+
+            if (title && title.length > 5) {
+              const fullImage = image.startsWith('http') ? image : 
+                               image.startsWith('//') ? `https:${image}` : 
+                               image ? new URL(image, url).href : 
+                               `https://source.unsplash.com/featured/300x200/?travel,${criteria || 'vacation'}`;
+              
+              const fullLink = link.startsWith('http') ? link : 
+                              link.startsWith('//') ? `https:${link}` : 
+                              link ? new URL(link, url).href : url;
+
+              offers.push({
+                title: title.substring(0, 100),
+                price,
+                image: fullImage,
+                link: fullLink,
+                source: 'Novaturas',
+                criteria: criteria || 'all'
+              });
+            }
+          } catch (err) {
+            console.log('Nepavyko apdoroti Novaturas elemento:', err.message);
           }
         });
+
+        if (offers.length > 0) break; // Sustojame jei radome pasiūlymų
+      }
+    }
+    else if (url.includes('teztour.lt')) {
+      console.log('🔄 Taikomos TezTour scrapinimo taisyklės');
+      
+      // TezTour - bandome įvairius selektorius
+      const selectors = [
+        '.tour-item', '.offer-item', '.product-item', 
+        '.card', '.item', '[class*="tour"]', '[class*="offer"]',
+        '.product', '.package', '.vacation-item'
+      ];
+
+      for (const selector of selectors) {
+        $(selector).each((index, element) => {
+          try {
+            const $el = $(element);
+            const title = $el.find('.title, .name, h2, h3, h4, [class*="title"], [class*="name"]').first().text().trim();
+            const priceText = $el.find('.price, .cost, [class*="price"], [class*="cost"]').first().text().trim();
+            const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+            const image = $el.find('img').first().attr('src') || '';
+            const link = $el.find('a').first().attr('href') || '';
+
+            if (title && title.length > 5) {
+              const fullImage = image.startsWith('http') ? image : 
+                               image.startsWith('//') ? `https:${image}` : 
+                               image ? new URL(image, url).href : 
+                               `https://source.unsplash.com/featured/300x200/?travel,${criteria || 'vacation'}`;
+              
+              const fullLink = link.startsWith('http') ? link : 
+                              link.startsWith('//') ? `https:${link}` : 
+                              link ? new URL(link, url).href : url;
+
+              offers.push({
+                title: title.substring(0, 100),
+                price,
+                image: fullImage,
+                link: fullLink,
+                source: 'TezTour',
+                criteria: criteria || 'all'
+              });
+            }
+          } catch (err) {
+            console.log('Nepavyko apdoroti TezTour elemento:', err.message);
+          }
+        });
+
+        if (offers.length > 0) break;
       }
     }
     else {
+      console.log('🔄 Taikomos bendrosios scrapinimo taisyklės');
+      
       // Bendras scrapinimas kitoms svetainėms
-      $('.product, .item, .card, .offer, .tour').each((index, element) => {
-        const $el = $(element);
-        const title = $el.find('h1, h2, h3, .title, .name').first().text().trim();
-        const priceText = $el.find('.price, .cost, [class*="price"]').first().text().trim();
-        const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-        const image = $el.find('img').first().attr('src') || '';
-        const link = $el.find('a').first().attr('href') || '';
+      const selectors = [
+        '.product', '.item', '.card', '.offer', '.tour',
+        '.package', '.vacation', '.trip', '[class*="product"]',
+        '[class*="item"]', '[class*="card"]'
+      ];
 
-        if (title && price > 0) {
+      for (const selector of selectors) {
+        $(selector).each((index, element) => {
+          try {
+            const $el = $(element);
+            const title = $el.find('h1, h2, h3, h4, .title, .name, [class*="title"], [class*="name"]').first().text().trim();
+            const priceText = $el.find('.price, .cost, [class*="price"], [class*="cost"]').first().text().trim();
+            const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+            const image = $el.find('img').first().attr('src') || '';
+            const link = $el.find('a').first().attr('href') || '';
+
+            if (title && title.length > 5) {
+              const fullImage = image.startsWith('http') ? image : 
+                               image.startsWith('//') ? `https:${image}` : 
+                               image ? new URL(image, url).href : 
+                               `https://source.unsplash.com/featured/300x200/?travel`;
+              
+              const fullLink = link.startsWith('http') ? link : 
+                              link.startsWith('//') ? `https:${link}` : 
+                              link ? new URL(link, url).href : url;
+
+              offers.push({
+                title: title.substring(0, 100),
+                price,
+                image: fullImage,
+                link: fullLink,
+                source: new URL(url).hostname,
+                criteria: criteria || 'all'
+              });
+            }
+          } catch (err) {
+            console.log('Nepavyko apdoroti elemento:', err.message);
+          }
+        });
+
+        if (offers.length > 0) break;
+      }
+    }
+
+    // Jei vis dar nerandame pasiūlymų, bandome paiešką pagal kriterijus
+    if (offers.length === 0 && criteria) {
+      console.log('🔍 Bandome paiešką pagal kriterijus:', criteria);
+      
+      $('a').each((index, element) => {
+        const $el = $(element);
+        const text = $el.text().trim();
+        const href = $el.attr('href') || '';
+        
+        if (text.toLowerCase().includes(criteria.toLowerCase()) && text.length > 10) {
           offers.push({
-            title,
-            price,
-            image: image.startsWith('http') ? image : new URL(image, url).href,
-            link: link.startsWith('http') ? link : new URL(link, url).href,
-            source: new URL(url).hostname
+            title: `Rasta: ${text.substring(0, 80)}...`,
+            price: 0,
+            image: `https://source.unsplash.com/featured/300x200/?${criteria}`,
+            link: href.startsWith('http') ? href : new URL(href, url).href,
+            source: new URL(url).hostname,
+            criteria,
+            note: 'Rasta per paiešką'
           });
         }
       });
     }
 
-    console.log(`Rasta ${offers.length} pasiūlymų iš ${url}`);
+    console.log(`✅ Rasta ${offers.length} pasiūlymų iš ${url}`);
 
-    // Jei nerandame pasiūlymų, bandome alternatyvų būdą
+    // Jei vis dar nerandame, grąžiname informacinį pranešimą
     if (offers.length === 0) {
-      console.log('Bandome alternatyvų scrapinimo būdą...');
-      
-      // Ieškome tekste, kuris atitinka paieškos kriterijus
-      const bodyText = $('body').text();
-      if (criteria && bodyText.toLowerCase().includes(criteria.toLowerCase())) {
-        // Jei svetainėje yra paieškos kriterijų, bet negalime išgauti struktūruotų duomenų
-        offers.push({
-          title: `Rasta pasiūlymų ${criteria} temoje`,
-          price: 0,
-          source: new URL(url).hostname,
-          note: 'Aplankykite svetainę norėdami pamatyti pilną pasiūlymų sąrašą',
-          link: url
-        });
-      }
+      offers.push({
+        title: `Nerasta pasiūlymų "${criteria}" temoje`,
+        price: 0,
+        image: `https://source.unsplash.com/featured/300x200/?travel,${criteria}`,
+        link: url,
+        source: new URL(url).hostname,
+        criteria: criteria || 'all',
+        note: 'Aplankykite svetainę norėdami pamatyti pilną pasiūlymų sąrašą'
+      });
     }
 
     res.json(offers);
 
   } catch (error) {
-    console.error('Scrapinimo klaida:', error.message);
+    console.error('❌ Scrapinimo klaida:', error.message);
     
     // Grąžiname informatyvų klaidos pranešimą
     res.status(500).json([{
@@ -206,7 +305,8 @@ app.post('/api/scrape', async (req, res) => {
       price: 0,
       source: 'system',
       error: error.message,
-      note: 'Svetainė laikinai nepasiekiama arba pakeitė struktūrą'
+      note: 'Svetainė laikinai nepasiekiama arba pakeitė struktūrą',
+      criteria: req.body.criteria || 'all'
     }]);
   }
 });
