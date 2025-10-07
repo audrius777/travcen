@@ -3,27 +3,18 @@ const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
 const Joi = require('joi');
-const redis = require('redis');
 const rateLimit = require('express-rate-limit');
-const { logOfferEvent, monitorPerformance } = require('../utils/logger');
 
-// Konfigūracija
+// Konfigūracija (PAŠALINTAS REDIS - sukeldavo klaidų)
 const CONFIG = {
   PARTNERS_DIR: path.join(__dirname, '../partners'),
   MAX_CONCURRENT_REQUESTS: 3,
   REQUEST_TIMEOUT: 10000,
-  CACHE_TTL: 300, // 5 minučių caching
   RATE_LIMIT: {
     windowMs: 15 * 60 * 1000, // 15 minučių
     max: 100 // 100 užklausų per langą
   }
 };
-
-// Redis kliento inicijavimas
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-redisClient.connect().catch(console.error);
 
 // Rate limiting middleware
 const apiLimiter = rateLimit({
@@ -45,21 +36,27 @@ const offerSchema = Joi.object({
   date: Joi.date().iso().greater('now').optional()
 });
 
+// Papildoma funkcija loggeriui (kad nekiltų klaidų)
+const logOfferEvent = (event, data = {}) => {
+  console.log(`📊 Offer Event: ${event}`, data);
+};
+
+const monitorPerformance = (partnerName, duration, offersCount) => {
+  console.log(`⏱️ ${partnerName}: ${duration}ms, ${offersCount} offers`);
+};
+
 // Saugus partnerio modulio įkėlimas su metrikomis
 const loadPartnerOffers = async (file) => {
   const startTime = Date.now();
   const partnerName = path.basename(file, '.js');
   
   try {
-    // Cache check
-    const cacheKey = `offers:${partnerName}`;
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      logOfferEvent('cache_hit', { partner: partnerName });
-      return JSON.parse(cached);
-    }
+    // Tikriname ar failas egzistuoja
+    const filePath = path.join(CONFIG.PARTNERS_DIR, file);
+    await fs.access(filePath);
 
-    const partnerModule = require(path.join(CONFIG.PARTNERS_DIR, file));
+    // Įkeliame modulį
+    const partnerModule = require(filePath);
     
     if (typeof partnerModule !== 'function') {
       throw new Error(`Netinkamas partnerio modulio formatas: ${file}`);
@@ -85,13 +82,6 @@ const loadPartnerOffers = async (file) => {
         });
       }
     }
-
-    // Cache set
-    await redisClient.setEx(
-      cacheKey, 
-      CONFIG.CACHE_TTL, 
-      JSON.stringify(validatedOffers)
-    );
 
     const duration = Date.now() - startTime;
     monitorPerformance(partnerName, duration, validatedOffers.length);
@@ -119,9 +109,9 @@ const processInBatches = async (files, batchSize, retries = 2) => {
   
   for (let i = 0; i < files.length; i += batchSize) {
     const batch = files.slice(i, i + batchSize);
-    const batchPromises = batch.map(file => loadPartnerOffers(file));
     
     try {
+      const batchPromises = batch.map(file => loadPartnerOffers(file));
       const batchResults = await Promise.all(batchPromises);
       allOffers = allOffers.concat(...batchResults);
     } catch (err) {
@@ -165,9 +155,12 @@ router.get('/offers', apiLimiter, async (req, res) => {
       logOfferEvent('no_partners_found');
       return res.status(404).json({ 
         success: false,
-        error: 'Nerasta partnerių modulių' 
+        error: 'Nerasta partnerių modulių',
+        note: 'Sugeneruokite partnerių modulius naudodami generatePartnerModules.js'
       });
     }
+
+    console.log(`🔍 Aptikta ${files.length} partnerių modulių:`, files);
 
     // Gauname pasiūlymus
     const allOffers = await processInBatches(files, CONFIG.MAX_CONCURRENT_REQUESTS);
@@ -193,6 +186,7 @@ router.get('/offers', apiLimiter, async (req, res) => {
       count: filteredOffers.length,
       page,
       totalPages: Math.ceil(filteredOffers.length / limit),
+      partnersLoaded: files.length,
       data: paginatedOffers
     });
   } catch (err) {
@@ -208,13 +202,54 @@ router.get('/offers', apiLimiter, async (req, res) => {
 
 // Health check endpoint'as
 router.get('/offers/health', async (req, res) => {
-  const partners = (await fs.readdir(CONFIG.PARTNERS_DIR))
-    .filter(file => file.endsWith('.js') && !file.startsWith('_'));
-  
+  try {
+    const partners = (await fs.readdir(CONFIG.PARTNERS_DIR))
+      .filter(file => file.endsWith('.js') && !file.startsWith('_'));
+    
+    res.json({
+      status: 'OK',
+      partnerCount: partners.length,
+      partnersDirectory: CONFIG.PARTNERS_DIR,
+      partners: partners
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'ERROR',
+      error: err.message
+    });
+  }
+});
+
+// Testinis endpoint'as - grąžina demo duomenis jei nėra partnerių
+router.get('/offers/demo', async (req, res) => {
+  const demoOffers = [
+    {
+      title: "Demo Kelionė į Romą",
+      from: "Vilnius",
+      to: "Roma",
+      type: "cultural",
+      price: 299,
+      url: "https://www.example.com/roma",
+      image: "https://source.unsplash.com/featured/300x200/?rome",
+      partner: "DemoPartner"
+    },
+    {
+      title: "Demo Paplūdimio atostogos",
+      from: "Vilnius", 
+      to: "Maldyvai",
+      type: "beach",
+      price: 899,
+      url: "https://www.example.com/maldives",
+      image: "https://source.unsplash.com/featured/300x200/?beach",
+      partner: "DemoPartner"
+    }
+  ];
+
   res.json({
-    status: 'OK',
-    partnerCount: partners.length,
-    cacheStatus: redisClient.isOpen ? 'connected' : 'disconnected'
+    success: true,
+    count: demoOffers.length,
+    data: demoOffers,
+    note: "Tai yra demo duomenys. Sukurkite partnerių modulius norėdami realių pasiūlymų."
   });
 });
 
