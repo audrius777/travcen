@@ -71,11 +71,11 @@ const partnerSchema = new mongoose.Schema({
     },
     ipAddress: {
         type: String,
-        required: true
+        default: ''
     },
     syncStatus: {
         type: String,
-        enum: ['success', 'failed', 'never'],
+        enum: ['success', 'failed', 'in_progress', 'never'],
         default: 'never'
     },
     lastSyncError: {
@@ -157,7 +157,8 @@ partnerSchema.statics.getPartnersNeedingSync = function() {
         $or: [
             { lastSync: { $lt: twentyFourHoursAgo } },
             { lastSync: null }
-        ]
+        ],
+        syncStatus: { $ne: 'in_progress' }
     });
 };
 
@@ -166,7 +167,11 @@ partnerSchema.methods.updateSyncStatus = function(success, errorMessage = '', of
     this.lastSync = new Date();
     this.syncStatus = success ? 'success' : 'failed';
     this.lastSyncError = errorMessage;
-    this.offersCount = offersCount;
+    
+    if (offersCount > 0) {
+        this.offersCount = offersCount;
+    }
+    
     return this.save();
 };
 
@@ -187,6 +192,6 @@ partnerSchema.index({ slug: 1 }, { unique: true });
 partnerSchema.index({ status: 1, lastSync: 1 });
 partnerSchema.index({ email: 1 }, { unique: true });
 partnerSchema.index({ website: 1 });
-partnerSchema.index({ 'syncStatus': 1 });
+partnerSchema.index({ syncStatus: 1 });
 
 export const Partner = mongoose.model('Partner', partnerSchema);
