@@ -47,7 +47,7 @@ function generateOfferId(offer) {
 export function validatePartner(partnerData) {
   const errors = [];
 
-  if (!partnerData.company || partnerData.company.trim().length < 2) {
+  if (!partnerData.companyName || partnerData.companyName.trim().length < 2) {
     errors.push('Įmonės pavadinimas per trumpas (minimum 2 simboliai)');
   }
 
@@ -59,14 +59,19 @@ export function validatePartner(partnerData) {
     errors.push('Netinkamas svetainės URL');
   }
 
+  if (!partnerData.contactPerson || partnerData.contactPerson.trim().length < 2) {
+    errors.push('Kontaktinio asmens vardas per trumpas');
+  }
+
   if (errors.length > 0) {
     throw new Error(errors.join(', '));
   }
 
   return {
-    company: validator.escape(partnerData.company.trim()),
+    company: validator.escape(partnerData.companyName.trim()),
     email: validator.normalizeEmail(partnerData.email),
     website: partnerData.website,
+    contactPerson: validator.escape(partnerData.contactPerson.trim()),
     description: partnerData.description ? validator.escape(partnerData.description.trim()) : '',
     status: 'pending'
   };
@@ -197,7 +202,7 @@ export const validationLogic = {
   },
 
   /**
-   * Filtruoja pasikartojančius pasiūlymus
+   * Filtruoja pasikartojančius pasiūlymai
    * @param {Array} offers - Pasiūlymai
    * @returns {Array} Unikalūs pasiūlymai
    */
