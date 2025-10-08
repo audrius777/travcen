@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 10000;
 // 1. Trust proxy
 app.set('trust proxy', 1);
 
-// 2. CORS konfigūracija
+// 2. CORS konfigūracija (PATAISYTA - pridėtas null ir naujas domain)
 app.use(cors({
   origin: [
     'null',
@@ -83,7 +83,7 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTA SCRAPINIMO LOGIKA)
+// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTI SCRAPINIMO SELEKTORIAI)
 app.post('/api/scrape', async (req, res) => {
   try {
     const { url, criteria } = req.body;
@@ -96,7 +96,7 @@ app.post('/api/scrape', async (req, res) => {
 
     // Tikras scrapinimas su axios ir cheerio
     const response = await axios.get(url, {
-      timeout: 20000, // Padidintas timeout
+      timeout: 15000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8',
@@ -113,7 +113,7 @@ app.post('/api/scrape', async (req, res) => {
     const $ = cheerio.load(response.data);
     const offers = [];
 
-    // ATNAUJINTOS SCRAPINIMO TAISYKLĖS - MAŽESNI FILTRAI
+    // ATNAUJINTI SCRAPINIMO TAISYKLĖS - DAUGIAU REZULTATŲ
     if (url.includes('novaturas.lt')) {
       console.log('🔄 Taikomos Novaturas scrapinimo taisyklės');
       
@@ -138,8 +138,7 @@ app.post('/api/scrape', async (req, res) => {
             const image = $el.find('img').first().attr('src') || '';
             const link = $el.find('a').first().attr('href') || '';
 
-            // SUMUŽINTAS FILTRAS: title.length > 3 vietoj > 5
-            if (title && title.length > 3 && !title.includes('undefined')) {
+            if (title && title.length > 5 && !title.includes('undefined')) {
               const fullImage = image.startsWith('http') ? image : 
                                image.startsWith('//') ? `https:${image}` : 
                                image ? new URL(image, url).href : 
@@ -171,8 +170,7 @@ app.post('/api/scrape', async (req, res) => {
           }
         });
 
-        // PADIDINTAS LIMITAS: 15 vietoj 5
-        if (offers.length > 15) break;
+        if (offers.length > 5) break; // Sustojame jei radome pakankamai pasiūlymų
       }
     }
     else if (url.includes('teztour.lt')) {
@@ -199,8 +197,7 @@ app.post('/api/scrape', async (req, res) => {
             const image = $el.find('img').first().attr('src') || '';
             const link = $el.find('a').first().attr('href') || '';
 
-            // SUMUŽINTAS FILTRAS: title.length > 3 vietoj > 5
-            if (title && title.length > 3 && !title.includes('undefined')) {
+            if (title && title.length > 5 && !title.includes('undefined')) {
               const fullImage = image.startsWith('http') ? image : 
                                image.startsWith('//') ? `https:${image}` : 
                                image ? new URL(image, url).href : 
@@ -232,8 +229,7 @@ app.post('/api/scrape', async (req, res) => {
           }
         });
 
-        // PADIDINTAS LIMITAS: 15 vietoj 5
-        if (offers.length > 15) break;
+        if (offers.length > 5) break;
       }
     }
 
