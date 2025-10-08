@@ -1,4 +1,95 @@
-import { validateOffer } from '../validation.js';
+import validator from 'validator';
+
+export function validateOffer(offer) {
+  // PAPRASTESNĖ VALIDACIJA - MAŽESNI REIKALAVIMAI
+  if (!offer.title || offer.title.length < 3) {
+    throw new Error('Pavadinimas per trumpas (minimum 3 simboliai)');
+  }
+
+  if (!offer.price || !validator.isNumeric(String(offer.price))) {
+    throw new Error('Netinkama kaina');
+  }
+
+  if (!offer.url || !validator.isURL(offer.url)) {
+    throw new Error('Netinkamas URL');
+  }
+
+  // GENERUOJAME offerId JEI JO NĖRA
+  const offerId = offer.offerId || generateOfferId(offer);
+
+  return {
+    offerId: offerId,
+    title: validator.escape(offer.title),
+    price: parseFloat(offer.price),
+    currency: offer.currency || 'EUR',
+    destination: offer.destination ? validator.escape(offer.destination) : 'Kelionė',
+    departure: offer.departure ? validator.escape(offer.departure) : 'Vilnius',
+    type: offer.type || 'cultural',
+    imageUrl: validator.isURL(offer.imageUrl) ? offer.imageUrl : undefined,
+    url: validator.isURL(offer.url) ? offer.url : undefined,
+    validUntil: offer.validUntil ? new Date(offer.validUntil) : undefined
+  };
+}
+
+// PAGALBINĖ FUNKCIJA offerId GENERAVIMUI
+function generateOfferId(offer) {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 5);
+  const titlePart = offer.title.substring(0, 3).toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `${titlePart}_${timestamp}_${random}`;
+}
+
+/**
+ * Validuoja partnerio duomenis
+ * @param {Object} partnerData - Partnerio duomenys
+ * @returns {Object} Validūs partnerio duomenys
+ */
+export function validatePartner(partnerData) {
+  const errors = [];
+
+  if (!partnerData.company || partnerData.company.trim().length < 2) {
+    errors.push('Įmonės pavadinimas per trumpas (minimum 2 simboliai)');
+  }
+
+  if (!partnerData.email || !validator.isEmail(partnerData.email)) {
+    errors.push('Netinkamas el. pašto adresas');
+  }
+
+  if (!partnerData.website || !validator.isURL(partnerData.website)) {
+    errors.push('Netinkamas svetainės URL');
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.join(', '));
+  }
+
+  return {
+    company: validator.escape(partnerData.company.trim()),
+    email: validator.normalizeEmail(partnerData.email),
+    website: partnerData.website,
+    description: partnerData.description ? validator.escape(partnerData.description.trim()) : '',
+    status: 'pending'
+  };
+}
+
+/**
+ * Validuoja partnerio svetainę
+ * @param {string} website - Svetainės URL
+ * @returns {boolean} Ar svetainė validi
+ */
+export function validatePartnerWebsite(website) {
+  if (!website || !validator.isURL(website)) {
+    return false;
+  }
+
+  // Papildomi svetainės patikrinimai
+  try {
+    const url = new URL(website);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Serviso lygio validacijos logika
