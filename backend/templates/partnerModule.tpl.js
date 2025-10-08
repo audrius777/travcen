@@ -7,7 +7,7 @@ export default async function() {
     console.log('🔍 Scrapinama: {{URL}}');
     
     const response = await axios.get('{{URL}}', {
-      timeout: 15000,
+      timeout: 20000, // Padidintas timeout
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8',
@@ -40,7 +40,8 @@ export default async function() {
           const image = $el.find('img').first().attr('src') || '';
           const link = $el.find('a').first().attr('href') || '';
 
-          if (title && title.length > 10 && price > 0 && !title.includes('undefined')) {
+          // SUMUŽINTAS FILTRAS: title.length > 5 vietoj > 10 ir pašalintas price > 0 reikalavimas
+          if (title && title.length > 5 && !title.includes('undefined')) {
             const fullImage = image.startsWith('http') ? image : 
                              image.startsWith('//') ? 'https:' + image : 
                              image ? new URL(image, '{{URL}}').href : 
@@ -66,7 +67,8 @@ export default async function() {
         }
       });
 
-      if (offers.length > 10) break; // Sustojame jei radome pakankamai pasiūlymų
+      // PADIDINTAS LIMITAS: 20 vietoj 10
+      if (offers.length > 20) break;
     }
 
     console.log('✅ {{COMPANY}}: Rasta ' + offers.length + ' pasiūlymų');
