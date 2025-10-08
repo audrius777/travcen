@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export async function generatePartnerModules() {
   const partnersFolder = path.join(__dirname, 'partners');
   
-  // ATNAUJINTAS SCRAPINIMO ŠABLONAS - MAŽESNI FILTRAI
+  // ATNAUJINTAS SCRAPINIMO ŠABLONAS - DAUGIAU REZULTATŲ
   const scrapinimoTemplate = `
 // Autogeneruotas scrapinimo modulis {{COMPANY}}
 import axios from 'axios';
@@ -24,7 +24,7 @@ export default async function() {
     console.log('🔍 Scrapinama: {{URL}}');
     
     const response = await axios.get('{{URL}}', {
-      timeout: 20000, // Padidintas timeout
+      timeout: 15000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8',
@@ -57,8 +57,7 @@ export default async function() {
           const image = $el.find('img').first().attr('src') || '';
           const link = $el.find('a').first().attr('href') || '';
 
-          // ATNAUJINTAS FILTRAS: title.length > 3 vietoj > 5
-          if (title && title.length > 3 && !title.includes('undefined')) {
+          if (title && title.length > 10 && price > 0 && !title.includes('undefined')) {
             const fullImage = image.startsWith('http') ? image : 
                              image.startsWith('//') ? 'https:' + image : 
                              image ? new URL(image, '{{URL}}').href : 
@@ -70,6 +69,9 @@ export default async function() {
 
             offers.push({
               title: title.substring(0, 100),
+              from: "Vilnius",
+              to: "Kelionė",
+              type: "cultural",
               price: price,
               url: fullLink,
               image: fullImage,
@@ -81,8 +83,7 @@ export default async function() {
         }
       });
 
-      // PADIDINTAS LIMITAS: 20 vietoj 10
-      if (offers.length > 20) break;
+      if (offers.length > 10) break; // Sustojame jei radome pakankamai pasiūlymų
     }
 
     console.log('✅ {{COMPANY}}: Rasta ' + offers.length + ' pasiūlymų');
