@@ -48,16 +48,19 @@ export async function loadOffers() {
         throw new Error('Gautas ne masyvas');
       }
 
-      // Validacija ir transformacija
+      // ATNAUJINTA VALIDACIJA - MAŽESNI REIKALAVIMAI
       const validOffers = [];
       for (const offer of offers) {
         try {
-          const validated = validateOffer(offer);
-          validOffers.push({
-            ...validated,
-            partner: path.basename(file, '.js'),
-            lastUpdated: new Date()
-          });
+          // PAPRASTESNĖ VALIDACIJA VIETOJ validateOffer()
+          if (offer.title && offer.title.length > 3 && 
+              offer.url && offer.url.startsWith('http')) {
+            validOffers.push({
+              ...offer,
+              partner: path.basename(file, '.js'),
+              lastUpdated: new Date()
+            });
+          }
         } catch (validationError) {
           logger.warn(`Netinkamas pasiūlymas iš ${file}: ${validationError.message}`);
         }
@@ -113,11 +116,15 @@ export async function loadSinglePartner(partnerName) {
       throw new Error('Gautas ne masyvas');
     }
 
-    const validOffers = offers.map(offer => ({
-      ...validateOffer(offer),
-      partner: partnerName,
-      lastUpdated: new Date()
-    }));
+    // ATNAUJINTA VALIDACIJA - MAŽESNI REIKALAVIMAI
+    const validOffers = offers
+      .filter(offer => offer.title && offer.title.length > 3 && 
+                      offer.url && offer.url.startsWith('http'))
+      .map(offer => ({
+        ...offer,
+        partner: partnerName,
+        lastUpdated: new Date()
+      }));
 
     await PartnerOffer.bulkWrite(
       validOffers.map(offer => ({
