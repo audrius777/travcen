@@ -57,8 +57,8 @@ export default async function() {
           const image = $el.find('img').first().attr('src') || '';
           const link = $el.find('a').first().attr('href') || '';
 
-          // ATNAUJINTAS FILTRAS: title.length > 5 vietoj > 10 ir be price > 0 reikalavimo
-          if (title && title.length > 5 && !title.includes('undefined')) {
+          // ATNAUJINTAS FILTRAS: title.length > 3 vietoj > 5
+          if (title && title.length > 3 && !title.includes('undefined')) {
             const fullImage = image.startsWith('http') ? image : 
                              image.startsWith('//') ? 'https:' + image : 
                              image ? new URL(image, '{{URL}}').href : 
@@ -70,9 +70,6 @@ export default async function() {
 
             offers.push({
               title: title.substring(0, 100),
-              from: "Vilnius",
-              to: "Kelionė",
-              type: "cultural",
               price: price,
               url: fullLink,
               image: fullImage,
