@@ -2,15 +2,17 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { PartnerOffer } from '../models/offerModel.js';
+import { validationLogic } from './validationLogic.js';
 import logger from '../utils/logger.js';
 
 // ES modulių __dirname alternatyva
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Konfigūracija
 const CONFIG = {
   PARTNERS_DIR: path.join(__dirname, '../partners'),
-  MAX_CONCURRENT_REQUESTS: 5,
+  MAX_CONCURRENT_REQUESTS: 3, // SUMAŽINTA: iš 5 į 3
   REQUEST_TIMEOUT: 20000, // Padidintas timeout
   RETRY_ATTEMPTS: 2
 };
@@ -83,41 +85,36 @@ export default async function aggregateOffers() {
     const partnerModules = await getPartnerModules();
     
     if (partnerModules.length === 0) {
-      throw new Error('No partner modules found');
+      logger.warn('No partner modules found');
+      return [];
     }
 
     const rawOffers = await aggregateWithRetry(partnerModules);
     
-    // ATNAUJINTA VALIDACIJA - MAŽESNI REIKALAVIMAI
-    const validOffers = rawOffers.filter(offer => {
-      try {
-        // PRIDĖTA LANKSTESNĖ VALIDACIJA
-        if (!offer.title || offer.title.length < 3) {
-          return false;
-        }
-        if (!offer.url || !offer.url.startsWith('http')) {
-          return false;
-        }
-        return true;
-      } catch (err) {
-        logger.warn(`Invalid offer skipped: ${err.message}`);
-        return false;
-      }
-    });
+    // NAUDOJAME SERVISO VALIDACIJĄ VIETOJ TIESIOGINĖS
+    const validatedOffers = validationLogic.validateScrapedOffers(rawOffers);
+    
+    // PARUOŠIAME DUOMENŲ BAZEI
+    const preparedOffers = validationLogic.prepareForDatabase(validatedOffers);
+    
+    // FILTRUOJAME PASIKARTOJIMUS
+    const uniqueOffers = validationLogic.removeDuplicates(preparedOffers);
 
     // Išsaugojimas duomenų bazėje
-    await PartnerOffer.bulkWrite(
-      validOffers.map(offer => ({
-        updateOne: {
-          filter: { offerId: offer.offerId },
-          update: { $set: offer },
-          upsert: true
-        }
-      }))
-    );
+    if (uniqueOffers.length > 0) {
+      await PartnerOffer.bulkWrite(
+        uniqueOffers.map(offer => ({
+          updateOne: {
+            filter: { offerId: offer.offerId },
+            update: { $set: offer },
+            upsert: true
+          }
+        }))
+      );
+    }
 
-    logger.info(`Aggregated ${validOffers.length} valid offers`);
-    return validOffers;
+    logger.info(`Aggregated ${uniqueOffers.length} valid offers`);
+    return uniqueOffers;
   } catch (err) {
     logger.error('Aggregation failed:', err);
     throw err;
