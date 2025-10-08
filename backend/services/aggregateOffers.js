@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG = {
   PARTNERS_DIR: path.join(__dirname, '../partners'),
   MAX_CONCURRENT_REQUESTS: 5,
-  REQUEST_TIMEOUT: 15000,
+  REQUEST_TIMEOUT: 20000, // Padidintas timeout
   RETRY_ATTEMPTS: 2
 };
 
@@ -88,10 +88,16 @@ export default async function aggregateOffers() {
 
     const rawOffers = await aggregateWithRetry(partnerModules);
     
-    // Validacija ir transformacija
+    // ATNAUJINTA VALIDACIJA - MAŽESNI REIKALAVIMAI
     const validOffers = rawOffers.filter(offer => {
       try {
-        PartnerOffer.validateOffer(offer);
+        // PRIDĖTA LANKSTESNĖ VALIDACIJA
+        if (!offer.title || offer.title.length < 3) {
+          return false;
+        }
+        if (!offer.url || !offer.url.startsWith('http')) {
+          return false;
+        }
         return true;
       } catch (err) {
         logger.warn(`Invalid offer skipped: ${err.message}`);
