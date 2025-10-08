@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
 import { PartnerOffer } from '../models/offerModel.js';
-import { validationLogic } from '../services/validationLogic.js';
+import { validateOffer } from '../utils/validation.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -48,18 +48,26 @@ export async function loadOffers() {
         throw new Error('Gautas ne masyvas');
       }
 
-      // NAUDOJAME SERVISO VALIDACIJĄ
-      const validOffers = validationLogic.validateScrapedOffers(offers);
-      
-      // PARUOŠIAME DUOMENŲ BAZEI
-      const preparedOffers = validationLogic.prepareForDatabase(validOffers);
+      // Validacija ir transformacija
+      const validOffers = [];
+      for (const offer of offers) {
+        try {
+          const validated = validateOffer(offer);
+          validOffers.push({
+            ...validated,
+            partner: path.basename(file, '.js'),
+            lastUpdated: new Date()
+          });
+        } catch (validationError) {
+          logger.warn(`Netinkamas pasiūlymas iš ${file}: ${validationError.message}`);
+        }
+      }
 
-      if (preparedOffers.length > 0) {
-        allOffers.push(...preparedOffers);
-        
+      if (validOffers.length > 0) {
+        allOffers.push(...validOffers);
         // Išsaugome duomenų bazėje
         await PartnerOffer.bulkWrite(
-          preparedOffers.map(offer => ({
+          validOffers.map(offer => ({
             updateOne: {
               filter: { offerId: offer.offerId },
               update: { $set: offer },
@@ -71,7 +79,7 @@ export async function loadOffers() {
 
       const loadTime = Date.now() - startTime;
       loadTimes[file] = `${loadTime}ms`;
-      logger.info(`✅ Sėkmingai įkeltas ${file} (${preparedOffers.length} pasiūlymų)`);
+      logger.info(`✅ Sėkmingai įkeltas ${file} (${validOffers.length} pasiūlymų)`);
 
     } catch (err) {
       logger.error(`❌ Klaida partnerio modulyje ${file}: ${err.message}`);
@@ -105,14 +113,14 @@ export async function loadSinglePartner(partnerName) {
       throw new Error('Gautas ne masyvas');
     }
 
-    // NAUDOJAME SERVISO VALIDACIJĄ
-    const validOffers = validationLogic.validateScrapedOffers(offers);
-    
-    // PARUOŠIAME DUOMENŲ BAZEI
-    const preparedOffers = validationLogic.prepareForDatabase(validOffers);
+    const validOffers = offers.map(offer => ({
+      ...validateOffer(offer),
+      partner: partnerName,
+      lastUpdated: new Date()
+    }));
 
     await PartnerOffer.bulkWrite(
-      preparedOffers.map(offer => ({
+      validOffers.map(offer => ({
         updateOne: {
           filter: { offerId: offer.offerId },
           update: { $set: offer },
@@ -121,8 +129,8 @@ export async function loadSinglePartner(partnerName) {
       }))
     );
 
-    logger.info(`✅ Sėkmingai atnaujintas ${partnerName} (${preparedOffers.length} pasiūlymų)`);
-    return preparedOffers;
+    logger.info(`✅ Sėkmingai atnaujintas ${partnerName} (${validOffers.length} pasiūlymų)`);
+    return validOffers;
   } catch (err) {
     logger.error(`❌ Klaida įkeliant ${partnerName}: ${err.message}`);
     throw err;
