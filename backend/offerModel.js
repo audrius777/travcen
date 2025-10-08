@@ -21,7 +21,7 @@ const offerSchema = new mongoose.Schema({
   title: { 
     type: String, 
     required: true,
-    minlength: 3, // SUMAŽINTA: iš 10 į 3
+    minlength: 10,
     maxlength: 100,
     trim: true
   },
@@ -40,14 +40,14 @@ const offerSchema = new mongoose.Schema({
   },
   destination: { 
     type: String, 
-    required: false, // PAKEISTA: iš required true į false
+    required: true,
     minlength: 3,
     maxlength: 50,
     trim: true
   },
   departure: { 
     type: String, 
-    required: false, // PAKEISTA: iš required true į false
+    required: true,
     minlength: 3,
     maxlength: 50,
     trim: true
@@ -55,7 +55,7 @@ const offerSchema = new mongoose.Schema({
   type: { 
     type: String, 
     enum: ['leisure', 'adventure', 'cultural', 'beach', 'city', 'cruise', 'ski'],
-    required: false, // PAKEISTA: iš required true į false
+    required: true,
     lowercase: true,
     trim: true
   },
@@ -161,14 +161,18 @@ offerSchema.virtual('priceInfo').get(function() {
 
 // Statiniai metodai
 offerSchema.statics.validateOffer = function(offer) {
-  const requiredFields = ['offerId', 'title', 'price', 'url']; // SUMAŽINTI PRIVALOMI LAUKAI
+  const requiredFields = ['offerId', 'title', 'price', 'destination', 'departure', 'type', 'url'];
   const missingFields = requiredFields.filter(field => !offer[field]);
   
   if (missingFields.length > 0) {
     throw new Error(`Trūksta privalomų laukų: ${missingFields.join(', ')}`);
   }
 
-  return offer;
+  return this.schema.eachPath(path => {
+    if (this.schema.paths[path].isRequired && !offer[path]) {
+      throw new Error(`Privalomas laukas '${path}' nenurodytas`);
+    }
+  });
 };
 
 // Užklausų optimizavimas
