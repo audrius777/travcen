@@ -78,7 +78,7 @@ router.post('/register', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const partners = await Partner.find({ status: 'active' })
-            .select('companyName website email contactPerson description slug')
+            .select('companyName website email contactPerson description slug offerFormUrl')
             .sort({ createdAt: -1 });
         
         // Jei nėra aktyvių partnerių, grąžiname tuščią masyvą
@@ -174,6 +174,115 @@ router.delete('/:id/reject', async (req, res) => {
 
     } catch (error) {
         console.error('Partnerio atmetimo klaida:', error);
+        res.status(500).json({ error: 'Serverio klaida' });
+    }
+});
+
+// 7. HTML formos generavimas partneriui (GET /api/partners/:id/generate-form)
+router.get('/:id/generate-form', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const partner = await Partner.findById(id);
+        if (!partner) {
+            return res.status(404).json({ error: 'Partneris nerastas' });
+        }
+
+        // Generuojame unikalų formos URL
+        const formSlug = `partner-form-${partner.slug}-${Date.now()}`;
+        const offerFormUrl = `/partner-forms/${formSlug}.html`;
+
+        // Atnaujiname partnerio duomenis
+        partner.offerFormUrl = offerFormUrl;
+        await partner.save();
+
+        res.json({ 
+            success: true, 
+            offerFormUrl,
+            message: 'HTML forma sėkmingai sugeneruota'
+        });
+
+    } catch (error) {
+        console.error('Formos generavimo klaida:', error);
+        res.status(500).json({ error: 'Serverio klaida' });
+    }
+});
+
+// 8. Pasiūlymų gavimas pagal partnerį (GET /api/partners/:id/offers)
+router.get('/:id/offers', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const partner = await Partner.findById(id).select('offers companyName');
+        if (!partner) {
+            return res.status(404).json({ error: 'Partneris nerastas' });
+        }
+
+        res.json({ 
+            offers: partner.offers,
+            companyName: partner.companyName
+        });
+
+    } catch (error) {
+        console.error('Pasiūlymų gavimo klaida:', error);
+        res.status(500).json({ error: 'Serverio klaida' });
+    }
+});
+
+// 9. Pasiūlymo pridėjimas partneriui (POST /api/partners/:id/offers)
+router.post('/:id/offers', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { offerUrl, price, tripType, tripDate, validUntil } = req.body;
+        
+        const partner = await Partner.findById(id);
+        if (!partner) {
+            return res.status(404).json({ error: 'Partneris nerastas' });
+        }
+
+        // Pridedame naują pasiūlymą
+        partner.offers.push({
+            offerUrl,
+            price,
+            tripType,
+            tripDate: new Date(tripDate),
+            validUntil: new Date(validUntil)
+        });
+
+        await partner.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Pasiūlymas sėkmingai pridėtas'
+        });
+
+    } catch (error) {
+        console.error('Pasiūlymo pridėjimo klaida:', error);
+        res.status(500).json({ error: 'Serverio klaida' });
+    }
+});
+
+// 10. Pasiūlymo šalinimas (DELETE /api/partners/:partnerId/offers/:offerId)
+router.delete('/:partnerId/offers/:offerId', async (req, res) => {
+    try {
+        const { partnerId, offerId } = req.params;
+        
+        const partner = await Partner.findById(partnerId);
+        if (!partner) {
+            return res.status(404).json({ error: 'Partneris nerastas' });
+        }
+
+        // Pašaliname pasiūlymą iš masyvo
+        partner.offers = partner.offers.filter(offer => offer._id.toString() !== offerId);
+        await partner.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Pasiūlymas sėkmingai pašalintas'
+        });
+
+    } catch (error) {
+        console.error('Pasiūlymo šalinimo klaida:', error);
         res.status(500).json({ error: 'Serverio klaida' });
     }
 });
