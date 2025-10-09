@@ -66,13 +66,29 @@ const PartnerSchema = new mongoose.Schema({
                 .replace(/\s+/g, '-');
             return `${baseSlug}-${Date.now()}`;
         }
-    }
+    },
+    // PRIDĖTI NAUJI LAUKAI PAGAL PLANĄ
+    offerFormUrl: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    offers: [{
+        offerUrl: { type: String, required: true },
+        price: { type: Number, required: true },
+        tripType: { type: String, required: true },
+        tripDate: { type: Date, required: true },
+        validUntil: { type: Date, required: true },
+        createdAt: { type: Date, default: Date.now }
+    }]
 }, { 
     timestamps: true 
 });
 
 // Indexai optimizavimui
 PartnerSchema.index({ status: 1, createdAt: -1 });
-PartnerSchema.index({ slug: 1 }); // PRIDĖTA: Slug indeksas
+PartnerSchema.index({ slug: 1 });
+PartnerSchema.index({ 'offers.validUntil': 1 }); // PRIDĖTA: pasiūlymų galiojimo indeksas
+PartnerSchema.index({ offerFormUrl: 1 }); // PRIDĖTA: formos URL indeksas
 
 export default mongoose.model('Partner', PartnerSchema);
