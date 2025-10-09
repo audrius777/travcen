@@ -1,5 +1,3 @@
-[file name]: server (36).js
-[file content begin]
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
