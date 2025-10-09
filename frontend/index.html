@@ -77,21 +77,6 @@
       text-decoration: underline;
     }
 
-    /* Scraping status indicator */
-    .scraping-status {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #0066cc;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 5px;
-      font-size: 14px;
-      display: none;
-      z-index: 1000;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-
     /* Scrollbar styling */
     .privacy-content::-webkit-scrollbar,
     .faq-content::-webkit-scrollbar {
@@ -183,11 +168,6 @@
   <!-- PATAISYTA: Pašalinti hardcoded demo korteles -->
   <div class="results" id="card-list">
     <!-- Kortelės bus įkeltos dinamiškai per JavaScript -->
-  </div>
-
-  <!-- Scraping status indicator -->
-  <div id="scraping-status" class="scraping-status">
-    <span id="scraping-message">Searching for offers...</span>
   </div>
 
   <div class="footer">
@@ -361,7 +341,6 @@
   </div>
 
   <script src="translate.js"></script>
-  <script src="script.js"></script>
   <script src="index.js"></script>
   
   <script>
