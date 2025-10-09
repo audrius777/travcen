@@ -40,25 +40,15 @@
             padding: 1.5rem;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
-        .btn-approve {
-            background-color: #28a745;
-            border-color: #28a745;
+        .btn-generate {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
             color: white;
         }
-        .btn-reject {
-            background-color: #dc3545;
-            border-color: #dc3545;
+        .btn-cleanup {
+            background-color: #ffc107;
+            border-color: #ffc107;
             color: white;
-        }
-        .search-box {
-            max-width: 300px;
-        }
-        .loading-spinner {
-            display: none;
-        }
-        .status-badge {
-            font-size: 0.8rem;
-            padding: 0.3rem 0.6rem;
         }
         .login-container {
             max-width: 400px;
@@ -121,7 +111,7 @@
                 <div class="row align-items-center">
                     <div class="col">
                         <h1 class="h3 mb-0"><i class="fas fa-cogs me-2"></i>TravCen Admin Panelė</h1>
-                        <p class="mb-0">Partnerių valdymo sistema</p>
+                        <p class="mb-0">HTML formų ir pasiūlymų valdymas</p>
                     </div>
                     <div class="col-auto">
                         <button id="logoutBtn" class="btn btn-outline-light">
@@ -135,58 +125,55 @@
         <div class="container">
             <!-- Statistics -->
             <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stats-card">
-                        <div class="stats-number" id="totalActive">0</div>
-                        <div class="stats-label">Aktyvūs partneriai</div>
+                        <div class="stats-number" id="totalOffers">0</div>
+                        <div class="stats-label">Aktyvūs pasiūlymai</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stats-card">
-                        <div class="stats-number" id="totalPending">0</div>
-                        <div class="stats-label">Laukia patvirtinimo</div>
+                        <div class="stats-number" id="expiredOffers">0</div>
+                        <div class="stats-label">Pasenę pasiūlymai</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stats-card">
-                        <div class="stats-number" id="totalRejected">0</div>
-                        <div class="stats-label">Atmesti</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
-                        <div class="stats-number" id="recentRegistrations">0</div>
-                        <div class="stats-label">Naujos užklausos (7d.)</div>
+                        <div class="stats-number" id="totalForms">-</div>
+                        <div class="stats-label">Sugeneruotos formos</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Search and Controls -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group search-box">
-                        <input type="text" id="searchInput" class="form-control" placeholder="Paieška pagal įmonę, el. paštą...">
-                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
-                            <i class="fas fa-search"></i>
+            <!-- HTML Form Generation -->
+            <div class="table-container mb-4">
+                <h5 class="mb-3"><i class="fas fa-file-code me-2"></i>HTML Formų Generavimas</h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="text-muted mb-3">
+                            Sugeneruokite HTML formą, kurią galėsite atsiųsti partneriui el. paštu. 
+                            Partneris užpildys formą ir pasiūlymas automatiškai atsiras svetainėje.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button id="generateFormBtn" class="btn btn-generate btn-lg">
+                            <i class="fas fa-magic me-2"></i>Sugeneruoti HTML Formą
                         </button>
                     </div>
                 </div>
-                <div class="col-md-6 text-end">
-                    <button id="refreshBtn" class="btn btn-primary">
-                        <i class="fas fa-sync-alt me-1"></i>Atnaujinti
-                    </button>
-                </div>
             </div>
 
-            <!-- Partners Table -->
+            <!-- Offers Management -->
             <div class="table-container">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Laukiančių partnerių sąrašas</h5>
-                    <div class="loading-spinner" id="tableLoading">
-                        <div class="spinner-border spinner-border-sm" role="status">
-                            <span class="visually-hidden">Kraunama...</span>
-                        </div>
-                        <span class="ms-2">Kraunama...</span>
+                    <h5 class="mb-0"><i class="fas fa-gift me-2"></i>Pasiūlymų Valdymas</h5>
+                    <div>
+                        <button id="cleanupOffersBtn" class="btn btn-cleanup me-2">
+                            <i class="fas fa-broom me-1"></i>Valyti pasenusius
+                        </button>
+                        <button id="refreshOffersBtn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-1"></i>Atnaujinti
+                        </button>
                     </div>
                 </div>
                 
@@ -194,54 +181,53 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Įmonės pavadinimas</th>
-                                <th>Svetainė</th>
-                                <th>El. paštas</th>
-                                <th>Kontaktinis asmuo</th>
-                                <th>Užklausos data</th>
+                                <th>Partnerio pavadinimas</th>
+                                <th>Kelionių tipas</th>
+                                <th>Kaina (€)</th>
+                                <th>Kelionės data</th>
+                                <th>Galioja iki</th>
+                                <th>Pasiūlymo nuoroda</th>
                                 <th>Veiksmai</th>
                             </tr>
                         </thead>
-                        <tbody id="partnersTableBody">
+                        <tbody id="offersTableBody">
                             <tr>
-                                <td colspan="6" class="text-center py-4">
+                                <td colspan="7" class="text-center py-4">
                                     <div class="spinner-border" role="status">
                                         <span class="visually-hidden">Kraunama...</span>
                                     </div>
-                                    <p class="mt-2 mb-0">Kraunami duomenys...</p>
+                                    <p class="mt-2 mb-0">Kraunami pasiūlymai...</p>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <nav>
-                    <ul class="pagination justify-content-center" id="pagination">
-                        <!-- Pagination will be generated here -->
-                    </ul>
-                </nav>
             </div>
         </div>
 
-        <!-- Rejection Modal -->
-        <div class="modal fade" id="rejectModal" tabindex="-1">
+        <!-- Form Generated Modal -->
+        <div class="modal fade" id="formGeneratedModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Partnerio atmetimas</h5>
+                        <h5 class="modal-title">HTML Forma Sugeneruota</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" id="rejectPartnerId">
+                        <p>HTML forma sėkmingai sugeneruota!</p>
                         <div class="mb-3">
-                            <label for="rejectReason" class="form-label">Atmetimo priežastis:</label>
-                            <textarea class="form-control" id="rejectReason" rows="3" placeholder="Įveskite atmetimo priežastį..."></textarea>
+                            <label class="form-label">Formos nuoroda:</label>
+                            <input type="text" id="generatedFormUrl" class="form-control" readonly>
                         </div>
+                        <small class="text-muted">
+                            Šią nuorodą atsiųskite partneriui el. paštu. Partneris užpildys formą ir pasiūlymas atsiras svetainėje automatiškai.
+                        </small>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
-                        <button type="button" class="btn btn-danger" id="confirmRejectBtn">Atmesti</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
+                        <button type="button" class="btn btn-primary" id="copyFormUrlBtn">
+                            <i class="fas fa-copy me-1"></i>Kopijuoti nuorodą
+                        </button>
                     </div>
                 </div>
             </div>
@@ -251,12 +237,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const BACKEND_URL = 'https://travcen-backendas.onrender.com/api';
-        const ADMIN_PASSWORD = 'kelioniupasaulis1!'; // Galima pakeisti norimu slaptažodžiu
+        const ADMIN_PASSWORD = 'kelioniupasaulis1!';
         const MAX_LOGIN_ATTEMPTS = 3;
-        const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minučių
+        const LOCKOUT_TIME = 15 * 60 * 1000;
 
-        let currentPage = 1;
-        let currentSearch = '';
         let loginAttempts = 0;
         let lockoutUntil = 0;
 
@@ -287,7 +271,6 @@
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('adminContent').style.display = 'none';
             
-            // Check if locked out
             if (Date.now() < lockoutUntil) {
                 const minutesLeft = Math.ceil((lockoutUntil - Date.now()) / 60000);
                 document.getElementById('loginError').classList.remove('d-none');
@@ -301,7 +284,7 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('adminContent').style.display = 'block';
             loadStats();
-            loadPendingPartners();
+            loadAllOffers();
         }
 
         function setupEventListeners() {
@@ -309,26 +292,10 @@
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             
             // Admin functionality
-            document.getElementById('refreshBtn').addEventListener('click', function() {
-                loadStats();
-                loadPendingPartners();
-            });
-
-            document.getElementById('searchBtn').addEventListener('click', function() {
-                currentSearch = document.getElementById('searchInput').value;
-                currentPage = 1;
-                loadPendingPartners();
-            });
-
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    currentSearch = this.value;
-                    currentPage = 1;
-                    loadPendingPartners();
-                }
-            });
-
-            document.getElementById('confirmRejectBtn').addEventListener('click', rejectPartner);
+            document.getElementById('generateFormBtn').addEventListener('click', generateNewForm);
+            document.getElementById('refreshOffersBtn').addEventListener('click', loadAllOffers);
+            document.getElementById('cleanupOffersBtn').addEventListener('click', cleanupExpiredOffers);
+            document.getElementById('copyFormUrlBtn').addEventListener('click', copyFormUrl);
             
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -343,19 +310,16 @@
             
             const password = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('loginError');
-            const attemptsLeft = MAX_LOGIN_ATTEMPTS - loginAttempts;
 
             if (password === ADMIN_PASSWORD) {
-                // Successful login
                 loginAttempts = 0;
                 const loginData = {
                     timestamp: Date.now(),
-                    expires: Date.now() + (8 * 60 * 60 * 1000) // 8 hours
+                    expires: Date.now() + (8 * 60 * 60 * 1000)
                 };
                 localStorage.setItem('adminLogin', JSON.stringify(loginData));
                 showAdminContent();
             } else {
-                // Failed login
                 loginAttempts++;
                 const attemptsLeft = MAX_LOGIN_ATTEMPTS - loginAttempts;
                 
@@ -373,200 +337,173 @@
                     }, LOCKOUT_TIME);
                 }
                 
-                // Clear password field
                 document.getElementById('adminPassword').value = '';
             }
         }
 
         async function loadStats() {
             try {
-                const response = await fetch(`${BACKEND_URL}/partners/stats`);
-                const stats = await response.json();
-                
-                document.getElementById('totalActive').textContent = stats.totalActive;
-                document.getElementById('totalPending').textContent = stats.totalPending;
-                document.getElementById('totalRejected').textContent = stats.totalRejected;
-                document.getElementById('recentRegistrations').textContent = stats.recentRegistrations;
+                const response = await fetch(`${BACKEND_URL}/offers`);
+                const data = await response.json();
+                const offers = data.offers || [];
+
+                const currentDate = new Date();
+                const expiredOffers = offers.filter(offer => new Date(offer.validUntil) < currentDate);
+
+                document.getElementById('totalOffers').textContent = offers.length;
+                document.getElementById('expiredOffers').textContent = expiredOffers.length;
+                document.getElementById('totalForms').textContent = '-'; // Forms are generated on-demand
             } catch (error) {
                 console.error('Klaida kraunant statistiką:', error);
             }
         }
 
-        async function loadPendingPartners() {
-            showTableLoading(true);
-            
+        async function loadAllOffers() {
             try {
-                const queryParams = new URLSearchParams({
-                    page: currentPage,
-                    limit: 10,
-                    ...(currentSearch && { search: currentSearch })
-                });
-
-                const response = await fetch(`${BACKEND_URL}/admin/pending-partners?${queryParams}`);
+                const response = await fetch(`${BACKEND_URL}/offers`);
                 const data = await response.json();
 
-                displayPartners(data.partners);
-                setupPagination(data.totalPages, data.currentPage);
+                displayOffers(data.offers || []);
+                loadStats(); // Update stats
             } catch (error) {
-                console.error('Klaida kraunant partnerius:', error);
-                document.getElementById('partnersTableBody').innerHTML = `
+                console.error('Klaida kraunant pasiūlymus:', error);
+                document.getElementById('offersTableBody').innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center text-danger py-4">
+                        <td colspan="7" class="text-center text-danger py-4">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Klaida kraunant duomenis
+                            Klaida kraunant pasiūlymus
                         </td>
                     </tr>
                 `;
-            } finally {
-                showTableLoading(false);
             }
         }
 
-        function displayPartners(partners) {
-            const tbody = document.getElementById('partnersTableBody');
+        function displayOffers(offers) {
+            const tbody = document.getElementById('offersTableBody');
+            const currentDate = new Date();
             
-            if (partners.length === 0) {
+            if (offers.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center py-4">
+                        <td colspan="7" class="text-center py-4">
                             <i class="fas fa-inbox me-2"></i>
-                            Nėra laukiančių partnerių
+                            Nėra pasiūlymų
                         </td>
                     </tr>
                 `;
                 return;
             }
 
-            tbody.innerHTML = partners.map(partner => `
-                <tr>
-                    <td><strong>${partner.companyName}</strong></td>
-                    <td>
-                        <a href="${partner.website}" target="_blank" class="text-decoration-none">
-                            ${partner.website}
-                        </a>
-                    </td>
-                    <td>${partner.email}</td>
-                    <td>${partner.contactPerson}</td>
-                    <td>${new Date(partner.requestDate).toLocaleDateString('lt-LT')}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-success btn-approve" onclick="approvePartner('${partner._id}')">
-                                <i class="fas fa-check me-1"></i>Patvirtinti
+            tbody.innerHTML = offers.map(offer => {
+                const isValid = new Date(offer.validUntil) >= currentDate;
+                const rowClass = isValid ? '' : 'table-warning';
+                
+                return `
+                    <tr class="${rowClass}">
+                        <td><strong>${offer.companyName || 'Nežinomas partneris'}</strong></td>
+                        <td>${offer.tripType}</td>
+                        <td>€${offer.price}</td>
+                        <td>${new Date(offer.tripDate).toLocaleDateString('lt-LT')}</td>
+                        <td>
+                            ${new Date(offer.validUntil).toLocaleDateString('lt-LT')}
+                            ${!isValid ? '<span class="badge bg-danger ms-1">Pasenęs</span>' : ''}
+                        </td>
+                        <td>
+                            <a href="${offer.offerUrl}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>Nuoroda
+                            </a>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteOffer('${offer._id}')">
+                                <i class="fas fa-trash me-1"></i>Šalinti
                             </button>
-                            <button class="btn btn-danger btn-reject" onclick="openRejectModal('${partner._id}')">
-                                <i class="fas fa-times me-1"></i>Atmesti
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function setupPagination(totalPages, currentPage) {
-            const pagination = document.getElementById('pagination');
-            
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-                return;
-            }
-
-            let paginationHTML = '';
-            
-            // Previous button
-            paginationHTML += `
-                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Atgal</a>
-                </li>
-            `;
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                paginationHTML += `
-                    <li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-                    </li>
+                        </td>
+                    </tr>
                 `;
+            }).join('');
+        }
+
+        async function generateNewForm() {
+            try {
+                // Generate a random form ID (simulating partner ID)
+                const randomId = 'form-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                const formUrl = `/partner-forms/${randomId}.html`;
+                
+                // In a real system, this would call the backend to generate the HTML file
+                document.getElementById('generatedFormUrl').value = window.location.origin + formUrl;
+                new bootstrap.Modal(document.getElementById('formGeneratedModal')).show();
+                
+                // Update forms count
+                document.getElementById('totalForms').textContent = '1 nauja';
+                
+            } catch (error) {
+                console.error('Klaida generuojant formą:', error);
+                alert('Klaida generuojant formą: ' + error.message);
             }
-
-            // Next button
-            paginationHTML += `
-                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Pirmyn</a>
-                </li>
-            `;
-
-            pagination.innerHTML = paginationHTML;
         }
 
-        function changePage(page) {
-            currentPage = page;
-            loadPendingPartners();
-        }
-
-        function showTableLoading(show) {
-            document.getElementById('tableLoading').style.display = show ? 'flex' : 'none';
-        }
-
-        async function approvePartner(partnerId) {
-            if (!confirm('Ar tikrai norite patvirtinti šį partnerį?')) return;
+        async function cleanupExpiredOffers() {
+            if (!confirm('Ar tikrai norite pašalinti visus pasenusius pasiūlymus?')) return;
 
             try {
-                const response = await fetch(`${BACKEND_URL}/admin/partners/${partnerId}/approve`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
+                const response = await fetch(`${BACKEND_URL}/offers/cleanup`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert('Pasenę pasiūlymai sėkmingai pašalinti!');
+                    loadAllOffers();
+                } else {
+                    throw new Error('Nepavyko pašalinti pasenusių pasiūlymų');
+                }
+            } catch (error) {
+                console.error('Klaida valant pasiūlymus:', error);
+                alert('Klaida valant pasiūlymus: ' + error.message);
+            }
+        }
+
+        async function deleteOffer(offerId) {
+            if (!confirm('Ar tikrai norite pašalinti šį pasiūlymą?')) return;
+
+            try {
+                // Since we don't have partner IDs, we need to find which partner has this offer
+                const partnersResponse = await fetch(`${BACKEND_URL}/partners`);
+                const partners = await partnersResponse.json();
+                
+                let partnerId = null;
+                for (const partner of partners) {
+                    if (partner.offers && partner.offers.some(offer => offer._id === offerId)) {
+                        partnerId = partner._id;
+                        break;
                     }
-                });
+                }
 
-                if (response.ok) {
-                    alert('Partneris sėkmingai patvirtintas!');
-                    loadStats();
-                    loadPendingPartners();
+                if (partnerId) {
+                    const response = await fetch(`${BACKEND_URL}/partners/${partnerId}/offers/${offerId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        alert('Pasiūlymas sėkmingai pašalintas!');
+                        loadAllOffers();
+                    } else {
+                        throw new Error('Nepavyko pašalinti pasiūlymo');
+                    }
                 } else {
-                    throw new Error('Nepavyko patvirtinti partnerio');
+                    // If no partner found, try direct cleanup
+                    await cleanupExpiredOffers();
                 }
             } catch (error) {
-                console.error('Klaida patvirtinant partnerį:', error);
-                alert('Klaida patvirtinant partnerį: ' + error.message);
+                console.error('Klaida šalinant pasiūlymą:', error);
+                alert('Klaida šalinant pasiūlymą: ' + error.message);
             }
         }
 
-        function openRejectModal(partnerId) {
-            document.getElementById('rejectPartnerId').value = partnerId;
-            document.getElementById('rejectReason').value = '';
-            new bootstrap.Modal(document.getElementById('rejectModal')).show();
-        }
-
-        async function rejectPartner() {
-            const partnerId = document.getElementById('rejectPartnerId').value;
-            const reason = document.getElementById('rejectReason').value;
-
-            if (!reason.trim()) {
-                alert('Prašome įvesti atmetimo priežastį');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/admin/partners/${partnerId}/reject`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ reason: reason.trim() })
-                });
-
-                if (response.ok) {
-                    document.getElementById('rejectModal').querySelector('.btn-close').click();
-                    alert('Partneris sėkmingai atmestas!');
-                    loadStats();
-                    loadPendingPartners();
-                } else {
-                    throw new Error('Nepavyko atmesti partnerio');
-                }
-            } catch (error) {
-                console.error('Klaida atmetant partnerį:', error);
-                alert('Klaida atmetant partnerį: ' + error.message);
-            }
+        function copyFormUrl() {
+            const formUrlInput = document.getElementById('generatedFormUrl');
+            formUrlInput.select();
+            document.execCommand('copy');
+            alert('Nuoroda nukopijuota!');
         }
     </script>
 </body>
