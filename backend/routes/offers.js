@@ -1,3 +1,5 @@
+[file name]: offers (8).js
+[file content begin]
 import express from 'express';
 import mongoose from 'mongoose';
 import Partner from '../models/Partner.js';
@@ -108,7 +110,92 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 2. Automatinis pasenusių pasiūlymų šalinimas (POST /api/offers/cleanup)
+// 2. Pasiūlymo pateikimas iš HTML formos (POST /api/offers/submit)
+router.post('/submit', async (req, res) => {
+    try {
+        const { 
+            companyName,
+            offerUrl, 
+            price, 
+            tripType, 
+            tripDate, 
+            validUntil 
+        } = req.body;
+
+        // Validacija
+        if (!companyName || !offerUrl || !price || !tripType || !tripDate || !validUntil) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Visi laukai yra privalomi' 
+            });
+        }
+
+        if (price <= 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Kaina turi būti teigiamas skaičius' 
+            });
+        }
+
+        if (new Date(validUntil) <= new Date(tripDate)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Galiojimo data turi būti vėlesnė už kelionės datą' 
+            });
+        }
+
+        if (new Date(tripDate) < new Date()) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Kelionės data negali būti praeityje' 
+            });
+        }
+
+        // Randame arba sukuriame partnerį
+        let partner = await Partner.findOne({ 
+            companyName: { $regex: companyName, $options: 'i' } 
+        });
+
+        if (!partner) {
+            // Sukuriame naują partnerį jei neegzistuoja
+            partner = new Partner({
+                companyName: companyName,
+                website: offerUrl, // Naudojame offerUrl kaip laikiną website
+                email: `temp-${Date.now()}@${companyName.toLowerCase().replace(/\s+/g, '-')}.com`,
+                contactPerson: 'Formos pateikėjas',
+                description: 'Automatiškai sukurtas iš HTML formos',
+                ipAddress: req.ip || 'unknown',
+                status: 'active'
+            });
+        }
+
+        // Pridedame pasiūlymą
+        partner.offers.push({
+            offerUrl,
+            price: parseFloat(price),
+            tripType,
+            tripDate: new Date(tripDate),
+            validUntil: new Date(validUntil)
+        });
+
+        await partner.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Pasiūlymas sėkmingai pateiktas ir atsiras svetainėje',
+            offerId: partner.offers[partner.offers.length - 1]._id
+        });
+
+    } catch (error) {
+        console.error('Pasiūlymo pateikimo klaida:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Serverio klaida pateikiant pasiūlymą' 
+        });
+    }
+});
+
+// 3. Automatinis pasenusių pasiūlymų šalinimas (POST /api/offers/cleanup)
 router.post('/cleanup', async (req, res) => {
     try {
         const currentDate = new Date();
@@ -131,7 +218,7 @@ router.post('/cleanup', async (req, res) => {
     }
 });
 
-// 3. Pasiūlymo informacijos gavimas (GET /api/offers/:offerId)
+// 4. Pasiūlymo informacijos gavimas (GET /api/offers/:offerId)
 router.get('/:offerId', async (req, res) => {
     try {
         const { offerId } = req.params;
@@ -171,3 +258,4 @@ router.get('/:offerId', async (req, res) => {
 });
 
 export default router;
+[file content end]
