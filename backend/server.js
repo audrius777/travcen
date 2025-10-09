@@ -1,3 +1,5 @@
+[file name]: server (36).js
+[file content begin]
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
@@ -83,172 +85,11 @@ app.get('/api/csrf-token', (req, res) => {
 import partnerRoutes from './routes/partners.js';
 app.use('/api', partnerRoutes);
 
-// 8. TIKRAS Scrapinimo endpoint'as (PATAISYTI SCRAPINIMO SELEKTORIAI)
-app.post('/api/scrape', async (req, res) => {
-  try {
-    const { url, criteria } = req.body;
-    
-    if (!url || !url.startsWith('http')) {
-      return res.status(400).json({ error: 'Neteisingas URL formatas' });
-    }
-
-    console.log(`🔍 Scrapinama: ${url} su kriterijais: ${criteria || 'visi'}`);
-
-    // Tikras scrapinimas su axios ir cheerio
-    const response = await axios.get(url, {
-      timeout: 15000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8',
-        'Accept-Language': 'lt-LT,lt;q=0.9,en;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none'
-      }
-    });
-
-    const $ = cheerio.load(response.data);
-    const offers = [];
-
-    // ATNAUJINTI SCRAPINIMO TAISYKLĖS - DAUGIAU REZULTATŲ
-    if (url.includes('novaturas.lt')) {
-      console.log('🔄 Taikomos Novaturas scrapinimo taisyklės');
-      
-      // Novaturas - IŠPLĖSTI SELEKTORIAI
-      const selectors = [
-        '.tour-item', '.offer-item', '.product-item', '.trip-card',
-        '.card', '.item', '[class*="tour"]', '[class*="offer"]',
-        '.product', '.package', '.vacation-item', '.hotel-item',
-        '.js-product-card', '.c-product-card', '.b-tour', '.b-offer'
-      ];
-
-      for (const selector of selectors) {
-        const elements = $(selector);
-        console.log(`📊 Novaturas ${selector}: ${elements.length} elementų`);
-        
-        elements.each((index, element) => {
-          try {
-            const $el = $(element);
-            const title = $el.find('.title, .name, h2, h3, h4, [class*="title"], [class*="name"]').first().text().trim();
-            const priceText = $el.find('.price, .cost, [class*="price"], [class*="cost"], .amount').first().text().trim();
-            const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-            const image = $el.find('img').first().attr('src') || '';
-            const link = $el.find('a').first().attr('href') || '';
-
-            if (title && title.length > 5 && !title.includes('undefined')) {
-              const fullImage = image.startsWith('http') ? image : 
-                               image.startsWith('//') ? `https:${image}` : 
-                               image ? new URL(image, url).href : 
-                               `https://source.unsplash.com/featured/300x200/?travel,${criteria || 'vacation'}`;
-              
-              const fullLink = link.startsWith('http') ? link : 
-                              link.startsWith('//') ? `https:${link}` : 
-                              link ? new URL(link, url).href : url;
-
-              // Tikriname ar atitinka kriterijus
-              const matchesCriteria = !criteria || 
-                title.toLowerCase().includes(criteria.toLowerCase()) ||
-                (criteria === 'last-minute' && title.toLowerCase().includes('last minute')) ||
-                (criteria === 'cultural' && title.toLowerCase().includes('culture'));
-
-              if (matchesCriteria) {
-                offers.push({
-                  title: title.substring(0, 100),
-                  price,
-                  image: fullImage,
-                  link: fullLink,
-                  source: 'Novaturas',
-                  criteria: criteria || 'all'
-                });
-              }
-            }
-          } catch (err) {
-            console.log('Nepavyko apdoroti Novaturas elemento:', err.message);
-          }
-        });
-
-        if (offers.length > 5) break; // Sustojame jei radome pakankamai pasiūlymų
-      }
-    }
-    else if (url.includes('teztour.lt')) {
-      console.log('🔄 Taikomos TezTour scrapinimo taisyklės');
-      
-      // TezTour - IŠPLĖSTI SELEKTORIAI
-      const selectors = [
-        '.tour-item', '.offer-item', '.product-item', 
-        '.card', '.item', '[class*="tour"]', '[class*="offer"]',
-        '.product', '.package', '.vacation-item', '.hotel-item',
-        '.js-tour-item', '.b-tour', '.b-offer', '.c-tour'
-      ];
-
-      for (const selector of selectors) {
-        const elements = $(selector);
-        console.log(`📊 TezTour ${selector}: ${elements.length} elementų`);
-        
-        elements.each((index, element) => {
-          try {
-            const $el = $(element);
-            const title = $el.find('.title, .name, h2, h3, h4, [class*="title"], [class*="name"]').first().text().trim();
-            const priceText = $el.find('.price, .cost, [class*="price"], [class*="cost"], .amount').first().text().trim();
-            const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-            const image = $el.find('img').first().attr('src') || '';
-            const link = $el.find('a').first().attr('href') || '';
-
-            if (title && title.length > 5 && !title.includes('undefined')) {
-              const fullImage = image.startsWith('http') ? image : 
-                               image.startsWith('//') ? `https:${image}` : 
-                               image ? new URL(image, url).href : 
-                               `https://source.unsplash.com/featured/300x200/?travel,${criteria || 'vacation'}`;
-              
-              const fullLink = link.startsWith('http') ? link : 
-                              link.startsWith('//') ? `https:${link}` : 
-                              link ? new URL(link, url).href : url;
-
-              // Tikriname ar atitinka kriterijus
-              const matchesCriteria = !criteria || 
-                title.toLowerCase().includes(criteria.toLowerCase()) ||
-                (criteria === 'last-minute' && title.toLowerCase().includes('last minute')) ||
-                (criteria === 'cultural' && title.toLowerCase().includes('culture'));
-
-              if (matchesCriteria) {
-                offers.push({
-                  title: title.substring(0, 100),
-                  price,
-                  image: fullImage,
-                  link: fullLink,
-                  source: 'TezTour',
-                  criteria: criteria || 'all'
-                });
-              }
-            }
-          } catch (err) {
-            console.log('Nepavyko apdoroti TezTour elemento:', err.message);
-          }
-        });
-
-        if (offers.length > 5) break;
-      }
-    }
-
-    console.log(`✅ Rasta ${offers.length} pasiūlymų iš ${url}`);
-
-    res.json(offers);
-
-  } catch (error) {
-    console.error('❌ Scrapinimo klaida:', error.message);
-    
-    res.status(500).json([{
-      title: 'Scrapinimo klaida',
-      price: 0,
-      source: 'system',
-      error: error.message,
-      note: 'Svetainė laikinai nepasiekiama arba pakeitė struktūrą'
-    }]);
-  }
-});
+// 8. Pridėti naujus route'us
+import offerRoutes from './routes/offers.js';
+import formRoutes from './routes/forms.js';
+app.use('/api/offers', offerRoutes);
+app.use('/api/forms', formRoutes);
 
 // 9. Autentifikacijos endpoint'ai
 app.post('/api/login', (req, res) => {
@@ -311,7 +152,7 @@ async function startServer() {
       console.log(`🚀 Serveris paleistas porte: ${PORT}`);
       console.log(`🔗 Health check: /api/health`);
       console.log(`🌍 CORS įjungtas Vercel domain'ams`);
-      console.log(`🔍 Tikras scrapinimas įJUNGTAS`);
+      console.log(`📝 Nauja pasiūlymų sistema įJUNGTAS`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
@@ -320,3 +161,4 @@ async function startServer() {
 }
 
 startServer();
+[file content end]
