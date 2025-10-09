@@ -1,5 +1,3 @@
-[file name]: offers (8).js
-[file content begin]
 import express from 'express';
 import mongoose from 'mongoose';
 import Partner from '../models/Partner.js';
