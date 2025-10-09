@@ -1,4 +1,3 @@
-// Paprastas valiutų konvertavimo modulis
 export const currencyConverter = {
   // Valiutų kursai (galima atnaujinti arba gauti iš API)
   exchangeRates: {
