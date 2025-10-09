@@ -1,3 +1,5 @@
+[file name]: admin-panel (6).html
+[file content begin]
 <!DOCTYPE html>
 <html lang="lt">
 <head>
@@ -265,6 +267,7 @@
                 showLoginForm();
             }
             setupEventListeners();
+            loadFormsCount();
         });
 
         function showLoginForm() {
@@ -285,6 +288,7 @@
             document.getElementById('adminContent').style.display = 'block';
             loadStats();
             loadAllOffers();
+            loadFormsCount();
         }
 
         function setupEventListeners() {
@@ -352,9 +356,22 @@
 
                 document.getElementById('totalOffers').textContent = offers.length;
                 document.getElementById('expiredOffers').textContent = expiredOffers.length;
-                document.getElementById('totalForms').textContent = '-'; // Forms are generated on-demand
             } catch (error) {
                 console.error('Klaida kraunant statistiką:', error);
+            }
+        }
+
+        async function loadFormsCount() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/forms`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('totalForms').textContent = data.total || 0;
+                }
+            } catch (error) {
+                console.error('Klaida kraunant formų skaičių:', error);
+                document.getElementById('totalForms').textContent = '-';
             }
         }
 
@@ -425,16 +442,22 @@
 
         async function generateNewForm() {
             try {
-                // Generate a random form ID (simulating partner ID)
-                const randomId = 'form-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-                const formUrl = `/partner-forms/${randomId}.html`;
-                
-                // In a real system, this would call the backend to generate the HTML file
-                document.getElementById('generatedFormUrl').value = window.location.origin + formUrl;
-                new bootstrap.Modal(document.getElementById('formGeneratedModal')).show();
-                
-                // Update forms count
-                document.getElementById('totalForms').textContent = '1 nauja';
+                const response = await fetch(`${BACKEND_URL}/forms/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('generatedFormUrl').value = window.location.origin + result.formUrl;
+                    new bootstrap.Modal(document.getElementById('formGeneratedModal')).show();
+                    loadFormsCount(); // Atnaujinti formų skaičių
+                } else {
+                    throw new Error(result.error || 'Nepavyko sugeneruoti formos');
+                }
                 
             } catch (error) {
                 console.error('Klaida generuojant formą:', error);
@@ -508,3 +531,4 @@
     </script>
 </body>
 </html>
+[file content end]
