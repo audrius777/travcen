@@ -79,6 +79,8 @@ const PartnerSchema = new mongoose.Schema({
         tripType: { type: String, required: true },
         tripDate: { type: Date, required: true },
         validUntil: { type: Date, required: true },
+        departureLocation: { type: String, required: true }, // PRIDĖTA: išvykimo vieta
+        destination: { type: String, required: true },       // PRIDĖTA: kelionės tikslas
         createdAt: { type: Date, default: Date.now }
     }]
 }, { 
