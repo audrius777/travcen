@@ -337,7 +337,7 @@
                 if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
                     lockoutUntil = Date.now() + LOCKOUT_TIME;
                     errorDiv.innerHTML = `Prieiga užblokuota! Bandykite dar kartą po 15 minučių.`;
-                    document.querySelector('button[type="submit"]').disabled = true;
+                    document.querySelector('button[type="submit']').disabled = true;
                     setTimeout(() => {
                         loginAttempts = 0;
                         document.querySelector('button[type="submit"]').disabled = false;
@@ -444,6 +444,31 @@
             }).join('');
         }
 
+        // PATAISYTA: deleteOffer funkcija
+        async function deleteOffer(offerId) {
+            if (!confirm('Ar tikrai norite pašalinti šį pasiūlymą?')) return;
+
+            try {
+                // PATAISYTA: Tiesioginis šalinimas per offers endpointą
+                const response = await fetch(`${BACKEND_URL}/offers/${offerId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Pasiūlymas sėkmingai pašalintas!');
+                    loadAllOffers(); // Perkrauti pasiūlymų sąrašą
+                } else {
+                    throw new Error(result.error || 'Nepavyko pašalinti pasiūlymo');
+                }
+                
+            } catch (error) {
+                console.error('Klaida šalinant pasiūlymą:', error);
+                alert('Klaida šalinant pasiūlymą: ' + error.message);
+            }
+        }
+
         async function generateNewForm() {
             try {
                 const response = await fetch(`${BACKEND_URL}/forms/generate`, {
@@ -486,43 +511,6 @@
             } catch (error) {
                 console.error('Klaida valant pasiūlymus:', error);
                 alert('Klaida valant pasiūlymus: ' + error.message);
-            }
-        }
-
-        async function deleteOffer(offerId) {
-            if (!confirm('Ar tikrai norite pašalinti šį pasiūlymą?')) return;
-
-            try {
-                // Since we don't have partner IDs, we need to find which partner has this offer
-                const partnersResponse = await fetch(`${BACKEND_URL}/partners`);
-                const partners = await partnersResponse.json();
-                
-                let partnerId = null;
-                for (const partner of partners) {
-                    if (partner.offers && partner.offers.some(offer => offer._id === offerId)) {
-                        partnerId = partner._id;
-                        break;
-                    }
-                }
-
-                if (partnerId) {
-                    const response = await fetch(`${BACKEND_URL}/partners/${partnerId}/offers/${offerId}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        alert('Pasiūlymas sėkmingai pašalintas!');
-                        loadAllOffers();
-                    } else {
-                        throw new Error('Nepavyko pašalinti pasiūlymo');
-                    }
-                } else {
-                    // If no partner found, try direct cleanup
-                    await cleanupExpiredOffers();
-                }
-            } catch (error) {
-                console.error('Klaida šalinant pasiūlymą:', error);
-                alert('Klaida šalinant pasiūlymą: ' + error.message);
             }
         }
 
