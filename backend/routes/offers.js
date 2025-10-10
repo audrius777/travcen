@@ -264,4 +264,39 @@ router.get('/:offerId', async (req, res) => {
     }
 });
 
+// 5. Pasiūlymo šalinimas (DELETE /api/offers/:offerId)
+router.delete('/:offerId', async (req, res) => {
+    try {
+        const { offerId } = req.params;
+
+        // Randame partnerį, kuris turi šį pasiūlymą
+        const partner = await Partner.findOne({ 
+            'offers._id': new mongoose.Types.ObjectId(offerId) 
+        });
+
+        if (!partner) {
+            return res.status(404).json({ 
+                success: false,
+                error: 'Pasiūlymas nerastas' 
+            });
+        }
+
+        // Pašaliname pasiūlymą iš masyvo
+        partner.offers = partner.offers.filter(offer => offer._id.toString() !== offerId);
+        await partner.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Pasiūlymas sėkmingai pašalintas' 
+        });
+
+    } catch (error) {
+        console.error('Pasiūlymo šalinimo klaida:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Serverio klaida šalinant pasiūlymą' 
+        });
+    }
+});
+
 export default router;
