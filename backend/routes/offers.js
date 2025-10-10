@@ -78,6 +78,8 @@ router.get('/', async (req, res) => {
                     tripType: offer.tripType,
                     tripDate: offer.tripDate,
                     validUntil: offer.validUntil,
+                    departureLocation: offer.departureLocation, // PRIDĖTA
+                    destination: offer.destination,             // PRIDĖTA
                     createdAt: offer.createdAt
                 });
             });
@@ -117,11 +119,14 @@ router.post('/submit', async (req, res) => {
             price, 
             tripType, 
             tripDate, 
-            validUntil 
+            validUntil,
+            departureLocation,  // PRIDĖTA
+            destination         // PRIDĖTA
         } = req.body;
 
-        // Validacija
-        if (!companyName || !offerUrl || !price || !tripType || !tripDate || !validUntil) {
+        // Validacija - PRIDĖTI NAUJI LAUKAI
+        if (!companyName || !offerUrl || !price || !tripType || !tripDate || !validUntil || 
+            !departureLocation || !destination) {
             return res.status(400).json({ 
                 success: false, 
                 error: 'Visi laukai yra privalomi' 
@@ -167,13 +172,15 @@ router.post('/submit', async (req, res) => {
             });
         }
 
-        // Pridedame pasiūlymą
+        // Pridedame pasiūlymą su VISAIS LAUKAIS
         partner.offers.push({
             offerUrl,
             price: parseFloat(price),
             tripType,
             tripDate: new Date(tripDate),
-            validUntil: new Date(validUntil)
+            validUntil: new Date(validUntil),
+            departureLocation: departureLocation,  // PRIDĖTA
+            destination: destination               // PRIDĖTA
         });
 
         await partner.save();
@@ -246,6 +253,8 @@ router.get('/:offerId', async (req, res) => {
             tripType: offer.tripType,
             tripDate: offer.tripDate,
             validUntil: offer.validUntil,
+            departureLocation: offer.departureLocation, // PRIDĖTA
+            destination: offer.destination,            // PRIDĖTA
             createdAt: offer.createdAt
         });
 
@@ -256,4 +265,3 @@ router.get('/:offerId', async (req, res) => {
 });
 
 export default router;
-
