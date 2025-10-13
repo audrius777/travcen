@@ -337,7 +337,7 @@
                 if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
                     lockoutUntil = Date.now() + LOCKOUT_TIME;
                     errorDiv.innerHTML = `Prieiga užblokuota! Bandykite dar kartą po 15 minučių.`;
-                    document.querySelector('button[type="submit']').disabled = true;
+                    document.querySelector('button[type="submit"]').disabled = true;
                     setTimeout(() => {
                         loginAttempts = 0;
                         document.querySelector('button[type="submit"]').disabled = false;
