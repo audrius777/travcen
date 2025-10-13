@@ -88,34 +88,32 @@ class OffersManager {
     }
 
     // Filtruoti pasiūlymus pagal vartotojo kriterijus
-   filterOffers(filters = {}) {
-    this.currentFilters = { ...this.currentFilters, ...filters };
-    
-    this.filteredOffers = this.offers.filter(offer => {
-        // Tikriname ar reikšmė ne tuščia
-        const matchesTripType = !filters.tripType || filters.tripType === '' || 
-            (offer.tripType && offer.tripType.toLowerCase().includes(filters.tripType.toLowerCase()));
+    filterOffers(filters = {}) {
+        this.currentFilters = { ...this.currentFilters, ...filters };
         
-        const matchesPrice = !filters.maxPrice || offer.price <= parseFloat(filters.maxPrice);
-        
-        const matchesStartDate = !filters.startDate || 
-            new Date(offer.tripDate) >= new Date(filters.startDate);
-        
-        const matchesEndDate = !filters.endDate || 
-            new Date(offer.tripDate) <= new Date(filters.endDate);
-        
-        const matchesDestination = !filters.destination || filters.destination === '' || 
-            (offer.tripType && offer.tripType.toLowerCase().includes(filters.destination.toLowerCase())) ||
-            (offer.companyName && offer.companyName.toLowerCase().includes(filters.destination.toLowerCase()));
-        
-        const matchesDeparture = !filters.departure || filters.departure === '' || 
-            (offer.companyName && offer.companyName.toLowerCase().includes(filters.departure.toLowerCase()));
+        this.filteredOffers = this.offers.filter(offer => {
+            // Tikriname ar reikšmė ne tuščia
+            const matchesTripType = !filters.tripType || filters.tripType === '' || 
+                (offer.tripType && offer.tripType.toLowerCase().includes(filters.tripType.toLowerCase()));
+            
+            const matchesPrice = !filters.maxPrice || offer.price <= parseFloat(filters.maxPrice);
+            
+            const matchesStartDate = !filters.startDate || 
+                new Date(offer.tripDate) >= new Date(filters.startDate);
+            
+            const matchesEndDate = !filters.endDate || 
+                new Date(offer.tripDate) <= new Date(filters.endDate);
+            
+            const matchesDestination = !filters.destination || filters.destination === '' || 
+                (offer.tripType && offer.tripType.toLowerCase().includes(filters.destination.toLowerCase())) ||
+                (offer.companyName && offer.companyName.toLowerCase().includes(filters.destination.toLowerCase()));
+            
+            const matchesDeparture = !filters.departure || filters.departure === '' || 
+                (offer.companyName && offer.companyName.toLowerCase().includes(filters.departure.toLowerCase()));
 
-        return matchesTripType && matchesPrice && matchesStartDate && 
-               matchesEndDate && matchesDestination && matchesDeparture;
-    });
-
-}
+            return matchesTripType && matchesPrice && matchesStartDate && 
+                   matchesEndDate && matchesDestination && matchesDeparture;
+        });
 
         // Rikiavimas
         if (filters.priceSort === 'price-low') {
