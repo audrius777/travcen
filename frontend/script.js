@@ -88,7 +88,7 @@ class OffersManager {
     }
 
     // Filtruoti pasiūlymus pagal vartotojo kriterijus
-    filterOffers(filters = {}) {
+   filterOffers(filters = {}) {
     this.currentFilters = { ...this.currentFilters, ...filters };
     
     this.filteredOffers = this.offers.filter(offer => {
