@@ -185,8 +185,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         searchBtn.addEventListener("click", handleSearch);
     }
 
-    // Filtravimas realiu laiku
-    setupRealTimeFiltering();
+    // 👇 UŽKOMENTUOTA: Filtravimas realiu laiku
+    // setupRealTimeFiltering();
 
     // Modalų valdymas (išlaikomas iš senos versijos)
     setupModals();
@@ -205,7 +205,7 @@ function handleSearch() {
     offersManager.filterOffers(filters);
 }
 
-// Realaus laiko filtravimas
+// Realaus laiko filtravimas (UŽKOMENTUOTA)
 function setupRealTimeFiltering() {
     const inputs = ['departure', 'destination', 'trip-type', 'price-sort', 'departure-date'];
     
