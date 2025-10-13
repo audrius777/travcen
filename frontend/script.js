@@ -92,9 +92,9 @@ class OffersManager {
     this.currentFilters = { ...this.currentFilters, ...filters };
     
     this.filteredOffers = this.offers.filter(offer => {
-        // Tik tikriname jei reikšmė ne tuščia
+        // Tikriname ar reikšmė ne tuščia
         const matchesTripType = !filters.tripType || filters.tripType === '' || 
-            offer.tripType.toLowerCase().includes(filters.tripType.toLowerCase());
+            (offer.tripType && offer.tripType.toLowerCase().includes(filters.tripType.toLowerCase()));
         
         const matchesPrice = !filters.maxPrice || offer.price <= parseFloat(filters.maxPrice);
         
@@ -105,7 +105,7 @@ class OffersManager {
             new Date(offer.tripDate) <= new Date(filters.endDate);
         
         const matchesDestination = !filters.destination || filters.destination === '' || 
-            offer.tripType.toLowerCase().includes(filters.destination.toLowerCase()) ||
+            (offer.tripType && offer.tripType.toLowerCase().includes(filters.destination.toLowerCase())) ||
             (offer.companyName && offer.companyName.toLowerCase().includes(filters.destination.toLowerCase()));
         
         const matchesDeparture = !filters.departure || filters.departure === '' || 
@@ -115,7 +115,6 @@ class OffersManager {
                matchesEndDate && matchesDestination && matchesDeparture;
     });
 
-    // ... likęs kodas
 }
 
         // Rikiavimas
