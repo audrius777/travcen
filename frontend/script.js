@@ -1,4 +1,4 @@
-// script.js - Naujas pasiūlymų valdymo failas (BE SCRAPINIMO)
+// script.js - Pataisytas pasiūlymų valdymo failas
 const API_BASE_URL = 'https://travcen-backendas.onrender.com/api';
 
 class OffersManager {
