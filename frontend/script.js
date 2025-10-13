@@ -213,7 +213,6 @@ function setupRealTimeFiltering() {
         const element = document.getElementById(inputId);
         if (element) {
             element.addEventListener('input', handleSearch);
-            element.addEventListener('change', handleSearch);
         }
     });
 }
