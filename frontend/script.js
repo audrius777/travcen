@@ -65,24 +65,26 @@ class OffersManager {
         const imageUrl = offer.imageUrl || `https://source.unsplash.com/featured/280x180/?${encodeURIComponent(offer.tripType)}`;
 
         return `
-            <div class="card" 
-                 data-id="${offer._id}"
-                 data-from="${offer.companyName}"
-                 data-to="${offer.tripType}"
-                 data-price="${offer.price}"
-                 data-type="${offer.tripType}"
-                 data-date="${offer.tripDate}">
-                <img src="${imageUrl}" alt="${offer.tripType}" 
-                     onerror="this.src='https://source.unsplash.com/featured/280x180/?travel'" />
-                <div class="card-content">
-                    <h3>${offer.tripType}</h3>
-                    <p class="company">${offer.companyName}</p>
-                    <p class="departure-date">Trip Date: ${formattedDate}</p>
-                    <p class="valid-until">Valid Until: ${validUntil}</p>
-                    <p class="price">Price: €${offer.price}</p>
-                </div>
+    <div class="card" 
+         data-id="${offer._id}"
+         data-from="${offer.companyName}"
+         data-to="${offer.tripType}"
+         data-price="${offer.price}"
+         data-type="${offer.tripType}"
+         data-date="${offer.tripDate}">
+        <a href="${offer.offerUrl}" target="_blank" class="card-link">
+            <img src="${imageUrl}" alt="${offer.tripType}" 
+                 onerror="this.src='https://source.unsplash.com/featured/280x180/?travel'" />
+            <div class="card-content">
+                <h3>${offer.tripType}</h3>
+                <p class="company">${offer.companyName}</p>
+                <p class="departure-date">Trip Date: ${formattedDate}</p>
+                <p class="valid-until">Valid Until: ${validUntil}</p>
+                <p class="price">Price: €${offer.price}</p>
             </div>
-        `;
+        </a>
+    </div>
+`;
     }
 
     // Filtruoti pasiūlymus pagal vartotojo kriterijus
