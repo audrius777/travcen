@@ -200,7 +200,10 @@ function handleSearch() {
         startDate: document.getElementById("departure-date").value
     };
 
-    offersManager.filterOffers(filters);
+    // PATAISYTA - Krauname pasiūlymus iš API su filtrais
+    offersManager.loadOffers(filters).then(() => {
+        offersManager.displayOffers();
+    });
 }
 
 // Modalų valdymas (išlaikomas funkcionalumas)
