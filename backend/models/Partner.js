@@ -48,8 +48,13 @@ const PartnerSchema = new mongoose.Schema({
     },
     status: { 
         type: String, 
-        enum: ['active', 'inactive'], 
-        default: 'active' 
+        enum: ['pending', 'active', 'inactive'], 
+        default: 'pending' 
+    },
+    partnerId: {
+        type: String,
+        required: true,
+        unique: true
     },
     ipAddress: {
         type: String,
@@ -67,22 +72,11 @@ const PartnerSchema = new mongoose.Schema({
             return `${baseSlug}-${Date.now()}`;
         }
     },
-    // PRIDĖTI NAUJI LAUKAI PAGAL PLANĄ
     offerFormUrl: {
         type: String,
         unique: true,
         sparse: true
-    },
-    offers: [{
-        offerUrl: { type: String, required: true },
-        price: { type: Number, required: true },
-        tripType: { type: String, required: true },
-        tripDate: { type: Date, required: true },
-        validUntil: { type: Date, required: true },
-        departureLocation: { type: String, required: true }, // PRIDĖTA: išvykimo vieta
-        destination: { type: String, required: true },       // PRIDĖTA: kelionės tikslas
-        createdAt: { type: Date, default: Date.now }
-    }]
+    }
 }, { 
     timestamps: true 
 });
@@ -90,7 +84,7 @@ const PartnerSchema = new mongoose.Schema({
 // Indexai optimizavimui
 PartnerSchema.index({ status: 1, createdAt: -1 });
 PartnerSchema.index({ slug: 1 });
-PartnerSchema.index({ 'offers.validUntil': 1 }); // PRIDĖTA: pasiūlymų galiojimo indeksas
-PartnerSchema.index({ offerFormUrl: 1 }); // PRIDĖTA: formos URL indeksas
+PartnerSchema.index({ partnerId: 1 });
+PartnerSchema.index({ offerFormUrl: 1 });
 
 export default mongoose.model('Partner', PartnerSchema);
