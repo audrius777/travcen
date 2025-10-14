@@ -290,130 +290,128 @@
     </div>
 
     <script>
-        // PARTNERIO ID NUSKAITYMAS IŠ URL
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const partnerId = urlParams.get('partnerId');
-            
-            if (partnerId) {
-                document.getElementById('partnerId').value = partnerId;
-                document.getElementById('partnerIdDisplay').textContent = partnerId;
-                document.getElementById('partnerInfo').style.display = 'block';
-            }
-
-            // VIEŠBUČIO ŽVAIGŽDUTĖS PASIRINKIMAS
-            const starButtons = document.querySelectorAll('.star-btn');
-            starButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Nuimti pasirinkimą nuo kitų mygtukų
-                    starButtons.forEach(btn => btn.classList.remove('selected'));
-                    // Pridėti pasirinkimą šiam mygtukui
-                    this.classList.add('selected');
-                    // Įrašyti reikšmę į paslėptą lauką
-                    document.getElementById('hotelRating').value = this.getAttribute('data-stars');
-                });
-            });
-        });
-
-        document.getElementById('offerForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const formData = {
-                companyName: document.getElementById('companyName').value.trim(),
-                offerUrl: document.getElementById('offerUrl').value.trim(),
-                departureLocation: document.getElementById('departureLocation').value.trim(),
-                destination: document.getElementById('destination').value.trim(),
-                tripType: document.getElementById('tripType').value,
-                price: parseFloat(document.getElementById('price').value),
-                tripDate: document.getElementById('tripDate').value,
-                validUntil: document.getElementById('validUntil').value,
-                partnerId: document.getElementById('partnerId').value,
-                hotelRating: document.getElementById('hotelRating').value // PRIDĖTA
-            };
-
-            // VALIDACIJA SU PARTNERIO ID
-            if (!formData.partnerId) {
-                showMessage('Netinkama forma. Naudokite partnerio gautą nuorodą.', 'error');
-                return;
-            }
-
-            // PAPILDOMA VALIDACIJA VIEŠBUČIO KOKYBEI
-            if (!formData.hotelRating) {
-                showMessage('Pasirinkite viešbučio kokybę', 'error');
-                return;
-            }
-
-            if (!formData.companyName || !formData.offerUrl || !formData.departureLocation || 
-                !formData.destination || !formData.tripType || !formData.price || 
-                !formData.tripDate || !formData.validUntil) {
-                showMessage('Visi laukai yra privalomi', 'error');
-                return;
-            }
-
-            if (formData.price <= 0) {
-                showMessage('Kaina turi būti teigiamas skaičius', 'error');
-                return;
-            }
-
-            if (new Date(formData.validUntil) <= new Date(formData.tripDate)) {
-                showMessage('Galiojimo data turi būti vėlesnė už kelionės datą', 'error');
-                return;
-            }
-
-            if (new Date(formData.tripDate) < new Date()) {
-                showMessage('Kelionės data negali būti praeityje', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('https://travcen-backendas.onrender.com/api/offers/submit', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showMessage('Pasiūlymas sėkmingai pateiktas! Jis atsiras svetainėje po patvirtinimo.', 'success');
-                    document.getElementById('offerForm').reset();
-                    // Išvalyti viešbučio pasirinkimą
-                    document.querySelectorAll('.star-btn').forEach(btn => btn.classList.remove('selected'));
-                    document.getElementById('hotelRating').value = '';
-                } else {
-                    showMessage(result.error || 'Įvyko klaida pateikiant pasiūlymą', 'error');
-                }
-            } catch (error) {
-                showMessage('Įvyko serverio klaida. Bandykite vėliau.', 'error');
-                console.error('Klaida:', error);
-            }
-        });
-
-        function showMessage(text, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = 'message ' + type;
-            messageEl.style.display = 'block';
-
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, type === 'success' ? 5000 : 10000);
+    // PARTNERIO ID NUSKAITYMAS IŠ URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const partnerId = urlParams.get('partnerId');
+        
+        if (partnerId) {
+            document.getElementById('partnerId').value = partnerId;
+            document.getElementById('partnerIdDisplay').textContent = partnerId;
+            document.getElementById('partnerInfo').style.display = 'block';
         }
 
-        // DATŲ VALIDACIJA
-        const tripDateInput = document.getElementById('tripDate');
-        const validUntilInput = document.getElementById('validUntil');
-
-        tripDateInput.addEventListener('change', function() {
-            validUntilInput.min = this.value;
+        // VIEŠBUČIO ŽVAIGŽDUTĖS PASIRINKIMAS
+        const starButtons = document.querySelectorAll('.star-btn');
+        starButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Nuimti pasirinkimą nuo kitų mygtukų
+                starButtons.forEach(btn => btn.classList.remove('selected'));
+                // Pridėti pasirinkimą šiam mygtukui
+                this.classList.add('selected');
+                // Įrašyti reikšmę į paslėptą lauką
+                document.getElementById('hotelRating').value = this.getAttribute('data-stars');
+            });
         });
+    });
 
-        // NUSTATYTI MINIMALIĄ DATĄ ŠIANDIENAI
-        const today = new Date().toISOString().split('T')[0];
-        tripDateInput.min = today;
-        validUntilInput.min = today;
-    </script>
-</body>
-</html>
+    document.getElementById('offerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = {
+            partnerId: document.getElementById('partnerId').value,
+            companyName: document.getElementById('companyName').value.trim(),
+            offerUrl: document.getElementById('offerUrl').value.trim(),
+            departureLocation: document.getElementById('departureLocation').value.trim(),
+            destination: document.getElementById('destination').value.trim(),
+            tripType: document.getElementById('tripType').value,
+            price: parseFloat(document.getElementById('price').value),
+            hotelRating: document.getElementById('hotelRating').value,
+            tripDate: document.getElementById('tripDate').value,
+            validUntil: document.getElementById('validUntil').value
+        };
+
+        // VALIDACIJA SU PARTNERIO ID
+        if (!formData.partnerId) {
+            showMessage('Netinkama forma. Naudokite partnerio gautą nuorodą.', 'error');
+            return;
+        }
+
+        // PAPILDOMA VALIDACIJA VIEŠBUČIO KOKYBEI
+        if (!formData.hotelRating) {
+            showMessage('Pasirinkite viešbučio kokybę', 'error');
+            return;
+        }
+
+        if (!formData.companyName || !formData.offerUrl || !formData.departureLocation || 
+            !formData.destination || !formData.tripType || !formData.price || 
+            !formData.tripDate || !formData.validUntil) {
+            showMessage('Visi laukai yra privalomi', 'error');
+            return;
+        }
+
+        if (formData.price <= 0) {
+            showMessage('Kaina turi būti teigiamas skaičius', 'error');
+            return;
+        }
+
+        if (new Date(formData.validUntil) <= new Date(formData.tripDate)) {
+            showMessage('Galiojimo data turi būti vėlesnė už kelionės datą', 'error');
+            return;
+        }
+
+        if (new Date(formData.tripDate) < new Date()) {
+            showMessage('Kelionės data negali būti praeityje', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://travcen-backendas.onrender.com/api/offers/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('Pasiūlymas sėkmingai pateiktas! Jis atsiras svetainėje po patvirtinimo.', 'success');
+                document.getElementById('offerForm').reset();
+                // Išvalyti viešbučio pasirinkimą
+                document.querySelectorAll('.star-btn').forEach(btn => btn.classList.remove('selected'));
+                document.getElementById('hotelRating').value = '';
+            } else {
+                showMessage(result.error || 'Įvyko klaida pateikiant pasiūlymą', 'error');
+            }
+        } catch (error) {
+            showMessage('Įvyko serverio klaida. Bandykite vėliau.', 'error');
+            console.error('Klaida:', error);
+        }
+    });
+
+    function showMessage(text, type) {
+        const messageEl = document.getElementById('message');
+        messageEl.textContent = text;
+        messageEl.className = 'message ' + type;
+        messageEl.style.display = 'block';
+
+        setTimeout(() => {
+            messageEl.style.display = 'none';
+        }, type === 'success' ? 5000 : 10000);
+    }
+
+    // DATŲ VALIDACIJA
+    const tripDateInput = document.getElementById('tripDate');
+    const validUntilInput = document.getElementById('validUntil');
+
+    tripDateInput.addEventListener('change', function() {
+        validUntilInput.min = this.value;
+    });
+
+    // NUSTATYTI MINIMALIĄ DATĄ ŠIANDIENAI
+    const today = new Date().toISOString().split('T')[0];
+    tripDateInput.min = today;
+    validUntilInput.min = today;
+</script>>
