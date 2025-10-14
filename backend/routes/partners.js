@@ -6,6 +6,20 @@ import Partner from '../models/Partner.js';
 
 const router = express.Router();
 
+// PARTNERIO ID GENERAVIMO FUNKCIJA
+function generatePartnerId(companyName) {
+    // Paimti pirmas 6 raides iš įmonės pavadinimo
+    const prefix = companyName
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .substring(0, 6);
+    
+    // Sugeneruoti atsitiktinę dalį
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    return `${prefix}_${random}`;
+}
+
 // 1. Svetainės validacija (GET /api/validate-website?url=...)
 router.get('/validate-website', async (req, res) => {
     try {
@@ -22,7 +36,7 @@ router.get('/validate-website', async (req, res) => {
     }
 });
 
-// 2. Partnerio registracija (POST /api/partners/register)
+// 2. Partnerio registracija (POST /api/partners/register) - PRIDĖTAS ID GENERAVIMAS
 router.post('/register', async (req, res) => {
     try {
         const { 
@@ -41,6 +55,9 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: validation.error });
         }
 
+        // 🔥 PARTNERIO ID GENERAVIMAS
+        const partnerId = generatePartnerId(companyName);
+
         // Išsaugojimas MongoDB
         const newPartner = new PendingPartner({
             companyName,
@@ -49,6 +66,7 @@ router.post('/register', async (req, res) => {
             contactPerson,
             description: description || '',
             ipAddress,
+            partnerId, // 🔥 PRIDĖTAS PARTNERIO ID
             status: 'pending'
         });
         
@@ -56,7 +74,8 @@ router.post('/register', async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: 'Registracija sėkmingai gauta. Susisieksime su jumis el. paštu.' 
+            message: 'Registracija sėkmingai gauta. Susisieksime su jumis el. paštu.',
+            partnerId: partnerId // 🔥 GRĄŽINAMAS PARTNERIO ID
         });
 
     } catch (error) {
@@ -78,10 +97,9 @@ router.post('/register', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const partners = await Partner.find({ status: 'active' })
-            .select('companyName website email contactPerson description slug offerFormUrl')
+            .select('companyName website email contactPerson description slug offerFormUrl partnerId')
             .sort({ createdAt: -1 });
         
-        // Jei nėra aktyvių partnerių, grąžiname tuščią masyvą
         res.json(partners);
         
     } catch (error) {
@@ -105,7 +123,7 @@ router.get('/pending', async (req, res) => {
         }
         
         const partners = await PendingPartner.find(query)
-            .select('companyName website email contactPerson description requestDate slug')
+            .select('companyName website email contactPerson description requestDate slug partnerId')
             .sort({ requestDate: -1 });
             
         res.json(partners);
@@ -115,7 +133,7 @@ router.get('/pending', async (req, res) => {
     }
 });
 
-// 5. Partnerio patvirtinimas (PUT /api/partners/:id/approve)
+// 5. Partnerio patvirtinimas (PUT /api/partners/:id/approve) - PRIDĖTAS ID PERKĖLIMAS
 router.put('/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -133,6 +151,7 @@ router.put('/:id/approve', async (req, res) => {
             contactPerson: pendingPartner.contactPerson,
             description: pendingPartner.description,
             ipAddress: pendingPartner.ipAddress,
+            partnerId: pendingPartner.partnerId, // 🔥 PERKELIAMAS ID
             slug: pendingPartner.slug,
             status: 'active'
         });
