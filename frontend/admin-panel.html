@@ -72,6 +72,22 @@
             font-size: 0.9rem;
             margin-top: 0.5rem;
         }
+        .partner-id-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .location-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        .hotel-stars {
+            color: #ffc107;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -131,41 +147,64 @@
         <div class="container">
             <!-- Statistics -->
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="stats-card">
                         <div class="stats-number" id="totalOffers">0</div>
                         <div class="stats-label">Aktyvūs pasiūlymai</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="stats-card">
                         <div class="stats-number" id="expiredOffers">0</div>
                         <div class="stats-label">Pasenę pasiūlymai</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="stats-card">
-                        <div class="stats-number" id="totalForms">-</div>
-                        <div class="stats-label">Sugeneruotos formos</div>
+                        <div class="stats-number" id="totalPartners">0</div>
+                        <div class="stats-label">Aktyvūs partneriai</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="pendingPartners">0</div>
+                        <div class="stats-label">Laukia patvirtinimo</div>
                     </div>
                 </div>
             </div>
 
-            <!-- HTML Form Generation -->
+            <!-- Partner Management -->
             <div class="table-container mb-4">
-                <h5 class="mb-3"><i class="fas fa-file-code me-2"></i>HTML Formų Generavimas</h5>
-                <div class="row">
-                    <div class="col-md-8">
-                        <p class="text-muted mb-3">
-                            Sugeneruokite HTML formą, kurią galėsite atsiųsti partneriui el. paštu. 
-                            Partneris užpildys formą ir pasiūlymas automatiškai atsiras svetainėje.
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <button id="generateFormBtn" class="btn btn-generate btn-lg">
-                            <i class="fas fa-magic me-2"></i>Sugeneruoti HTML Formą
-                        </button>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Partnerių Valdymas</h5>
+                    <button id="refreshPartnersBtn" class="btn btn-primary">
+                        <i class="fas fa-sync-alt me-1"></i>Atnaujinti
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Partnerio ID</th>
+                                <th>Įmonės pavadinimas</th>
+                                <th>Svetainė</th>
+                                <th>El. paštas</th>
+                                <th>Formos nuoroda</th>
+                                <th>Veiksmai</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnersTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Kraunama...</span>
+                                    </div>
+                                    <p class="mt-2 mb-0">Kraunami partneriai...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -187,12 +226,12 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Partnerio pavadinimas</th>
-                                <th>Kelionių tipas</th>
-                                <th>Kaina (€)</th>
-                                <th>Kelionės data</th>
-                                <th>Galioja iki</th>
-                                <th>Pasiūlymo nuoroda</th>
+                                <th>Partneris</th>
+                                <th>Kelionės tipas</th>
+                                <th>Vietos</th>
+                                <th>Kaina</th>
+                                <th>Viešbutis</th>
+                                <th>Datų</th>
                                 <th>Veiksmai</th>
                             </tr>
                         </thead>
@@ -211,19 +250,22 @@
             </div>
         </div>
 
-        <!-- Form Generated Modal -->
-        <div class="modal fade" id="formGeneratedModal" tabindex="-1">
+        <!-- Partner Link Modal -->
+        <div class="modal fade" id="partnerLinkModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">HTML Forma Sugeneruota</h5>
+                        <h5 class="modal-title">Partnerio Formos Nuoroda</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p>HTML forma sėkmingai sugeneruota!</p>
+                        <div class="mb-3">
+                            <label class="form-label">Partnerio ID:</label>
+                            <div class="partner-id-badge" id="modalPartnerId"></div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Formos nuoroda:</label>
-                            <input type="text" id="generatedFormUrl" class="form-control" readonly>
+                            <input type="text" id="partnerFormUrl" class="form-control" readonly>
                         </div>
                         <small class="text-muted">
                             Šią nuorodą atsiųskite partneriui el. paštu. Partneris užpildys formą ir pasiūlymas atsiras svetainėje automatiškai.
@@ -231,7 +273,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
-                        <button type="button" class="btn btn-primary" id="copyFormUrlBtn">
+                        <button type="button" class="btn btn-primary" id="copyPartnerUrlBtn">
                             <i class="fas fa-copy me-1"></i>Kopijuoti nuorodą
                         </button>
                     </div>
@@ -271,7 +313,6 @@
                 showLoginForm();
             }
             setupEventListeners();
-            loadFormsCount();
         });
 
         function showLoginForm() {
@@ -292,7 +333,7 @@
             document.getElementById('adminContent').style.display = 'block';
             loadStats();
             loadAllOffers();
-            loadFormsCount();
+            loadAllPartners();
         }
 
         function setupEventListeners() {
@@ -300,10 +341,10 @@
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             
             // Admin functionality
-            document.getElementById('generateFormBtn').addEventListener('click', generateNewForm);
             document.getElementById('refreshOffersBtn').addEventListener('click', loadAllOffers);
+            document.getElementById('refreshPartnersBtn').addEventListener('click', loadAllPartners);
             document.getElementById('cleanupOffersBtn').addEventListener('click', cleanupExpiredOffers);
-            document.getElementById('copyFormUrlBtn').addEventListener('click', copyFormUrl);
+            document.getElementById('copyPartnerUrlBtn').addEventListener('click', copyPartnerUrl);
             
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -360,23 +401,88 @@
 
                 document.getElementById('totalOffers').textContent = offers.length;
                 document.getElementById('expiredOffers').textContent = expiredOffers.length;
+
+                // Load partners count
+                const partnersResponse = await fetch(`${BACKEND_URL}/partners`);
+                const partnersData = await partnersResponse.json();
+                if (partnersData.success) {
+                    document.getElementById('totalPartners').textContent = partnersData.partners?.length || 0;
+                    
+                    // Count pending partners
+                    const pendingPartners = partnersData.partners?.filter(p => p.status === 'pending') || [];
+                    document.getElementById('pendingPartners').textContent = pendingPartners.length;
+                }
             } catch (error) {
                 console.error('Klaida kraunant statistiką:', error);
             }
         }
 
-        async function loadFormsCount() {
+        async function loadAllPartners() {
             try {
-                const response = await fetch(`${BACKEND_URL}/forms`);
+                const response = await fetch(`${BACKEND_URL}/partners`);
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    document.getElementById('totalForms').textContent = data.total || 0;
+                    displayPartners(data.partners || []);
+                } else {
+                    throw new Error(data.error || 'Nepavyko įkelti partnerių');
                 }
             } catch (error) {
-                console.error('Klaida kraunant formų skaičių:', error);
-                document.getElementById('totalForms').textContent = '-';
+                console.error('Klaida kraunant partnerius:', error);
+                document.getElementById('partnersTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Klaida kraunant partnerius
+                        </td>
+                    </tr>
+                `;
             }
+        }
+
+        function displayPartners(partners) {
+            const tbody = document.getElementById('partnersTableBody');
+            
+            if (partners.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-inbox me-2"></i>
+                            Nėra partnerių
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = partners.map(partner => {
+                const formUrl = `${window.location.origin}/partner-form.html?partnerId=${partner.partnerId}`;
+                
+                return `
+                    <tr>
+                        <td>
+                            <span class="partner-id-badge">${partner.partnerId}</span>
+                        </td>
+                        <td><strong>${partner.companyName || 'Nežinoma įmonė'}</strong></td>
+                        <td>
+                            <a href="${partner.website}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>Svetainė
+                            </a>
+                        </td>
+                        <td>${partner.email}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showPartnerLink('${partner.partnerId}')">
+                                <i class="fas fa-link me-1"></i>Gauti nuorodą
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deletePartner('${partner._id}')">
+                                <i class="fas fa-trash me-1"></i>Šalinti
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         async function loadAllOffers() {
@@ -419,20 +525,31 @@
                 const isValid = new Date(offer.validUntil) >= currentDate;
                 const rowClass = isValid ? '' : 'table-warning';
                 
+                // Sukurti žvaigždučių atvaizdavimą
+                const stars = '⭐'.repeat(offer.hotelRating || 0);
+                
                 return `
                     <tr class="${rowClass}">
-                        <td><strong>${offer.companyName || 'Nežinomas partneris'}</strong></td>
-                        <td>${offer.tripType}</td>
-                        <td>€${offer.price}</td>
-                        <td>${new Date(offer.tripDate).toLocaleDateString('lt-LT')}</td>
                         <td>
-                            ${new Date(offer.validUntil).toLocaleDateString('lt-LT')}
-                            ${!isValid ? '<span class="badge bg-danger ms-1">Pasenęs</span>' : ''}
+                            <strong>${offer.companyName || 'Nežinomas partneris'}</strong>
+                            <div class="location-info">
+                                <small>🛫 ${offer.departureLocation || 'Nenurodyta'} → 🛬 ${offer.destination || 'Nenurodyta'}</small>
+                            </div>
+                        </td>
+                        <td>${offer.tripType}</td>
+                        <td>
+                            <div><strong>Išvyksta:</strong> ${offer.departureLocation || 'Nenurodyta'}</div>
+                            <div><strong>Atvyksta:</strong> ${offer.destination || 'Nenurodyta'}</div>
+                        </td>
+                        <td><strong>€${offer.price}</strong></td>
+                        <td>
+                            <span class="hotel-stars">${stars}</span>
+                            <div class="location-info">${offer.hotelRating} žvaigždutės</div>
                         </td>
                         <td>
-                            <a href="${offer.offerUrl}" target="_blank" class="text-decoration-none">
-                                <i class="fas fa-external-link-alt me-1"></i>Nuoroda
-                            </a>
+                            <div><strong>Kelionė:</strong> ${new Date(offer.tripDate).toLocaleDateString('lt-LT')}</div>
+                            <div><strong>Galioja iki:</strong> ${new Date(offer.validUntil).toLocaleDateString('lt-LT')}</div>
+                            ${!isValid ? '<span class="badge bg-danger ms-1">Pasenęs</span>' : ''}
                         </td>
                         <td>
                             <button class="btn btn-danger btn-sm" onclick="deleteOffer('${offer._id}')">
@@ -444,12 +561,48 @@
             }).join('');
         }
 
-        // PATAISYTA: deleteOffer funkcija
+        // Partnerio funkcijos
+        function showPartnerLink(partnerId) {
+            document.getElementById('modalPartnerId').textContent = partnerId;
+            document.getElementById('partnerFormUrl').value = `${window.location.origin}/partner-form.html?partnerId=${partnerId}`;
+            new bootstrap.Modal(document.getElementById('partnerLinkModal')).show();
+        }
+
+        function copyPartnerUrl() {
+            const formUrlInput = document.getElementById('partnerFormUrl');
+            formUrlInput.select();
+            document.execCommand('copy');
+            alert('Nuoroda nukopijuota!');
+        }
+
+        async function deletePartner(partnerId) {
+            if (!confirm('Ar tikrai norite pašalinti šį partnerį?')) return;
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/partners/${partnerId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Partneris sėkmingai pašalintas!');
+                    loadAllPartners();
+                    loadStats();
+                } else {
+                    throw new Error(result.error || 'Nepavyko pašalinti partnerio');
+                }
+                
+            } catch (error) {
+                console.error('Klaida šalinant partnerį:', error);
+                alert('Klaida šalinant partnerį: ' + error.message);
+            }
+        }
+
         async function deleteOffer(offerId) {
             if (!confirm('Ar tikrai norite pašalinti šį pasiūlymą?')) return;
 
             try {
-                // PATAISYTA: Tiesioginis šalinimas per offers endpointą
                 const response = await fetch(`${BACKEND_URL}/offers/${offerId}`, {
                     method: 'DELETE'
                 });
@@ -458,39 +611,14 @@
 
                 if (response.ok) {
                     alert('Pasiūlymas sėkmingai pašalintas!');
-                    loadAllOffers(); // Perkrauti pasiūlymų sąrašą
+                    loadAllOffers();
                 } else {
-                    throw new Error(result.error || 'Nepavyko pašalinti pasiūlymo');
+                    throw new Error(result.error || 'Nepavyko pašalinti pasiūlymą');
                 }
                 
             } catch (error) {
                 console.error('Klaida šalinant pasiūlymą:', error);
                 alert('Klaida šalinant pasiūlymą: ' + error.message);
-            }
-        }
-
-        async function generateNewForm() {
-            try {
-                const response = await fetch(`${BACKEND_URL}/forms/generate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    document.getElementById('generatedFormUrl').value = window.location.origin + result.formUrl;
-                    new bootstrap.Modal(document.getElementById('formGeneratedModal')).show();
-                    loadFormsCount(); // Atnaujinti formų skaičių
-                } else {
-                    throw new Error(result.error || 'Nepavyko sugeneruoti formos');
-                }
-                
-            } catch (error) {
-                console.error('Klaida generuojant formą:', error);
-                alert('Klaida generuojant formą: ' + error.message);
             }
         }
 
@@ -512,13 +640,6 @@
                 console.error('Klaida valant pasiūlymus:', error);
                 alert('Klaida valant pasiūlymus: ' + error.message);
             }
-        }
-
-        function copyFormUrl() {
-            const formUrlInput = document.getElementById('generatedFormUrl');
-            formUrlInput.select();
-            document.execCommand('copy');
-            alert('Nuoroda nukopijuota!');
         }
     </script>
 </body>
