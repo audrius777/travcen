@@ -27,7 +27,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             padding: 40px;
             width: 100%;
-            max-width: 600px;
+            max-width: 700px;
         }
 
         .header {
@@ -127,6 +127,47 @@
             content: " *";
             color: #e74c3c;
         }
+
+        .partner-info {
+            background: #e8f4fd;
+            border: 1px solid #b6e0fe;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .partner-id {
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        .hotel-rating {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .star-btn {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .star-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .star-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -136,7 +177,14 @@
             <p>Įveskite savo kelionių pasiūlymo informaciją</p>
         </div>
 
+        <div id="partnerInfo" class="partner-info" style="display: none;">
+            <i class="fas fa-user-check"></i> 
+            Partnerio ID: <span id="partnerIdDisplay" class="partner-id"></span>
+        </div>
+
         <form id="offerForm">
+            <input type="hidden" id="partnerId" name="partnerId">
+            
             <div class="form-group">
                 <label for="companyName" class="required">Įmonės pavadinimas</label>
                 <input type="text" id="companyName" required 
@@ -177,6 +225,26 @@
                         <option value="Šeimos kelionė">Šeimos kelionė</option>
                         <option value="Romantinė kelionė">Romantinė kelionė</option>
                         <option value="Last Minute">Last Minute</option>
+                        <!-- PRIDĖTOS NAUJOS KATEGORIJOS -->
+                        <option value="Relaxation / Beach Vacations">Relaxation / Beach Vacations</option>
+                        <option value="Adventure Travel">Adventure Travel</option>
+                        <option value="Last-Minute Deals">Last-Minute Deals</option>
+                        <option value="Romantic Getaways">Romantic Getaways</option>
+                        <option value="Family Vacations">Family Vacations</option>
+                        <option value="Active / Outdoor Trips">Active / Outdoor Trips</option>
+                        <option value="Wellness & Spa Retreats">Wellness & Spa Retreats</option>
+                        <option value="Luxury Travel">Luxury Travel</option>
+                        <option value="Eco-Friendly / Sustainable Travel">Eco-Friendly / Sustainable Travel</option>
+                        <option value="Cultural Trips">Cultural Trips</option>
+                        <option value="Historical Tours">Historical Tours</option>
+                        <option value="Themed Trips">Themed Trips</option>
+                        <option value="Solo Travel">Solo Travel</option>
+                        <option value="Group Tours">Group Tours</option>
+                        <option value="Business Travel">Business Travel</option>
+                        <option value="Cruise Vacations">Cruise Vacations</option>
+                        <option value="Mountain / Ski Trips">Mountain / Ski Trips</option>
+                        <option value="Beach Holidays">Beach Holidays</option>
+                        <option value="Exotic Destinations">Exotic Destinations</option>
                     </select>
                 </div>
 
@@ -186,6 +254,19 @@
                            min="1" max="10000" step="0.01"
                            placeholder="299.99">
                 </div>
+            </div>
+
+            <!-- PRIDĖTA VIEŠBUČIO KOKYBĖS PASIRINKIMAS -->
+            <div class="form-group">
+                <label class="required">Viešbučio kokybė / apgyvendinimo lygis</label>
+                <div class="hotel-rating">
+                    <button type="button" class="star-btn" data-stars="1">⭐ 1 žvaigždutė</button>
+                    <button type="button" class="star-btn" data-stars="2">⭐⭐ 2 žvaigždutės</button>
+                    <button type="button" class="star-btn" data-stars="3">⭐⭐⭐ 3 žvaigždutės</button>
+                    <button type="button" class="star-btn" data-stars="4">⭐⭐⭐⭐ 4 žvaigždutės</button>
+                    <button type="button" class="star-btn" data-stars="5">⭐⭐⭐⭐⭐ 5 žvaigždutės</button>
+                </div>
+                <input type="hidden" id="hotelRating" required>
             </div>
 
             <div class="form-row">
@@ -209,6 +290,31 @@
     </div>
 
     <script>
+        // PARTNERIO ID NUSKAITYMAS IŠ URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const partnerId = urlParams.get('partnerId');
+            
+            if (partnerId) {
+                document.getElementById('partnerId').value = partnerId;
+                document.getElementById('partnerIdDisplay').textContent = partnerId;
+                document.getElementById('partnerInfo').style.display = 'block';
+            }
+
+            // VIEŠBUČIO ŽVAIGŽDUTĖS PASIRINKIMAS
+            const starButtons = document.querySelectorAll('.star-btn');
+            starButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Nuimti pasirinkimą nuo kitų mygtukų
+                    starButtons.forEach(btn => btn.classList.remove('selected'));
+                    // Pridėti pasirinkimą šiam mygtukui
+                    this.classList.add('selected');
+                    // Įrašyti reikšmę į paslėptą lauką
+                    document.getElementById('hotelRating').value = this.getAttribute('data-stars');
+                });
+            });
+        });
+
         document.getElementById('offerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -220,10 +326,23 @@
                 tripType: document.getElementById('tripType').value,
                 price: parseFloat(document.getElementById('price').value),
                 tripDate: document.getElementById('tripDate').value,
-                validUntil: document.getElementById('validUntil').value
+                validUntil: document.getElementById('validUntil').value,
+                partnerId: document.getElementById('partnerId').value,
+                hotelRating: document.getElementById('hotelRating').value // PRIDĖTA
             };
 
-            // Validacija
+            // VALIDACIJA SU PARTNERIO ID
+            if (!formData.partnerId) {
+                showMessage('Netinkama forma. Naudokite partnerio gautą nuorodą.', 'error');
+                return;
+            }
+
+            // PAPILDOMA VALIDACIJA VIEŠBUČIO KOKYBEI
+            if (!formData.hotelRating) {
+                showMessage('Pasirinkite viešbučio kokybę', 'error');
+                return;
+            }
+
             if (!formData.companyName || !formData.offerUrl || !formData.departureLocation || 
                 !formData.destination || !formData.tripType || !formData.price || 
                 !formData.tripDate || !formData.validUntil) {
@@ -260,6 +379,9 @@
                 if (result.success) {
                     showMessage('Pasiūlymas sėkmingai pateiktas! Jis atsiras svetainėje po patvirtinimo.', 'success');
                     document.getElementById('offerForm').reset();
+                    // Išvalyti viešbučio pasirinkimą
+                    document.querySelectorAll('.star-btn').forEach(btn => btn.classList.remove('selected'));
+                    document.getElementById('hotelRating').value = '';
                 } else {
                     showMessage(result.error || 'Įvyko klaida pateikiant pasiūlymą', 'error');
                 }
@@ -280,7 +402,7 @@
             }, type === 'success' ? 5000 : 10000);
         }
 
-        // Datų validacija
+        // DATŲ VALIDACIJA
         const tripDateInput = document.getElementById('tripDate');
         const validUntilInput = document.getElementById('validUntil');
 
@@ -288,7 +410,7 @@
             validUntilInput.min = this.value;
         });
 
-        // Nustatyti minimalią datą šiandienai
+        // NUSTATYTI MINIMALIĄ DATĄ ŠIANDIENAI
         const today = new Date().toISOString().split('T')[0];
         tripDateInput.min = today;
         validUntilInput.min = today;
