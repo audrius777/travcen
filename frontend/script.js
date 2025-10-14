@@ -1,3 +1,5 @@
+[file name]: script.js
+[file content begin]
 const API_BASE_URL = 'https://travcen-backendas.onrender.com/api';
 
 class OffersManager {
@@ -12,6 +14,9 @@ class OffersManager {
         try {
             const queryParams = new URLSearchParams();
             
+            // 👇 PATAISYTA - Pridėti departureLocation ir destination parametrus
+            if (filters.departure) queryParams.append('departureLocation', filters.departure);
+            if (filters.destination) queryParams.append('destination', filters.destination);
             if (filters.tripType) queryParams.append('tripType', filters.tripType);
             if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
             if (filters.startDate) queryParams.append('startDate', filters.startDate);
@@ -74,9 +79,11 @@ class OffersManager {
         <div class="card-content">
             <h3>${offer.tripType}</h3>
             <p class="company">${offer.companyName}</p>
+            <p class="location-info">From: ${offer.departureLocation} → To: ${offer.destination}</p>
             <p class="departure-date">Trip Date: ${formattedDate}</p>
             <p class="valid-until">Valid Until: ${validUntil}</p>
             <p class="price">Price: €${offer.price}</p>
+            <p class="hotel-stars">Hotel: ${'⭐'.repeat(offer.hotelRating)}</p>
         </div>
     </a>
 </div>
@@ -88,7 +95,13 @@ class OffersManager {
         this.currentFilters = { ...this.currentFilters, ...filters };
         
         this.filteredOffers = this.offers.filter(offer => {
-            // Tikriname ar reikšmė ne tuščia
+            // 👇 PATAISYTA - Teisingas filtravimas pagal departureLocation ir destination
+            const matchesDeparture = !filters.departure || filters.departure === '' || 
+                (offer.departureLocation && offer.departureLocation.toLowerCase().includes(filters.departure.toLowerCase()));
+            
+            const matchesDestination = !filters.destination || filters.destination === '' || 
+                (offer.destination && offer.destination.toLowerCase().includes(filters.destination.toLowerCase()));
+            
             const matchesTripType = !filters.tripType || filters.tripType === '' || 
                 (offer.tripType && offer.tripType.toLowerCase().includes(filters.tripType.toLowerCase()));
             
@@ -99,16 +112,9 @@ class OffersManager {
             
             const matchesEndDate = !filters.endDate || 
                 new Date(offer.tripDate) <= new Date(filters.endDate);
-            
-            const matchesDestination = !filters.destination || filters.destination === '' || 
-                (offer.tripType && offer.tripType.toLowerCase().includes(filters.destination.toLowerCase())) ||
-                (offer.companyName && offer.companyName.toLowerCase().includes(filters.destination.toLowerCase()));
-            
-            const matchesDeparture = !filters.departure || filters.departure === '' || 
-                (offer.companyName && offer.companyName.toLowerCase().includes(filters.departure.toLowerCase()));
 
-            return matchesTripType && matchesPrice && matchesStartDate && 
-                   matchesEndDate && matchesDestination && matchesDeparture;
+            return matchesDeparture && matchesDestination && matchesTripType && 
+                   matchesPrice && matchesStartDate && matchesEndDate;
         });
 
         // Rikiavimas
@@ -181,9 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         searchBtn.addEventListener("click", handleSearch);
     }
 
-    // 👇 UŽKOMENTUOTA: Filtravimas realiu laiku
-    // setupRealTimeFiltering();
-
     // Modalų valdymas (išlaikomas iš senos versijos)
     setupModals();
 });
@@ -199,18 +202,6 @@ function handleSearch() {
     };
 
     offersManager.filterOffers(filters);
-}
-
-// Realaus laiko filtravimas (UŽKOMENTUOTA)
-function setupRealTimeFiltering() {
-    const inputs = ['departure', 'destination', 'trip-type', 'price-sort', 'departure-date'];
-    
-    inputs.forEach(inputId => {
-        const element = document.getElementById(inputId);
-        if (element) {
-            element.addEventListener('input', handleSearch);
-        }
-    });
 }
 
 // Modalų valdymas (išlaikomas funkcionalumas)
@@ -294,3 +285,4 @@ if (window.setLanguage) {
         offersManager.displayOffers();
     };
 }
+[file content end]
