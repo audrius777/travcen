@@ -1,5 +1,4 @@
-[file name]: script.js
-[file content begin]
+// script.js
 const API_BASE_URL = 'https://travcen-backendas.onrender.com/api';
 
 class OffersManager {
@@ -14,7 +13,7 @@ class OffersManager {
         try {
             const queryParams = new URLSearchParams();
             
-            // 👇 PATAISYTA - Pridėti departureLocation ir destination parametrus
+            // PATAISYTA - Pridėti departureLocation ir destination parametrus
             if (filters.departure) queryParams.append('departureLocation', filters.departure);
             if (filters.destination) queryParams.append('destination', filters.destination);
             if (filters.tripType) queryParams.append('tripType', filters.tripType);
@@ -95,7 +94,7 @@ class OffersManager {
         this.currentFilters = { ...this.currentFilters, ...filters };
         
         this.filteredOffers = this.offers.filter(offer => {
-            // 👇 PATAISYTA - Teisingas filtravimas pagal departureLocation ir destination
+            // PATAISYTA - Teisingas filtravimas pagal departureLocation ir destination
             const matchesDeparture = !filters.departure || filters.departure === '' || 
                 (offer.departureLocation && offer.departureLocation.toLowerCase().includes(filters.departure.toLowerCase()));
             
@@ -285,4 +284,3 @@ if (window.setLanguage) {
         offersManager.displayOffers();
     };
 }
-[file content end]
