@@ -100,6 +100,19 @@
       background: #0052a3;
     }
 
+    /* Hotel stars styling */
+    .hotel-stars {
+      color: #ffc107;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .location-info {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 5px;
+    }
+
     @media (max-width: 768px) {
       .faq-content {
         max-height: 60vh;
@@ -147,13 +160,49 @@
     <input type="text" id="departure" placeholder="Departure location" />
     <input type="text" id="destination" placeholder="Destination" />
     <input type="date" id="departure-date" placeholder="Departure date" />
+    
+    <!-- ATNAUJINTAS: Visos kategorijos kaip partner-form.html -->
     <select id="trip-type">
-  <option value="">All trip types</option>
-  <option value="Leisure">Leisure</option>
-  <option value="Adventure">Adventure</option>
-  <option value="Cultural">Cultural</option>
-  <option value="Last Minute">Last Minute</option>
-</select>
+      <option value="">All trip types</option>
+      <option value="Pajūrio poilsis">Beach Vacations</option>
+      <option value="Kalnų turizmas">Mountain Tourism</option>
+      <option value="Miesto turizmas">City Tourism</option>
+      <option value="Kultūrinė kelionė">Cultural Trips</option>
+      <option value="Ekstremalus turizmas">Extreme Tourism</option>
+      <option value="Šeimos kelionė">Family Trips</option>
+      <option value="Romantinė kelionė">Romantic Trips</option>
+      <option value="Last Minute">Last Minute</option>
+      <option value="Relaxation / Beach Vacations">Relaxation / Beach</option>
+      <option value="Adventure Travel">Adventure Travel</option>
+      <option value="Last-Minute Deals">Last-Minute Deals</option>
+      <option value="Romantic Getaways">Romantic Getaways</option>
+      <option value="Family Vacations">Family Vacations</option>
+      <option value="Active / Outdoor Trips">Active / Outdoor</option>
+      <option value="Wellness & Spa Retreats">Wellness & Spa</option>
+      <option value="Luxury Travel">Luxury Travel</option>
+      <option value="Eco-Friendly / Sustainable Travel">Eco-Friendly</option>
+      <option value="Cultural Trips">Cultural Trips</option>
+      <option value="Historical Tours">Historical Tours</option>
+      <option value="Themed Trips">Themed Trips</option>
+      <option value="Solo Travel">Solo Travel</option>
+      <option value="Group Tours">Group Tours</option>
+      <option value="Business Travel">Business Travel</option>
+      <option value="Cruise Vacations">Cruise Vacations</option>
+      <option value="Mountain / Ski Trips">Mountain / Ski</option>
+      <option value="Beach Holidays">Beach Holidays</option>
+      <option value="Exotic Destinations">Exotic Destinations</option>
+    </select>
+
+    <!-- PRIDĖTAS: Viešbučio kokybės filtras -->
+    <select id="hotel-rating">
+      <option value="">Any hotel rating</option>
+      <option value="1">⭐ 1 star</option>
+      <option value="2">⭐⭐ 2 stars</option>
+      <option value="3">⭐⭐⭐ 3 stars</option>
+      <option value="4">⭐⭐⭐⭐ 4 stars</option>
+      <option value="5">⭐⭐⭐⭐⭐ 5 stars</option>
+    </select>
+
     <select id="price-sort">
       <option value="">Sort by price</option>
       <option value="price-low">Price: Low to High</option>
@@ -165,7 +214,6 @@
   <div class="ads ads-left">Ad Left</div>
   <div class="ads ads-right">Ad Right</div>
 
-  <!-- PATAISYTA: Pašalinti hardcoded demo korteles -->
   <div class="results" id="card-list">
     <!-- Kortelės bus įkeltos dinamiškai per JavaScript -->
   </div>
@@ -342,7 +390,7 @@
 
   <script src="translate.js"></script>
   <script src="index.js"></script>
-  <script src="script.js?v=2"></script>
+  <script src="script.js?v=3"></script> <!-- Atnaujinta versija -->
   
   <script>
     // Paveikslėlių klaidų apdorojimo funkcija
