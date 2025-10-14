@@ -6,8 +6,6 @@ import cors from 'cors';
 import MongoStore from 'connect-mongo';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 // ES modulių __dirname emuliacija
 const __filename = fileURLToPath(import.meta.url);
@@ -79,15 +77,13 @@ app.get('/api/csrf-token', (req, res) => {
   });
 });
 
-// 7. Partnerių route'ai
+// 7. Partnerių route'ai - PATAISYTA: naudojame /api/partners
 import partnerRoutes from './routes/partners.js';
-app.use('/api', partnerRoutes);
+app.use('/api/partners', partnerRoutes);
 
-// 8. Pridėti naujus route'us
+// 8. Pasiūlymų route'ai - PATAISYTA: naudojame /api/offers
 import offerRoutes from './routes/offers.js';
-import formRoutes from './routes/forms.js';
 app.use('/api/offers', offerRoutes);
-app.use('/api/forms', formRoutes);
 
 // 9. Autentifikacijos endpoint'ai
 app.post('/api/login', (req, res) => {
@@ -150,7 +146,8 @@ async function startServer() {
       console.log(`🚀 Serveris paleistas porte: ${PORT}`);
       console.log(`🔗 Health check: /api/health`);
       console.log(`🌍 CORS įjungtas Vercel domain'ams`);
-      console.log(`📝 Nauja pasiūlymų sistema įJUNGTAS`);
+      console.log(`📝 Partnerių sistema: /api/partners`);
+      console.log(`🎯 Pasiūlymų sistema: /api/offers`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
@@ -159,4 +156,3 @@ async function startServer() {
 }
 
 startServer();
-
