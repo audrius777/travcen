@@ -1,5 +1,4 @@
-[file name]: offers.js
-[file content begin]
+// offers.js
 import express from 'express';
 import mongoose from 'mongoose';
 import Offer from '../models/Offer.js';
@@ -16,7 +15,7 @@ router.get('/', async (req, res) => {
             startDate, 
             endDate,
             destination,
-            departureLocation, // 👈 PRIDĖTA - išvykimo vieta
+            departureLocation, // PRIDĖTA - išvykimo vieta
             sortBy = 'validUntil',
             sortOrder = 'asc'
         } = req.query;
@@ -42,7 +41,7 @@ router.get('/', async (req, res) => {
             filter.destination = { $regex: destination, $options: 'i' };
         }
 
-        // 👇 PRIDĖTA - Filtravimas pagal išvykimo vietą
+        // PRIDĖTA - Filtravimas pagal išvykimo vietą
         if (departureLocation) {
             filter.departureLocation = { $regex: departureLocation, $options: 'i' };
         }
@@ -72,7 +71,7 @@ router.get('/', async (req, res) => {
                 startDate,
                 endDate,
                 destination,
-                departureLocation // 👈 PRIDĖTA
+                departureLocation // PRIDĖTA
             }
         });
 
@@ -232,4 +231,3 @@ router.delete('/:offerId', async (req, res) => {
 });
 
 export default router;
-[file content end]
