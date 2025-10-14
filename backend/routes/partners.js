@@ -1,26 +1,11 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { validatePartner, validatePartnerWebsite } from '../services/validationLogic.js';
-import PendingPartner from '../models/PendingPartner.js';
 import Partner from '../models/Partner.js';
+import Offer from '../models/Offer.js';
 
 const router = express.Router();
 
-// PARTNERIO ID GENERAVIMO FUNKCIJA
-function generatePartnerId(companyName) {
-    // Paimti pirmas 6 raides iš įmonės pavadinimo
-    const prefix = companyName
-        .toUpperCase()
-        .replace(/[^A-Z]/g, '')
-        .substring(0, 6);
-    
-    // Sugeneruoti atsitiktinę dalį
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
-    return `${prefix}_${random}`;
-}
-
-// 1. Svetainės validacija (GET /api/validate-website?url=...)
+// 1. Svetainės validacija (GET /api/partners/validate-website?url=...)
 router.get('/validate-website', async (req, res) => {
     try {
         const { url } = req.query;
@@ -28,15 +13,28 @@ router.get('/validate-website', async (req, res) => {
             return res.status(400).json({ error: 'Nenurodytas svetainės URL' });
         }
 
-        const result = await validatePartnerWebsite(url);
-        res.json(result);
+        // Paprasta validacija - tikriname ar URL atitinka formatą
+        const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
+        
+        if (!urlRegex.test(url)) {
+            return res.json({ 
+                isValid: false, 
+                error: 'Netinkamas URL formatas' 
+            });
+        }
+
+        res.json({ 
+            isValid: true, 
+            message: 'Svetainė atitinka reikalavimus' 
+        });
+
     } catch (error) {
         console.error('Svetainės tikrinimo klaida:', error);
         res.status(500).json({ error: 'Svetainės tikrinimo klaida' });
     }
 });
 
-// 2. Partnerio registracija (POST /api/partners/register) - PRIDĖTAS ID GENERAVIMAS
+// 2. Partnerio registracija (POST /api/partners/register)
 router.post('/register', async (req, res) => {
     try {
         const { 
@@ -44,46 +42,48 @@ router.post('/register', async (req, res) => {
             website, 
             email, 
             contactPerson,
-            description
+            description 
         } = req.body;
-        
-        const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        // Partnerio duomenų validacija
-        const validation = await validatePartner(companyName, website, email, ipAddress);
-        if (!validation.isValid) {
-            return res.status(400).json({ error: validation.error });
+        // Validacija
+        if (!companyName || !website || !email || !contactPerson) {
+            return res.status(400).json({ error: 'Visi privalomi laukai turi būti užpildyti' });
         }
 
-        // 🔥 PARTNERIO ID GENERAVIMAS
-        const partnerId = generatePartnerId(companyName);
+        // Patikrinti, ar partneris jau egzistuoja
+        const existingPartner = await Partner.findOne({ 
+            $or: [{ email }, { website }] 
+        });
 
-        // Išsaugojimas MongoDB
-        const newPartner = new PendingPartner({
+        if (existingPartner) {
+            return res.status(400).json({ error: 'Partneris su tokiu el. paštu ar svetaine jau egzistuoja' });
+        }
+
+        // Sugeneruoti unikalų partnerio ID
+        const partnerId = 'PART' + Date.now().toString().slice(-8);
+
+        // Sukurti naują partnerį
+        const newPartner = new Partner({
+            partnerId,
             companyName,
             website,
             email,
             contactPerson,
             description: description || '',
-            ipAddress,
-            partnerId, // 🔥 PRIDĖTAS PARTNERIO ID
-            status: 'pending'
+            status: 'pending',
+            ipAddress: req.ip || 'unknown'
         });
-        
+
         await newPartner.save();
 
         res.json({ 
             success: true, 
             message: 'Registracija sėkmingai gauta. Susisieksime su jumis el. paštu.',
-            partnerId: partnerId // 🔥 GRĄŽINAMAS PARTNERIO ID
+            partnerId 
         });
 
     } catch (error) {
-        console.error('Registracijos klaida:', error);
-        
-        if (error.message.includes('limit')) {
-            return res.status(429).json({ error: error.message });
-        }
+        console.error('Partnerio registracijos klaida:', error);
         
         if (error.code === 11000) {
             return res.status(400).json({ error: 'Partneris su tokiu el. paštu ar svetaine jau egzistuoja' });
@@ -93,18 +93,14 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// 3. Aktyvių partnerių sąrašas (GET /api/partners) - PATAISYTA KLAIDA
+// 3. Visų partnerių gavimas (GET /api/partners)
 router.get('/', async (req, res) => {
     try {
-        const partners = await Partner.find({ status: 'active' })
-            .select('companyName website email contactPerson description slug offerFormUrl partnerId')
-            .sort({ createdAt: -1 });
-        
-        res.json(partners);
-        
+        const partners = await Partner.find().sort({ createdAt: -1 });
+        res.json({ success: true, partners });
     } catch (error) {
         console.error('Partnerių gavimo klaida:', error);
-        res.status(500).json({ error: 'Serverio klaida' });
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
     }
 });
 
@@ -122,10 +118,7 @@ router.get('/pending', async (req, res) => {
             ];
         }
         
-        const partners = await PendingPartner.find(query)
-            .select('companyName website email contactPerson description requestDate slug partnerId')
-            .sort({ requestDate: -1 });
-            
+        const partners = await Partner.find(query).sort({ createdAt: -1 });
         res.json(partners);
     } catch (error) {
         console.error('Laukiančių partnerių gavimo klaida:', error);
@@ -133,38 +126,23 @@ router.get('/pending', async (req, res) => {
     }
 });
 
-// 5. Partnerio patvirtinimas (PUT /api/partners/:id/approve) - PRIDĖTAS ID PERKĖLIMAS
+// 5. Partnerio patvirtinimas (PUT /api/partners/:id/approve)
 router.put('/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const pendingPartner = await PendingPartner.findById(id);
-        if (!pendingPartner) {
+        const partner = await Partner.findById(id);
+        if (!partner) {
             return res.status(404).json({ error: 'Partneris nerastas' });
         }
 
-        // Sukuriamas naujas aktyvus partneris
-        const newPartner = new Partner({
-            companyName: pendingPartner.companyName,
-            website: pendingPartner.website,
-            email: pendingPartner.email,
-            contactPerson: pendingPartner.contactPerson,
-            description: pendingPartner.description,
-            ipAddress: pendingPartner.ipAddress,
-            partnerId: pendingPartner.partnerId, // 🔥 PERKELIAMAS ID
-            slug: pendingPartner.slug,
-            status: 'active'
-        });
-
-        await newPartner.save();
-        
-        // Pašalinamas iš laukiančių
-        await PendingPartner.findByIdAndDelete(id);
+        partner.status = 'active';
+        await partner.save();
 
         res.json({ 
             success: true, 
             message: 'Partneris sėkmingai patvirtintas',
-            partner: newPartner 
+            partner 
         });
 
     } catch (error) {
@@ -179,7 +157,7 @@ router.delete('/:id/reject', async (req, res) => {
         const { id } = req.params;
         const { reason } = req.body;
 
-        const partner = await PendingPartner.findByIdAndDelete(id);
+        const partner = await Partner.findByIdAndDelete(id);
         
         if (!partner) {
             return res.status(404).json({ error: 'Partneris nerastas' });
@@ -197,7 +175,43 @@ router.delete('/:id/reject', async (req, res) => {
     }
 });
 
-// 7. HTML formos generavimas partneriui (GET /api/partners/:id/generate-form)
+// 7. Partnerio šalinimas (DELETE /api/partners/:id)
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await Partner.findByIdAndDelete(id);
+        
+        if (!result) {
+            return res.status(404).json({ success: false, error: 'Partneris nerastas' });
+        }
+
+        res.json({ success: true, message: 'Partneris sėkmingai pašalintas' });
+    } catch (error) {
+        console.error('Partnerio šalinimo klaida:', error);
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
+    }
+});
+
+// 8. Partnerio informacijos gavimas (GET /api/partners/:id)
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const partner = await Partner.findById(id);
+        
+        if (!partner) {
+            return res.status(404).json({ success: false, error: 'Partneris nerastas' });
+        }
+
+        res.json({ success: true, partner });
+    } catch (error) {
+        console.error('Partnerio gavimo klaida:', error);
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
+    }
+});
+
+// 9. HTML formos generavimas partneriui (GET /api/partners/:id/generate-form)
 router.get('/:id/generate-form', async (req, res) => {
     try {
         const { id } = req.params;
@@ -208,17 +222,13 @@ router.get('/:id/generate-form', async (req, res) => {
         }
 
         // Generuojame unikalų formos URL
-        const formSlug = `partner-form-${partner.slug}-${Date.now()}`;
-        const offerFormUrl = `/partner-forms/${formSlug}.html`;
-
-        // Atnaujiname partnerio duomenis
-        partner.offerFormUrl = offerFormUrl;
-        await partner.save();
+        const formSlug = `partner-form-${partner.partnerId}-${Date.now()}`;
+        const offerFormUrl = `/partner-form.html?partnerId=${partner.partnerId}`;
 
         res.json({ 
             success: true, 
             offerFormUrl,
-            message: 'HTML forma sėkmingai sugeneruota'
+            message: 'Formos nuoroda sėkmingai sugeneruota'
         });
 
     } catch (error) {
@@ -227,81 +237,27 @@ router.get('/:id/generate-form', async (req, res) => {
     }
 });
 
-// 8. Pasiūlymų gavimas pagal partnerį (GET /api/partners/:id/offers)
+// 10. Pasiūlymų gavimas pagal partnerį (GET /api/partners/:id/offers)
 router.get('/:id/offers', async (req, res) => {
     try {
         const { id } = req.params;
-        
-        const partner = await Partner.findById(id).select('offers companyName');
-        if (!partner) {
-            return res.status(404).json({ error: 'Partneris nerastas' });
-        }
-
-        res.json({ 
-            offers: partner.offers,
-            companyName: partner.companyName
-        });
-
-    } catch (error) {
-        console.error('Pasiūlymų gavimo klaida:', error);
-        res.status(500).json({ error: 'Serverio klaida' });
-    }
-});
-
-// 9. Pasiūlymo pridėjimas partneriui (POST /api/partners/:id/offers)
-router.post('/:id/offers', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { offerUrl, price, tripType, tripDate, validUntil } = req.body;
         
         const partner = await Partner.findById(id);
         if (!partner) {
             return res.status(404).json({ error: 'Partneris nerastas' });
         }
 
-        // Pridedame naują pasiūlymą
-        partner.offers.push({
-            offerUrl,
-            price,
-            tripType,
-            tripDate: new Date(tripDate),
-            validUntil: new Date(validUntil)
-        });
-
-        await partner.save();
+        // Gauname pasiūlymus iš Offer kolekcijos
+        const offers = await Offer.find({ partnerId: partner.partnerId });
 
         res.json({ 
-            success: true, 
-            message: 'Pasiūlymas sėkmingai pridėtas'
+            success: true,
+            offers: offers,
+            companyName: partner.companyName
         });
 
     } catch (error) {
-        console.error('Pasiūlymo pridėjimo klaida:', error);
-        res.status(500).json({ error: 'Serverio klaida' });
-    }
-});
-
-// 10. Pasiūlymo šalinimas (DELETE /api/partners/:partnerId/offers/:offerId)
-router.delete('/:partnerId/offers/:offerId', async (req, res) => {
-    try {
-        const { partnerId, offerId } = req.params;
-        
-        const partner = await Partner.findById(partnerId);
-        if (!partner) {
-            return res.status(404).json({ error: 'Partneris nerastas' });
-        }
-
-        // Pašaliname pasiūlymą iš masyvo
-        partner.offers = partner.offers.filter(offer => offer._id.toString() !== offerId);
-        await partner.save();
-
-        res.json({ 
-            success: true, 
-            message: 'Pasiūlymas sėkmingai pašalintas'
-        });
-
-    } catch (error) {
-        console.error('Pasiūlymo šalinimo klaida:', error);
+        console.error('Pasiūlymų gavimo klaida:', error);
         res.status(500).json({ error: 'Serverio klaida' });
     }
 });
