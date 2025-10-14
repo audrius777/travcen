@@ -25,7 +25,8 @@ app.use(cors({
     'https://travcen.vercel.app',
     /\.vercel\.app$/,  // ✅ Leidžia visus Vercel subdomain'us
     'http://localhost:3000',
-    'https://localhost:3000'
+    'https://localhost:3000',
+    'null'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
