@@ -20,13 +20,10 @@ app.set('trust proxy', 1);
 // 2. CORS konfigūracija (PATAISYTA - pridėtas null ir naujas domain)
 app.use(cors({
   origin: [
-    'null',
     'https://travcen.com',
     'https://www.travcen.com', 
     'https://travcen.vercel.app',
-    'https://travcen-ehyjdij28-audrius-projects-76a4ec92.vercel.app',
-    'https://travcen-2x7ahizhc-audrius-projects-76a4ec92.vercel.app',
-    'https://travcen-oks0dte9r-audrius-projects-76a4ec92.vercel.app',
+    /\.vercel\.app$/,  // ✅ Leidžia visus Vercel subdomain'us
     'http://localhost:3000',
     'https://localhost:3000'
   ],
