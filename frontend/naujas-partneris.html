@@ -116,59 +116,57 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('partnerForm');
-            const successAlert = document.querySelector('.success-alert');
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('partnerForm');
+        const successAlert = document.querySelector('.success-alert');
 
-            // Formos pateikimas
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
+        // Formos pateikimas
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-                try {
-                    // Formos duomenys
-                    const formData = {
-                        companyName: document.getElementById('companyName').value,
-                        website: document.getElementById('website').value,
-                        email: document.getElementById('email').value,
-                        contactPerson: document.getElementById('contactPerson').value,
-                        description: document.getElementById('description').value
-                    };
+            try {
+                // Formos duomenys
+                const formData = {
+                    companyName: document.getElementById('companyName').value,
+                    website: document.getElementById('website').value,
+                    email: document.getElementById('email').value,
+                    contactPerson: document.getElementById('contactPerson').value,
+                    description: document.getElementById('description').value
+                };
 
-                    console.log('Siunčiama:', formData);
+                console.log('Siunčiama:', formData);
 
-                    // Siųsti į serverį su PILNU URL
-                    const response = await fetch('https://travcen-backendas.onrender.com/api/partners/register', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
-                    });
+                // Siųsti į serverį su PILNU URL
+                const response = await fetch('https://travcen-backendas.onrender.com/api/partners/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-                    console.log('Atsakymo statusas:', response.status);
+                console.log('Atsakymo statusas:', response.status);
+                
+                const result = await response.json();
+                console.log('Atsakymas:', result);
+
+                if (response.ok) {
+                    // Rodyti sėkmės pranešimą
+                    successAlert.style.display = 'block';
+                    form.reset();
                     
-                    const result = await response.json();
-                    console.log('Atsakymas:', result);
-
-                    if (response.ok) {
-                        // Rodyti sėkmės pranešimą
-                        successAlert.style.display = 'block';
-                        form.reset();
-                        
-                        // Slėpti pranešimą po 5 sekundžių
-                        setTimeout(() => {
-                            successAlert.style.display = 'none';
-                        }, 5000);
-                    } else {
-                        alert('❌ Klaida: ' + (result.error || 'Įvyko serverio klaida'));
-                    }
-
-                } catch (error) {
-                    console.error('Klaida:', error);
-                    alert('❌ Įvyko klaida siunčiant duomenis: ' + error.message);
+                    // Slėpti pranešimą po 5 sekundžių
+                    setTimeout(() => {
+                        successAlert.style.display = 'none';
+                    }, 5000);
+                } else {
+                    alert('❌ Klaida: ' + (result.error || 'Įvyko serverio klaida'));
                 }
-            });
+
+            } catch (error) {
+                console.error('Klaida:', error);
+                alert('❌ Įvyko klaida siunčiant duomenis: ' + error.message);
+            }
         });
-    </script>
-</body>
-</html>
+    });
+</script>
