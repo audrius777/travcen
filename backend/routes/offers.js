@@ -1,5 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import Offer from '../models/Offer.js';
 import Partner from '../models/Partner.js';
 
 const router = express.Router();
@@ -12,6 +13,7 @@ router.get('/', async (req, res) => {
             maxPrice, 
             startDate, 
             endDate,
+            destination,
             sortBy = 'validUntil',
             sortOrder = 'asc'
         } = req.query;
@@ -19,94 +21,55 @@ router.get('/', async (req, res) => {
         // Pagrindinis užklausos filtras
         let filter = { 
             status: 'active',
-            'offers.validUntil': { $gte: new Date() } // Tik galiojantys pasiūlymai
+            validUntil: { $gte: new Date() } // Tik galiojantys pasiūlymai
         };
 
         // Filtravimas pagal kelionių tipą
         if (tripType) {
-            filter['offers.tripType'] = { $regex: tripType, $options: 'i' };
+            filter.tripType = { $regex: tripType, $options: 'i' };
         }
 
         // Filtravimas pagal maksimalią kainą
         if (maxPrice) {
-            filter['offers.price'] = { $lte: parseFloat(maxPrice) };
+            filter.price = { $lte: parseFloat(maxPrice) };
+        }
+
+        // Filtravimas pagal paskirties vietą
+        if (destination) {
+            filter.destination = { $regex: destination, $options: 'i' };
         }
 
         // Filtravimas pagal datų intervalą
         if (startDate || endDate) {
-            filter['offers.tripDate'] = {};
-            if (startDate) filter['offers.tripDate'].$gte = new Date(startDate);
-            if (endDate) filter['offers.tripDate'].$lte = new Date(endDate);
+            filter.tripDate = {};
+            if (startDate) filter.tripDate.$gte = new Date(startDate);
+            if (endDate) filter.tripDate.$lte = new Date(endDate);
         }
 
         // Rikiavimas
         const sortOptions = {};
-        sortOptions[`offers.${sortBy}`] = sortOrder === 'desc' ? -1 : 1;
+        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-        // Gauname partnerius su pasiūlymais
-        const partners = await Partner.find(filter)
-            .select('companyName website offers')
+        // Gauname pasiūlymus
+        const offers = await Offer.find(filter)
             .sort(sortOptions);
 
-        // Suformatuojame pasiūlymus į vieną masyvą
-        const allOffers = [];
-        partners.forEach(partner => {
-            partner.offers.forEach(offer => {
-                // Tikriname ar pasiūlymas atitinka papildomus filtrus
-                if (tripType && !offer.tripType.toLowerCase().includes(tripType.toLowerCase())) {
-                    return;
-                }
-                if (maxPrice && offer.price > parseFloat(maxPrice)) {
-                    return;
-                }
-                if (startDate && new Date(offer.tripDate) < new Date(startDate)) {
-                    return;
-                }
-                if (endDate && new Date(offer.tripDate) > new Date(endDate)) {
-                    return;
-                }
-                if (new Date(offer.validUntil) < new Date()) {
-                    return; // Praleidžiame pasenusius pasiūlymus
-                }
-
-                allOffers.push({
-                    _id: offer._id,
-                    companyName: partner.companyName,
-                    website: partner.website,
-                    offerUrl: offer.offerUrl,
-                    price: offer.price,
-                    tripType: offer.tripType,
-                    tripDate: offer.tripDate,
-                    validUntil: offer.validUntil,
-                    departureLocation: offer.departureLocation, // PRIDĖTA
-                    destination: offer.destination,             // PRIDĖTA
-                    createdAt: offer.createdAt
-                });
-            });
-        });
-
-        // Galutinis rikiavimas
-        allOffers.sort((a, b) => {
-            if (sortOrder === 'desc') {
-                return new Date(b[sortBy]) - new Date(a[sortBy]);
-            }
-            return new Date(a[sortBy]) - new Date(b[sortBy]);
-        });
-
         res.json({
-            offers: allOffers,
-            total: allOffers.length,
+            success: true,
+            offers: offers,
+            total: offers.length,
             filters: {
                 tripType,
                 maxPrice,
                 startDate,
-                endDate
+                endDate,
+                destination
             }
         });
 
     } catch (error) {
         console.error('Pasiūlymų gavimo klaida:', error);
-        res.status(500).json({ error: 'Serverio klaida' });
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
     }
 });
 
@@ -114,19 +77,21 @@ router.get('/', async (req, res) => {
 router.post('/submit', async (req, res) => {
     try {
         const { 
+            partnerId,
             companyName,
             offerUrl, 
-            price, 
+            departureLocation,
+            destination,
             tripType, 
+            price, 
+            hotelRating,
             tripDate, 
-            validUntil,
-            departureLocation,  // PRIDĖTA
-            destination         // PRIDĖTA
+            validUntil
         } = req.body;
 
-        // Validacija - PRIDĖTI NAUJI LAUKAI
-        if (!companyName || !offerUrl || !price || !tripType || !tripDate || !validUntil || 
-            !departureLocation || !destination) {
+        // Validacija
+        if (!partnerId || !companyName || !offerUrl || !departureLocation || 
+            !destination || !tripType || !price || !hotelRating || !tripDate || !validUntil) {
             return res.status(400).json({ 
                 success: false, 
                 error: 'Visi laukai yra privalomi' 
@@ -154,41 +119,27 @@ router.post('/submit', async (req, res) => {
             });
         }
 
-        // Randame arba sukuriame partnerį
-        let partner = await Partner.findOne({ 
-            companyName: { $regex: companyName, $options: 'i' } 
-        });
-
-        if (!partner) {
-            // Sukuriame naują partnerį jei neegzistuoja
-            partner = new Partner({
-                companyName: companyName,
-                website: offerUrl, // Naudojame offerUrl kaip laikiną website
-                email: `temp-${Date.now()}@${companyName.toLowerCase().replace(/\s+/g, '-')}.com`,
-                contactPerson: 'Formos pateikėjas',
-                description: 'Automatiškai sukurtas iš HTML formos',
-                ipAddress: req.ip || 'unknown',
-                status: 'active'
-            });
-        }
-
-        // Pridedame pasiūlymą su VISAIS LAUKAIS
-        partner.offers.push({
+        // Sukurti naują pasiūlymą
+        const newOffer = new Offer({
+            partnerId,
+            companyName,
             offerUrl,
-            price: parseFloat(price),
+            departureLocation,
+            destination,
             tripType,
+            price: parseFloat(price),
+            hotelRating: parseInt(hotelRating),
             tripDate: new Date(tripDate),
             validUntil: new Date(validUntil),
-            departureLocation: departureLocation,  // PRIDĖTA
-            destination: destination               // PRIDĖTA
+            status: 'active'
         });
 
-        await partner.save();
+        await newOffer.save();
 
         res.json({ 
             success: true, 
-            message: 'Pasiūlymas sėkmingai pateiktas ir atsiras svetainėje',
-            offerId: partner.offers[partner.offers.length - 1]._id
+            message: 'Pasiūlymas sėkmingai pateiktas!',
+            offerId: newOffer._id 
         });
 
     } catch (error) {
@@ -203,23 +154,17 @@ router.post('/submit', async (req, res) => {
 // 3. Automatinis pasenusių pasiūlymų šalinimas (POST /api/offers/cleanup)
 router.post('/cleanup', async (req, res) => {
     try {
-        const currentDate = new Date();
-        
-        // Atliekame šalinimą visuose partneriuose
-        const result = await Partner.updateMany(
-            { 'offers.validUntil': { $lt: currentDate } },
-            { $pull: { offers: { validUntil: { $lt: currentDate } } } }
-        );
-
-        res.json({
-            success: true,
-            message: `Pašalinti pasenę pasiūlymai`,
-            deletedCount: result.modifiedCount
+        const result = await Offer.deleteMany({ 
+            validUntil: { $lt: new Date() } 
         });
 
+        res.json({ 
+            success: true, 
+            message: `Pašalinta ${result.deletedCount} pasenusių pasiūlymų` 
+        });
     } catch (error) {
         console.error('Pasiūlymų valymo klaida:', error);
-        res.status(500).json({ error: 'Serverio klaida' });
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
     }
 });
 
@@ -228,39 +173,24 @@ router.get('/:offerId', async (req, res) => {
     try {
         const { offerId } = req.params;
 
-        // Randame partnerį, kuris turi šį pasiūlymą
-        const partner = await Partner.findOne({ 
-            'offers._id': new mongoose.Types.ObjectId(offerId) 
-        }).select('companyName website offers');
-
-        if (!partner) {
-            return res.status(404).json({ error: 'Pasiūlymas nerastas' });
+        const offer = await Offer.findById(offerId);
+        
+        if (!offer) {
+            return res.status(404).json({ success: false, error: 'Pasiūlymas nerastas' });
         }
 
-        // Randame konkretų pasiūlymą
-        const offer = partner.offers.id(offerId);
-        
-        if (!offer || new Date(offer.validUntil) < new Date()) {
-            return res.status(404).json({ error: 'Pasiūlymas nerastas arba nebegalioja' });
+        if (new Date(offer.validUntil) < new Date()) {
+            return res.status(404).json({ success: false, error: 'Pasiūlymas nebegalioja' });
         }
 
         res.json({
-            _id: offer._id,
-            companyName: partner.companyName,
-            website: partner.website,
-            offerUrl: offer.offerUrl,
-            price: offer.price,
-            tripType: offer.tripType,
-            tripDate: offer.tripDate,
-            validUntil: offer.validUntil,
-            departureLocation: offer.departureLocation, // PRIDĖTA
-            destination: offer.destination,            // PRIDĖTA
-            createdAt: offer.createdAt
+            success: true,
+            offer: offer
         });
 
     } catch (error) {
         console.error('Pasiūlymo gavimo klaida:', error);
-        res.status(500).json({ error: 'Serverio klaida' });
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
     }
 });
 
@@ -269,21 +199,14 @@ router.delete('/:offerId', async (req, res) => {
     try {
         const { offerId } = req.params;
 
-        // Randame partnerį, kuris turi šį pasiūlymą
-        const partner = await Partner.findOne({ 
-            'offers._id': new mongoose.Types.ObjectId(offerId) 
-        });
-
-        if (!partner) {
+        const result = await Offer.findByIdAndDelete(offerId);
+        
+        if (!result) {
             return res.status(404).json({ 
                 success: false,
                 error: 'Pasiūlymas nerastas' 
             });
         }
-
-        // Pašaliname pasiūlymą iš masyvo
-        partner.offers = partner.offers.filter(offer => offer._id.toString() !== offerId);
-        await partner.save();
 
         res.json({ 
             success: true, 
