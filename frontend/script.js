@@ -83,7 +83,7 @@ class OffersManager {
             <p class="location-info">From: ${offer.departureLocation} → To: ${offer.destination}</p>
             <p class="departure-date">Trip Date: ${formattedDate}</p>
             <p class="valid-until">Valid Until: ${validUntil}</p>
-            <p class="price">Price: €${offer.price}</p>
+            <p class="price">Price: $${offer.price}</p>
             <p class="hotel-stars">Hotel: ${'⭐'.repeat(offer.hotelRating)}</p>
         </div>
     </a>
