@@ -1,4 +1,4 @@
-// translate.js - Pilnai atnaujinta ir pataisyta versija
+// translate.js - Pilnai atnaujinta ir papildyta versija su visais vertimais
 document.addEventListener('DOMContentLoaded', () => {
   // Visi vertimai, atitinkantys index.html elementus
   window.translations = {
@@ -9,10 +9,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Departure date",
       "trip-type-default": "All trip types",
-      "trip-type-leisure": "Beach Vacations",
-      "trip-type-adventure": "Mountain Tourism",
-      "trip-type-cultural": "City Tourism",
-      "trip-type-last-minute": "Cultural Trips",
+      "trip-type-Pajūrio poilsis": "Beach Vacations",
+      "trip-type-Kalnų turizmas": "Mountain Tourism",
+      "trip-type-Miesto turizmas": "City Tourism",
+      "trip-type-Kultūrinė kelionė": "Cultural Trips",
+      "trip-type-Ekstremalus turizmas": "Extreme Tourism",
+      "trip-type-Šeimos kelionė": "Family Trips",
+      "trip-type-Romantinė kelionė": "Romantic Trips",
+      "trip-type-Last Minute": "Last Minute",
+      "trip-type-Relaxation / Beach Vacations": "Relaxation / Beach",
+      "trip-type-Adventure Travel": "Adventure Travel",
+      "trip-type-Last-Minute Deals": "Last-Minute Deals",
+      "trip-type-Romantic Getaways": "Romantic Getaways",
+      "trip-type-Family Vacations": "Family Vacations",
+      "trip-type-Active / Outdoor Trips": "Active / Outdoor",
+      "trip-type-Wellness & Spa Retreats": "Wellness & Spa",
+      "trip-type-Luxury Travel": "Luxury Travel",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Eco-Friendly",
+      "trip-type-Cultural Trips": "Cultural Trips",
+      "trip-type-Historical Tours": "Historical Tours",
+      "trip-type-Themed Trips": "Themed Trips",
+      "trip-type-Solo Travel": "Solo Travel",
+      "trip-type-Group Tours": "Group Tours",
+      "trip-type-Business Travel": "Business Travel",
+      "trip-type-Cruise Vacations": "Cruise Vacations",
+      "trip-type-Mountain / Ski Trips": "Mountain / Ski",
+      "trip-type-Beach Holidays": "Beach Holidays",
+      "trip-type-Exotic Destinations": "Exotic Destinations",
+      "hotel-rating-default": "Any hotel rating",
+      "hotel-rating-1": "⭐ 1 star",
+      "hotel-rating-2": "⭐⭐ 2 stars",
+      "hotel-rating-3": "⭐⭐⭐ 3 stars",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 stars",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 stars",
       "price-sort-default": "Sort by price",
       "price-sort-low": "Price: Low to High",
       "price-sort-high": "Price: High to Low",
@@ -47,10 +76,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Kelionės tikslas",
       "departure-date-placeholder": "Išvykimo data",
       "trip-type-default": "Visos kelionių rūšys",
-      "trip-type-leisure": "Pajūrio poilsis",
-      "trip-type-adventure": "Kalnų turizmas",
-      "trip-type-cultural": "Miesto turizmas",
-      "trip-type-last-minute": "Kultūrinė kelionė",
+      "trip-type-Pajūrio poilsis": "Pajūrio poilsis",
+      "trip-type-Kalnų turizmas": "Kalnų turizmas",
+      "trip-type-Miesto turizmas": "Miesto turizmas",
+      "trip-type-Kultūrinė kelionė": "Kultūrinė kelionė",
+      "trip-type-Ekstremalus turizmas": "Ekstremalus turizmas",
+      "trip-type-Šeimos kelionė": "Šeimos kelionė",
+      "trip-type-Romantinė kelionė": "Romantinė kelionė",
+      "trip-type-Last Minute": "Last Minute",
+      "trip-type-Relaxation / Beach Vacations": "Atpalaidavimas / Pajūrio atostogos",
+      "trip-type-Adventure Travel": "Nuotykių kelionės",
+      "trip-type-Last-Minute Deals": "Paskutinės minutės pasiūlymai",
+      "trip-type-Romantic Getaways": "Romantinės kelionės",
+      "trip-type-Family Vacations": "Šeimos atostogos",
+      "trip-type-Active / Outdoor Trips": "Aktyvios / Lauko kelionės",
+      "trip-type-Wellness & Spa Retreats": "Sveikatingumo ir SPA poilsis",
+      "trip-type-Luxury Travel": "Prabangios kelionės",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Ekologiškos kelionės",
+      "trip-type-Cultural Trips": "Kultūrinės kelionės",
+      "trip-type-Historical Tours": "Istorinės kelionės",
+      "trip-type-Themed Trips": "Teminės kelionės",
+      "trip-type-Solo Travel": "Kelionės vienam",
+      "trip-type-Group Tours": "Grupinės kelionės",
+      "trip-type-Business Travel": "Verslo kelionės",
+      "trip-type-Cruise Vacations": "Kruizų atostogos",
+      "trip-type-Mountain / Ski Trips": "Kalnų / Slidinėjimo kelionės",
+      "trip-type-Beach Holidays": "Pajūrio atostogos",
+      "trip-type-Exotic Destinations": "Egzotiškos kelionės",
+      "hotel-rating-default": "Bet koks viešbučio įvertinimas",
+      "hotel-rating-1": "⭐ 1 žvaigždutė",
+      "hotel-rating-2": "⭐⭐ 2 žvaigždutės",
+      "hotel-rating-3": "⭐⭐⭐ 3 žvaigždutės",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 žvaigždutės",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 žvaigždutės",
       "price-sort-default": "Rikiuoti pagal kainą",
       "price-sort-low": "Kaina: nuo mažiausios",
       "price-sort-high": "Kaina: nuo didžiausios",
@@ -85,10 +143,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Date de départ",
       "trip-type-default": "Tous les types de voyage",
-      "trip-type-leisure": "Loisirs",
-      "trip-type-adventure": "Aventure",
-      "trip-type-cultural": "Culturel",
-      "trip-type-last-minute": "Dernière minute",
+      "trip-type-Pajūrio poilsis": "Vacances à la plage",
+      "trip-type-Kalnų turizmas": "Tourisme en montagne",
+      "trip-type-Miesto turizmas": "Tourisme urbain",
+      "trip-type-Kultūrinė kelionė": "Voyages culturels",
+      "trip-type-Ekstremalus turizmas": "Tourisme extrême",
+      "trip-type-Šeimos kelionė": "Voyages en famille",
+      "trip-type-Romantinė kelionė": "Voyages romantiques",
+      "trip-type-Last Minute": "Dernière minute",
+      "trip-type-Relaxation / Beach Vacations": "Détente / Vacances à la plage",
+      "trip-type-Adventure Travel": "Voyages d'aventure",
+      "trip-type-Last-Minute Deals": "Offres dernière minute",
+      "trip-type-Romantic Getaways": "Évasions romantiques",
+      "trip-type-Family Vacations": "Vacances en famille",
+      "trip-type-Active / Outdoor Trips": "Voyages actifs / Plein air",
+      "trip-type-Wellness & Spa Retreats": "Retraites bien-être et spa",
+      "trip-type-Luxury Travel": "Voyages de luxe",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Voyages écologiques",
+      "trip-type-Cultural Trips": "Voyages culturels",
+      "trip-type-Historical Tours": "Circuits historiques",
+      "trip-type-Themed Trips": "Voyages à thème",
+      "trip-type-Solo Travel": "Voyages en solo",
+      "trip-type-Group Tours": "Voyages en groupe",
+      "trip-type-Business Travel": "Voyages d'affaires",
+      "trip-type-Cruise Vacations": "Croisières",
+      "trip-type-Mountain / Ski Trips": "Voyages en montagne / Ski",
+      "trip-type-Beach Holidays": "Vacances à la plage",
+      "trip-type-Exotic Destinations": "Destinations exotiques",
+      "hotel-rating-default": "Toute classification d'hôtel",
+      "hotel-rating-1": "⭐ 1 étoile",
+      "hotel-rating-2": "⭐⭐ 2 étoiles",
+      "hotel-rating-3": "⭐⭐⭐ 3 étoiles",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 étoiles",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 étoiles",
       "price-sort-default": "Trier par prix",
       "price-sort-low": "Prix : du plus bas au plus élevé",
       "price-sort-high": "Prix : du plus élevé au plus bas",
@@ -123,10 +210,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Destino",
       "departure-date-placeholder": "Fecha de salida",
       "trip-type-default": "Todos los tipos de viaje",
-      "trip-type-leisure": "Ocio",
-      "trip-type-adventure": "Aventura",
-      "trip-type-cultural": "Cultural",
-      "trip-type-last-minute": "Último minuto",
+      "trip-type-Pajūrio poilsis": "Vacaciones en la playa",
+      "trip-type-Kalnų turizmas": "Turismo de montaña",
+      "trip-type-Miesto turizmas": "Turismo urbano",
+      "trip-type-Kultūrinė kelionė": "Viajes culturales",
+      "trip-type-Ekstremalus turizmas": "Turismo extremo",
+      "trip-type-Šeimos kelionė": "Viajes familiares",
+      "trip-type-Romantinė kelionė": "Viajes románticos",
+      "trip-type-Last Minute": "Último minuto",
+      "trip-type-Relaxation / Beach Vacations": "Relajación / Vacaciones en playa",
+      "trip-type-Adventure Travel": "Viajes de aventura",
+      "trip-type-Last-Minute Deals": "Ofertas de último minuto",
+      "trip-type-Romantic Getaways": "Escapadas románticas",
+      "trip-type-Family Vacations": "Vacaciones familiares",
+      "trip-type-Active / Outdoor Trips": "Viajes activos / Aire libre",
+      "trip-type-Wellness & Spa Retreats": "Retiros wellness y spa",
+      "trip-type-Luxury Travel": "Viajes de lujo",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Viajes ecológicos",
+      "trip-type-Cultural Trips": "Viajes culturales",
+      "trip-type-Historical Tours": "Tours históricos",
+      "trip-type-Themed Trips": "Viajes temáticos",
+      "trip-type-Solo Travel": "Viajes en solitario",
+      "trip-type-Group Tours": "Tours grupales",
+      "trip-type-Business Travel": "Viajes de negocios",
+      "trip-type-Cruise Vacations": "Vacaciones en crucero",
+      "trip-type-Mountain / Ski Trips": "Viajes de montaña / Esquí",
+      "trip-type-Beach Holidays": "Vacaciones en la playa",
+      "trip-type-Exotic Destinations": "Destinos exóticos",
+      "hotel-rating-default": "Cualquier clasificación de hotel",
+      "hotel-rating-1": "⭐ 1 estrella",
+      "hotel-rating-2": "⭐⭐ 2 estrellas",
+      "hotel-rating-3": "⭐⭐⭐ 3 estrellas",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 estrellas",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 estrellas",
       "price-sort-default": "Ordenar por precio",
       "price-sort-low": "Precio: de menor a mayor",
       "price-sort-high": "Precio: de mayor a menor",
@@ -143,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "modal-description": "Descripción breve",
       "modal-submit": "Enviar",
       "login-google": "Iniciar sesión con Google",
-      "login-facebook": "Iniciar sesión avec Facebook",
+      "login-facebook": "Iniciar sesión con Facebook",
       "footer-about": "Sobre nosotros",
       "about-title": "Sobre TravCen",
       "about-text-1": "TravCen es una plataforma inteligente de búsqueda de viajes que reúne ofertas de múltiples agencias de viajes en un lugar conveniente.",
@@ -161,13 +277,42 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Reiseziel",
       "departure-date-placeholder": "Abreisedatum",
       "trip-type-default": "Alle Reisetypen",
-      "trip-type-leisure": "Erholung",
-      "trip-type-adventure": "Abenteuer",
-      "trip-type-cultural": "Kulturell",
-      "trip-type-last-minute": "Last Minute",
+      "trip-type-Pajūrio poilsis": "Strandurlaub",
+      "trip-type-Kalnų turizmas": "Bergtourismus",
+      "trip-type-Miesto turizmas": "Städtetourismus",
+      "trip-type-Kultūrinė kelionė": "Kulturreisen",
+      "trip-type-Ekstremalus turizmas": "Extremtourismus",
+      "trip-type-Šeimos kelionė": "Familienreisen",
+      "trip-type-Romantinė kelionė": "Romantische Reisen",
+      "trip-type-Last Minute": "Last Minute",
+      "trip-type-Relaxation / Beach Vacations": "Entspannung / Strandurlaub",
+      "trip-type-Adventure Travel": "Abenteuerreisen",
+      "trip-type-Last-Minute Deals": "Last-Minute-Angebote",
+      "trip-type-Romantic Getaways": "Romantische Auszeiten",
+      "trip-type-Family Vacations": "Familienurlaub",
+      "trip-type-Active / Outdoor Trips": "Aktive Reisen / Outdoor",
+      "trip-type-Wellness & Spa Retreats": "Wellness & Spa Retreats",
+      "trip-type-Luxury Travel": "Luxusreisen",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Ökologisches Reisen",
+      "trip-type-Cultural Trips": "Kulturreisen",
+      "trip-type-Historical Tours": "Historische Touren",
+      "trip-type-Themed Trips": "Themenreisen",
+      "trip-type-Solo Travel": "Alleinerisen",
+      "trip-type-Group Tours": "Gruppenreisen",
+      "trip-type-Business Travel": "Geschäftsreisen",
+      "trip-type-Cruise Vacations": "Kreuzfahrten",
+      "trip-type-Mountain / Ski Trips": "Berg- / Skireisen",
+      "trip-type-Beach Holidays": "Strandurlaub",
+      "trip-type-Exotic Destinations": "Exotische Reiseziele",
+      "hotel-rating-default": "Beliebige Hotelbewertung",
+      "hotel-rating-1": "⭐ 1 Stern",
+      "hotel-rating-2": "⭐⭐ 2 Sterne",
+      "hotel-rating-3": "⭐⭐⭐ 3 Sterne",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 Sterne",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 Sterne",
       "price-sort-default": "Nach Preis sortieren",
-      "price-sort-low": "Pris: aufsteigend",
-      "price-sort-high": "Pris: absteigend",
+      "price-sort-low": "Preis: Aufsteigend",
+      "price-sort-high": "Preis: Absteigend",
       "search-btn": "Suchen",
       "footer-faq": "FAQ",
       "footer-privacy": "Datenschutzrichtlinie",
@@ -175,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "footer-partner": "Partner werden",
       "footer-disclaimer": "Hinweis: TravCen ist eine Vermittlungsplattform. Wir übernehmen keine Verantwortung für Dienstleistungen, die über Partnerseiten erworben wurden.",
       "modal-title": "Partnerregistrierung",
-      "modal-company": "Firmanavn",
+      "modal-company": "Firmenname",
       "modal-website": "Website-URL",
       "modal-email": "Kontakt-E-Mail",
       "modal-description": "Kurzbeschreibung",
@@ -199,10 +344,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "目的地",
       "departure-date-placeholder": "出发日期",
       "trip-type-default": "所有旅行类型",
-      "trip-type-leisure": "休闲",
-      "trip-type-adventure": "探险",
-      "trip-type-cultural": "文化",
-      "trip-type-last-minute": "最后一刻",
+      "trip-type-Pajūrio poilsis": "海滩度假",
+      "trip-type-Kalnų turizmas": "山地旅游",
+      "trip-type-Miesto turizmas": "城市旅游",
+      "trip-type-Kultūrinė kelionė": "文化旅行",
+      "trip-type-Ekstremalus turizmas": "极限旅游",
+      "trip-type-Šeimos kelionė": "家庭旅行",
+      "trip-type-Romantinė kelionė": "浪漫旅行",
+      "trip-type-Last Minute": "最后一刻",
+      "trip-type-Relaxation / Beach Vacations": "放松 / 海滩度假",
+      "trip-type-Adventure Travel": "冒险旅行",
+      "trip-type-Last-Minute Deals": "最后一刻优惠",
+      "trip-type-Romantic Getaways": "浪漫之旅",
+      "trip-type-Family Vacations": "家庭度假",
+      "trip-type-Active / Outdoor Trips": "活跃 / 户外旅行",
+      "trip-type-Wellness & Spa Retreats": "健康与水疗度假",
+      "trip-type-Luxury Travel": "豪华旅行",
+      "trip-type-Eco-Friendly / Sustainable Travel": "生态友好旅行",
+      "trip-type-Cultural Trips": "文化旅行",
+      "trip-type-Historical Tours": "历史之旅",
+      "trip-type-Themed Trips": "主题旅行",
+      "trip-type-Solo Travel": "独自旅行",
+      "trip-type-Group Tours": "团体旅行",
+      "trip-type-Business Travel": "商务旅行",
+      "trip-type-Cruise Vacations": "邮轮度假",
+      "trip-type-Mountain / Ski Trips": "山地 / 滑雪旅行",
+      "trip-type-Beach Holidays": "海滩假期",
+      "trip-type-Exotic Destinations": "异国情调目的地",
+      "hotel-rating-default": "任何酒店评级",
+      "hotel-rating-1": "⭐ 1星",
+      "hotel-rating-2": "⭐⭐ 2星",
+      "hotel-rating-3": "⭐⭐⭐ 3星",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4星",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5星",
       "price-sort-default": "按价格排序",
       "price-sort-low": "价格：从低到高",
       "price-sort-high": "价格：从高到低",
@@ -237,10 +411,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "목적지",
       "departure-date-placeholder": "출발 날짜",
       "trip-type-default": "모든 여행 유형",
-      "trip-type-leisure": "여가",
-      "trip-type-adventure": "모험",
-      "trip-type-cultural": "문화",
-      "trip-type-last-minute": "라스트 미닛",
+      "trip-type-Pajūrio poilsis": "해변 휴가",
+      "trip-type-Kalnų turizmas": "산악 관광",
+      "trip-type-Miesto turizmas": "도시 관광",
+      "trip-type-Kultūrinė kelionė": "문화 여행",
+      "trip-type-Ekstremalus turizmas": "익스트림 관광",
+      "trip-type-Šeimos kelionė": "가족 여행",
+      "trip-type-Romantinė kelionė": "로맨틱 여행",
+      "trip-type-Last Minute": "라스트 미닛",
+      "trip-type-Relaxation / Beach Vacations": "휴식 / 해변 휴가",
+      "trip-type-Adventure Travel": "어드벤처 여행",
+      "trip-type-Last-Minute Deals": "마지막 순간 특가",
+      "trip-type-Romantic Getaways": "로맨틱 여행",
+      "trip-type-Family Vacations": "가족 휴가",
+      "trip-type-Active / Outdoor Trips": "액티브 / 아웃도어 여행",
+      "trip-type-Wellness & Spa Retreats": "웰니스 & 스파 휴양",
+      "trip-type-Luxury Travel": "럭셔리 여행",
+      "trip-type-Eco-Friendly / Sustainable Travel": "친환경 여행",
+      "trip-type-Cultural Trips": "문화 여행",
+      "trip-type-Historical Tours": "역사 투어",
+      "trip-type-Themed Trips": "테마 여행",
+      "trip-type-Solo Travel": "솔로 여행",
+      "trip-type-Group Tours": "단체 여행",
+      "trip-type-Business Travel": "비즈니스 여행",
+      "trip-type-Cruise Vacations": "크루즈 휴가",
+      "trip-type-Mountain / Ski Trips": "산악 / 스키 여행",
+      "trip-type-Beach Holidays": "해변 휴가",
+      "trip-type-Exotic Destinations": "이색적인 목적지",
+      "hotel-rating-default": "모든 호텔 등급",
+      "hotel-rating-1": "⭐ 1성",
+      "hotel-rating-2": "⭐⭐ 2성",
+      "hotel-rating-3": "⭐⭐⭐ 3성",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4성",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5성",
       "price-sort-default": "가격순 정렬",
       "price-sort-low": "가격: 낮은 순",
       "price-sort-high": "가격: 높은 순",
@@ -275,10 +478,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Afrejsedato",
       "trip-type-default": "Alle rejsetyper",
-      "trip-type-leisure": "Ferie",
-      "trip-type-adventure": "Eventyr",
-      "trip-type-cultural": "Kulturel",
-      "trip-type-last-minute": "Last Minute",
+      "trip-type-Pajūrio poilsis": "Strandferie",
+      "trip-type-Kalnų turizmas": "Bjergturisme",
+      "trip-type-Miesto turizmas": "Byturisme",
+      "trip-type-Kultūrinė kelionė": "Kulturelle rejser",
+      "trip-type-Ekstremalus turizmas": "Ekstremturisme",
+      "trip-type-Šeimos kelionė": "Familie rejser",
+      "trip-type-Romantinė kelionė": "Romantiske rejser",
+      "trip-type-Last Minute": "Last Minute",
+      "trip-type-Relaxation / Beach Vacations": "Aflapning / Strandferie",
+      "trip-type-Adventure Travel": "Eventyrrejser",
+      "trip-type-Last-Minute Deals": "Last Minute-tilbud",
+      "trip-type-Romantic Getaways": "Romantiske rejser",
+      "trip-type-Family Vacations": "Familieferie",
+      "trip-type-Active / Outdoor Trips": "Aktive rejser / Udendørs",
+      "trip-type-Wellness & Spa Retreats": "Wellness & Spa ophold",
+      "trip-type-Luxury Travel": "Luksusrejser",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Bæredygtige rejser",
+      "trip-type-Cultural Trips": "Kulturelle rejser",
+      "trip-type-Historical Tours": "Historiske ture",
+      "trip-type-Themed Trips": "Temarejser",
+      "trip-type-Solo Travel": "Solo rejser",
+      "trip-type-Group Tours": "Grupperejser",
+      "trip-type-Business Travel": "Forretningsrejser",
+      "trip-type-Cruise Vacations": "Krydstogtsferie",
+      "trip-type-Mountain / Ski Trips": "Bjerg- / Skirejser",
+      "trip-type-Beach Holidays": "Strandferie",
+      "trip-type-Exotic Destinations": "Eksotiske destinationer",
+      "hotel-rating-default": "Enhven hotelvurdering",
+      "hotel-rating-1": "⭐ 1 stjerne",
+      "hotel-rating-2": "⭐⭐ 2 stjerner",
+      "hotel-rating-3": "⭐⭐⭐ 3 stjerner",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 stjerner",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 stjerner",
       "price-sort-default": "Sorter efter pris",
       "price-sort-low": "Pris: Lav til høj",
       "price-sort-high": "Pris: Høj til lav",
@@ -313,10 +545,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Avresedatum",
       "trip-type-default": "Alla resetyper",
-      "trip-type-leisure": "Fritid",
-      "trip-type-adventure": "Äventyr",
-      "trip-type-cultural": "Kulturell",
-      "trip-type-last-minute": "Sista minuten",
+      "trip-type-Pajūrio poilsis": "Semester vid stranden",
+      "trip-type-Kalnų turizmas": "Bergsturism",
+      "trip-type-Miesto turizmas": "Stadsturism",
+      "trip-type-Kultūrinė kelionė": "Kulturresor",
+      "trip-type-Ekstremalus turizmas": "Extremturism",
+      "trip-type-Šeimos kelionė": "Familjeresor",
+      "trip-type-Romantinė kelionė": "Romantiska resor",
+      "trip-type-Last Minute": "Sista minuten",
+      "trip-type-Relaxation / Beach Vacations": "Avkoppling / Strandsemester",
+      "trip-type-Adventure Travel": "Äventyrsresor",
+      "trip-type-Last-Minute Deals": "Sista minuten-erbjudanden",
+      "trip-type-Romantic Getaways": "Romantiska resor",
+      "trip-type-Family Vacations": "Familjesemester",
+      "trip-type-Active / Outdoor Trips": "Aktiva resor / Utomhus",
+      "trip-type-Wellness & Spa Retreats": "Wellness & Spa vistelser",
+      "trip-type-Luxury Travel": "Lyxresor",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Hållbara resor",
+      "trip-type-Cultural Trips": "Kulturresor",
+      "trip-type-Historical Tours": "Historiska turer",
+      "trip-type-Themed Trips": "Temaresor",
+      "trip-type-Solo Travel": "Solo resor",
+      "trip-type-Group Tours": "Gruppresor",
+      "trip-type-Business Travel": "Affärsresor",
+      "trip-type-Cruise Vacations": "Kryssningssemester",
+      "trip-type-Mountain / Ski Trips": "Berg- / Skidresor",
+      "trip-type-Beach Holidays": "Strandsemester",
+      "trip-type-Exotic Destinations": "Exotiska destinationer",
+      "hotel-rating-default": "Vilket hotellbetyg som helst",
+      "hotel-rating-1": "⭐ 1 stjärna",
+      "hotel-rating-2": "⭐⭐ 2 stjärnor",
+      "hotel-rating-3": "⭐⭐⭐ 3 stjärnor",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 stjärnor",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 stjärnor",
       "price-sort-default": "Sortera efter pris",
       "price-sort-low": "Pris: Lägst först",
       "price-sort-high": "Pris: Högst först",
@@ -351,10 +612,39 @@ document.addEventListener('DOMContentLoaded', () => {
       "destination-placeholder": "Destinasjon",
       "departure-date-placeholder": "Avreisedato",
       "trip-type-default": "Alle reisetyper",
-      "trip-type-leisure": "Fritid",
-      "trip-type-adventure": "Eventyr",
-      "trip-type-cultural": "Kulturell",
-      "trip-type-last-minute": "Siste liten",
+      "trip-type-Pajūrio poilsis": "Strandferie",
+      "trip-type-Kalnų turizmas": "Fjellturisme",
+      "trip-type-Miesto turizmas": "Byturisme",
+      "trip-type-Kultūrinė kelionė": "Kulturelle reiser",
+      "trip-type-Ekstremalus turizmas": "Ekstremturisme",
+      "trip-type-Šeimos kelionė": "Familie reiser",
+      "trip-type-Romantinė kelionė": "Romantiske reiser",
+      "trip-type-Last Minute": "Siste liten",
+      "trip-type-Relaxation / Beach Vacations": "Avslapning / Strandferie",
+      "trip-type-Adventure Travel": "Eventyrreiser",
+      "trip-type-Last-Minute Deals": "Siste minutt-tilbud",
+      "trip-type-Romantic Getaways": "Romantiske reiser",
+      "trip-type-Family Vacations": "Familieferie",
+      "trip-type-Active / Outdoor Trips": "Aktive reiser / Utendørs",
+      "trip-type-Wellness & Spa Retreats": "Wellness & Spa opphold",
+      "trip-type-Luxury Travel": "Luksusreiser",
+      "trip-type-Eco-Friendly / Sustainable Travel": "Bærekraftige reiser",
+      "trip-type-Cultural Trips": "Kulturelle reiser",
+      "trip-type-Historical Tours": "Historiske turer",
+      "trip-type-Themed Trips": "Temareiser",
+      "trip-type-Solo Travel": "Solo reiser",
+      "trip-type-Group Tours": "Gruppereiser",
+      "trip-type-Business Travel": "Forretningsreiser",
+      "trip-type-Cruise Vacations": "Kryssningsferie",
+      "trip-type-Mountain / Ski Trips": "Fjell- / Skireiser",
+      "trip-type-Beach Holidays": "Strandferie",
+      "trip-type-Exotic Destinations": "Eksotiske destinasjoner",
+      "hotel-rating-default": "Enhven hotellvurdering",
+      "hotel-rating-1": "⭐ 1 stjerne",
+      "hotel-rating-2": "⭐⭐ 2 stjerner",
+      "hotel-rating-3": "⭐⭐⭐ 3 stjerner",
+      "hotel-rating-4": "⭐⭐⭐⭐ 4 stjerner",
+      "hotel-rating-5": "⭐⭐⭐⭐⭐ 5 stjerner",
       "price-sort-default": "Sorter etter pris",
       "price-sort-low": "Pris: Lav til høy",
       "price-sort-high": "Pris: Høy til lav",
@@ -395,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ko: 'ko-KR',
     da: 'da-DK',
     sv: 'sv-SE',
-    no: 'nb-NO' // Norvegų kalba naudoja nb-NO locale
+    no: 'nb-NO'
   };
 
   // Pagrindinė kalbos nustatymo funkcija
@@ -411,25 +701,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const t = window.translations[langValue];
 
     // Visų elementų atnaujinimas
-    const updateElement = (id, value) => {
-      const element = document.getElementById(id);
-      if (!element) return;
-      
-      if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-        element.placeholder = value;
-      } else if (element.tagName === 'OPTION') {
-        element.textContent = value;
-      } else {
-        element.textContent = value;
-      }
-    };
-
-    // Tekstiniai elementai (PATAISYTA: pridėta input laukų atnaujinimo logika)
     Object.keys(t).forEach(key => {
       const element = document.getElementById(key);
       if (element) {
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-          // Specialus atvejis - departure, destination ir departure-date laukai
           if (key === 'departure-placeholder') {
             document.getElementById('departure').placeholder = t[key];
           } else if (key === 'destination-placeholder') {
@@ -456,12 +731,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // Atnaujiname select optionus
+    // Atnaujiname trip-type select optionus
+    const tripTypes = [
+      'Pajūrio poilsis', 'Kalnų turizmas', 'Miesto turizmas', 'Kultūrinė kelionė',
+      'Ekstremalus turizmas', 'Šeimos kelionė', 'Romantinė kelionė', 'Last Minute',
+      'Relaxation / Beach Vacations', 'Adventure Travel', 'Last-Minute Deals',
+      'Romantic Getaways', 'Family Vacations', 'Active / Outdoor Trips',
+      'Wellness & Spa Retreats', 'Luxury Travel', 'Eco-Friendly / Sustainable Travel',
+      'Cultural Trips', 'Historical Tours', 'Themed Trips', 'Solo Travel',
+      'Group Tours', 'Business Travel', 'Cruise Vacations', 'Mountain / Ski Trips',
+      'Beach Holidays', 'Exotic Destinations'
+    ];
+
     updateSelectOption('trip-type', '', 'trip-type-default');
-    updateSelectOption('trip-type', 'Pajūrio poilsis', 'trip-type-leisure');
-    updateSelectOption('trip-type', 'Kalnų turizmas', 'trip-type-adventure');
-    updateSelectOption('trip-type', 'Miesto turizmas', 'trip-type-cultural');
-    updateSelectOption('trip-type', 'Kultūrinė kelionė', 'trip-type-last-minute');
+    tripTypes.forEach(tripType => {
+      updateSelectOption('trip-type', tripType, `trip-type-${tripType}`);
+    });
+
+    // Atnaujiname hotel-rating select optionus
+    updateSelectOption('hotel-rating', '', 'hotel-rating-default');
+    for (let i = 1; i <= 5; i++) {
+      updateSelectOption('hotel-rating', i.toString(), `hotel-rating-${i}`);
+    }
+
+    // Atnaujiname price-sort select optionus
     updateSelectOption('price-sort', '', 'price-sort-default');
     updateSelectOption('price-sort', 'price-low', 'price-sort-low');
     updateSelectOption('price-sort', 'price-high', 'price-sort-high');
@@ -471,14 +764,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Atnaujinti datos kalendoriaus kalbą
     updateDateInputLanguage(langValue);
-
-    // Google Analytics
-    if (typeof gtag === 'function') {
-      gtag('event', 'language_change', {
-        'event_category': 'Language',
-        'event_label': langValue
-      });
-    }
   }
 
   // Funkcija datos įvesties lauko kalbos atnaujinimui
@@ -486,10 +771,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('departure-date');
     if (!dateInput) return;
     
-    // Nustatome kalbos atributą
     dateInput.setAttribute('lang', langCode);
     
-    // Pridedame papildomus atributus mobiliems įrenginiams
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       dateInput.setAttribute('title', window.translations[langCode]['departure-date-placeholder'] || 'Select date');
     }
@@ -497,8 +780,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inicijavimas - PRADINĖ KALBA ANGLŲ
   const supportedLangs = ['en', 'lt', 'fr', 'es', 'de', 'zh', 'ko', 'da', 'sv', 'no'];
-  
-  // 👇 PRIDĖTA: Nustatoma anglų kalba kaip pradinė, nepaisant naršyklės kalbos
   const savedLang = localStorage.getItem('selectedLanguage') || 'en';
 
   const languageSelector = document.querySelector('.language-selector select');
@@ -510,18 +791,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.setLanguage = setLanguage;
-  
-  // 👇 PRIDĖTA: Užtikrinama, kad pradinė kalba būtų anglų
   setLanguage('en');
 
   // Papildoma: datos įvesties palaikymas mobiliuose įrenginiuose
   const departureDateInput = document.getElementById('departure-date');
   if (departureDateInput) {
-    // Pridedame papildomus atributus geresniam mobiliam palaikymui
     departureDateInput.setAttribute('pattern', '[0-9]{4}-[0-9]{2}-[0-9]{2}');
     departureDateInput.setAttribute('inputmode', 'numeric');
     
-    // Jei mobiliame įrenginyje, pridedame papildomą informaciją
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       departureDateInput.setAttribute('title', 'Select date');
     }
