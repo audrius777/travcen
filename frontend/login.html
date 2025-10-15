@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="lt">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TravCen - Prisijungimas</title>
+  <title>TravCen - Login</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,21 +13,33 @@
       <option value="lt">Lietuvių</option>
     </select>
 
-    <h1 id="login-title">Prisijungimas</h1>
+    <h1 id="login-title">Login</h1>
     <form id="login-form">
-      <input type="email" id="email" placeholder="El. paštas" required>
-      <input type="password" id="password" placeholder="Slaptažodis" required>
-      <button type="submit" id="login-button">Prisijungti</button>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit" id="login-button">Login</button>
     </form>
 
-    <div class="divider">arba</div>
+    <div class="divider">or</div>
     
     <button class="google-login" id="google-login-btn">
       <img src="images/google-logo.png" alt="Google logo">
-      <span>Prisijungti per Google</span>
+      <span>Sign in with Google</span>
     </button>
   </div>
 
+  <script>
+    // 👇 PRIDĖTA: Pradinės kalbos nustatymas
+    document.addEventListener('DOMContentLoaded', function() {
+      // Nustatome anglų kalbą kaip pradinę
+      localStorage.setItem('selectedLanguage', 'en');
+      
+      // Užkrauname vertimų sistemą
+      if (typeof setLanguage === 'function') {
+        setLanguage('en');
+      }
+    });
+  </script>
   <script src="translate.js"></script>
   <script src="login.js"></script>
 </body>
