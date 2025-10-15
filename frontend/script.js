@@ -31,7 +31,9 @@ class OffersManager {
 
             const data = await response.json();
             this.offers = data.offers || [];
-            this.filteredOffers = [...this.offers];
+            
+            // 👇 PRIDĖTA: Iškart filtruoti pasiūlymus po įkėlimo
+            this.filterOffers(filters);
             
             return this.offers;
             
@@ -200,10 +202,8 @@ function handleSearch() {
         startDate: document.getElementById("departure-date").value
     };
 
-    // PATAISYTA - Krauname pasiūlymus iš API su filtrais
-    offersManager.loadOffers(filters).then(() => {
-        offersManager.displayOffers();
-    });
+    // 👇 PATAISYTA: Naudoti filterOffers vietoj loadOffers
+    offersManager.filterOffers(filters);
 }
 
 // Modalų valdymas (išlaikomas funkcionalumas)
