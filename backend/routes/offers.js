@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
             startDate, 
             endDate,
             destination,
-            departureLocation, // PRIDĖTA - išvykimo vieta
+            departureLocation,
             sortBy = 'validUntil',
             sortOrder = 'asc'
         } = req.query;
@@ -28,7 +28,39 @@ router.get('/', async (req, res) => {
 
         // Filtravimas pagal kelionių tipą
         if (tripType) {
-            filter.tripType = { $regex: tripType, $options: 'i' };
+            // Konvertuoti iš anglų į lietuvių kalbą
+            const tripTypeMapping = {
+                'Coastal Vacation': 'Pajūrio poilsis',
+                'Mountain Tourism': 'Kalnų turizmas',
+                'City Tourism': 'Miesto turizmas',
+                'Cultural Trip': 'Kultūrinė kelionė',
+                'Extreme Tourism': 'Ekstremalus turizmas',
+                'Family Trip': 'Šeimos kelionė',
+                'Romantic Trip': 'Romantinė kelionė',
+                'Last Minute': 'Last Minute',
+                'Relaxation / Beach Vacations': 'Relaxation / Beach Vacations',
+                'Adventure Travel': 'Adventure Travel',
+                'Last-Minute Deals': 'Last-Minute Deals',
+                'Romantic Getaways': 'Romantic Getaways',
+                'Family Vacations': 'Family Vacations',
+                'Active / Outdoor Trips': 'Active / Outdoor Trips',
+                'Wellness & Spa Retreats': 'Wellness & Spa Retreats',
+                'Luxury Travel': 'Luxury Travel',
+                'Eco-Friendly / Sustainable Travel': 'Eco-Friendly / Sustainable Travel',
+                'Cultural Trips': 'Cultural Trips',
+                'Historical Tours': 'Historical Tours',
+                'Themed Trips': 'Themed Trips',
+                'Solo Travel': 'Solo Travel',
+                'Group Tours': 'Group Tours',
+                'Business Travel': 'Business Travel',
+                'Cruise Vacations': 'Cruise Vacations',
+                'Mountain / Ski Trips': 'Mountain / Ski Trips',
+                'Beach Holidays': 'Beach Holidays',
+                'Exotic Destinations': 'Exotic Destinations'
+            };
+            
+            const lithuanianTripType = tripTypeMapping[tripType] || tripType;
+            filter.tripType = { $regex: lithuanianTripType, $options: 'i' };
         }
 
         // Filtravimas pagal maksimalią kainą
@@ -41,7 +73,7 @@ router.get('/', async (req, res) => {
             filter.destination = { $regex: destination, $options: 'i' };
         }
 
-        // PRIDĖTA - Filtravimas pagal išvykimo vietą
+        // Filtravimas pagal išvykimo vietą
         if (departureLocation) {
             filter.departureLocation = { $regex: departureLocation, $options: 'i' };
         }
@@ -71,7 +103,7 @@ router.get('/', async (req, res) => {
                 startDate,
                 endDate,
                 destination,
-                departureLocation // PRIDĖTA
+                departureLocation
             }
         });
 
@@ -102,28 +134,28 @@ router.post('/submit', async (req, res) => {
             !destination || !tripType || !price || !hotelRating || !tripDate || !validUntil) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Visi laukai yra privalomi' 
+                error: 'All fields are required' 
             });
         }
 
         if (price <= 0) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Kaina turi būti teigiamas skaičius' 
+                error: 'Price must be a positive number' 
             });
         }
 
         if (new Date(validUntil) <= new Date(tripDate)) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Galiojimo data turi būti vėlesnė už kelionės datą' 
+                error: 'Valid until date must be later than trip date' 
             });
         }
 
         if (new Date(tripDate) < new Date()) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Kelionės data negali būti praeityje' 
+                error: 'Trip date cannot be in the past' 
             });
         }
 
@@ -146,7 +178,7 @@ router.post('/submit', async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: 'Pasiūlymas sėkmingai pateiktas!',
+            message: 'Offer submitted successfully!',
             offerId: newOffer._id 
         });
 
@@ -154,7 +186,7 @@ router.post('/submit', async (req, res) => {
         console.error('Pasiūlymo pateikimo klaida:', error);
         res.status(500).json({ 
             success: false, 
-            error: 'Serverio klaida pateikiant pasiūlymą' 
+            error: 'Server error submitting offer' 
         });
     }
 });
@@ -168,7 +200,7 @@ router.post('/cleanup', async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `Pašalinta ${result.deletedCount} pasenusių pasiūlymų` 
+            message: `Deleted ${result.deletedCount} expired offers` 
         });
     } catch (error) {
         console.error('Pasiūlymų valymo klaida:', error);
@@ -184,11 +216,11 @@ router.get('/:offerId', async (req, res) => {
         const offer = await Offer.findById(offerId);
         
         if (!offer) {
-            return res.status(404).json({ success: false, error: 'Pasiūlymas nerastas' });
+            return res.status(404).json({ success: false, error: 'Offer not found' });
         }
 
         if (new Date(offer.validUntil) < new Date()) {
-            return res.status(404).json({ success: false, error: 'Pasiūlymas nebegalioja' });
+            return res.status(404).json({ success: false, error: 'Offer has expired' });
         }
 
         res.json({
@@ -212,22 +244,22 @@ router.delete('/:offerId', async (req, res) => {
         if (!result) {
             return res.status(404).json({ 
                 success: false,
-                error: 'Pasiūlymas nerastas' 
+                error: 'Offer not found' 
             });
         }
 
         res.json({ 
             success: true, 
-            message: 'Pasiūlymas sėkmingai pašalintas' 
+            message: 'Offer successfully deleted' 
         });
 
     } catch (error) {
         console.error('Pasiūlymo šalinimo klaida:', error);
         res.status(500).json({ 
             success: false,
-            error: 'Serverio klaida šalinant pasiūlymą' 
+            error: 'Server error deleting offer' 
         });
     }
 });
 
-export default router;
+export default router;t default router;
