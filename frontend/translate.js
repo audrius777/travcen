@@ -8,11 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Departure location",
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Departure date",
-      "trip-type-default": "Trip type",
-      "trip-type-leisure": "Leisure",
-      "trip-type-adventure": "Adventure",
-      "trip-type-cultural": "Cultural",
-      "trip-type-last-minute": "Last Minute",
+      "trip-type-default": "All trip types",
+      "trip-type-leisure": "Beach Vacations",
+      "trip-type-adventure": "Mountain Tourism",
+      "trip-type-cultural": "City Tourism",
+      "trip-type-last-minute": "Cultural Trips",
       "price-sort-default": "Sort by price",
       "price-sort-low": "Price: Low to High",
       "price-sort-high": "Price: High to Low",
@@ -46,11 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Išvykimo vieta",
       "destination-placeholder": "Kelionės tikslas",
       "departure-date-placeholder": "Išvykimo data",
-      "trip-type-default": "Kelionės tipas",
-      "trip-type-leisure": "Poilsinė",
-      "trip-type-adventure": "Nuotykinė",
-      "trip-type-cultural": "Pažintinė",
-      "trip-type-last-minute": "Last Minute",
+      "trip-type-default": "Visos kelionių rūšys",
+      "trip-type-leisure": "Pajūrio poilsis",
+      "trip-type-adventure": "Kalnų turizmas",
+      "trip-type-cultural": "Miesto turizmas",
+      "trip-type-last-minute": "Kultūrinė kelionė",
       "price-sort-default": "Rikiuoti pagal kainą",
       "price-sort-low": "Kaina: nuo mažiausios",
       "price-sort-high": "Kaina: nuo didžiausios",
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Lieu de départ",
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Date de départ",
-      "trip-type-default": "Type de voyage",
+      "trip-type-default": "Tous les types de voyage",
       "trip-type-leisure": "Loisirs",
       "trip-type-adventure": "Aventure",
       "trip-type-cultural": "Culturel",
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Lugar de salida",
       "destination-placeholder": "Destino",
       "departure-date-placeholder": "Fecha de salida",
-      "trip-type-default": "Tipo de viaje",
+      "trip-type-default": "Todos los tipos de viaje",
       "trip-type-leisure": "Ocio",
       "trip-type-adventure": "Aventura",
       "trip-type-cultural": "Cultural",
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-title": "Sobre TravCen",
       "about-text-1": "TravCen es una plataforma inteligente de búsqueda de viajes que reúne ofertas de múltiples agencias de viajes en un lugar conveniente.",
       "about-text-2": "Ayudamos a los viajeros a encontrar rápida y fácilmente las mejores vacaciones, viajes culturales, de aventura y de último minuto, ahorrando tiempo y dinero.",
-      "about-text-3": "A diferencia de las agencias tradicionales, TravCen no es un proveedor directo de viajes. En cambio, actuamos como un agregador transparente, dando a los usuarios la libertad de comparar и elegir las opciones de viaje más adecuadas de socios confiables.",
+      "about-text-3": "A diferencia de las agencias tradicionales, TravCen no es un proveedor directo de viajes. En cambio, actuamos como un agregador transparente, dando a los usuarios la libertad de comparar y elegir las opciones de viaje más adecuadas de socios confiables.",
       "about-text-4": "Nuestra misión es simple: hacer que la planificación de viajes sea más fácil, inteligente y accesible para todos.",
       "about-text-5": "¿Tienes preguntas o quieres colaborar?<br>📬 Contáctanos en info@travcen.com",
       "contact-title": "Contáctanos",
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Abfahrtsort",
       "destination-placeholder": "Reiseziel",
       "departure-date-placeholder": "Abreisedatum",
-      "trip-type-default": "Reisetyp",
+      "trip-type-default": "Alle Reisetypen",
       "trip-type-leisure": "Erholung",
       "trip-type-adventure": "Abenteuer",
       "trip-type-cultural": "Kulturell",
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "出发地",
       "destination-placeholder": "目的地",
       "departure-date-placeholder": "出发日期",
-      "trip-type-default": "旅行类型",
+      "trip-type-default": "所有旅行类型",
       "trip-type-leisure": "休闲",
       "trip-type-adventure": "探险",
       "trip-type-cultural": "文化",
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "출발지",
       "destination-placeholder": "목적지",
       "departure-date-placeholder": "출발 날짜",
-      "trip-type-default": "여행 유형",
+      "trip-type-default": "모든 여행 유형",
       "trip-type-leisure": "여가",
       "trip-type-adventure": "모험",
       "trip-type-cultural": "문화",
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Afrejsested",
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Afrejsedato",
-      "trip-type-default": "Rejsetype",
+      "trip-type-default": "Alle rejsetyper",
       "trip-type-leisure": "Ferie",
       "trip-type-adventure": "Eventyr",
       "trip-type-cultural": "Kulturel",
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Avreseort",
       "destination-placeholder": "Destination",
       "departure-date-placeholder": "Avresedatum",
-      "trip-type-default": "Resetyp",
+      "trip-type-default": "Alla resetyper",
       "trip-type-leisure": "Fritid",
       "trip-type-adventure": "Äventyr",
       "trip-type-cultural": "Kulturell",
@@ -338,8 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
       "about-title": "Om TravCen",
       "about-text-1": "TravCen är en smart resesökningsplattform som samlar erbjudanden från flera resebyråer på ett bekvämt ställe.",
       "about-text-2": "Vi hjälper resenärer att snabbt och enkelt hitta de bästa semestern, kultur-, äventyr- och sista minuten-resorna — och sparar både tid och pengar.",
-      "about-text-3": "Till skillnad från traditionella byråer är TravCen ikke en direkt reseleverantör. Istället agerar vi som en transparent aggregator som ger användarna frihet att jämföre och välja de mest lämpliga resealternativen från pålitliga partners.",
-      "about-text-4": "Vårt uppdrag är enkelt: att göre reseplanering enklare, smartare och mer tillgängligt för alla.",
+      "about-text-3": "Till skillnad från traditionella byråer är TravCen inte en direkt reseleverantör. Istället agerar vi som en transparent aggregator som ger användarna frihet att jämföre och välja de mest lämpliga resealternativen från pålitliga partners.",
+      "about-text-4": "Vårt uppdrag är enkelt: att göra reseplanering enklare, smartare och mer tillgängligt för alla.",
       "about-text-5": "Har du frågor eller vill samarbeta?<br>📬 Kontakta oss på info@travcen.com",
       "contact-title": "Kontakta oss",
       "contact-text": "Kontakta oss på info@travcen.com"
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
       "departure-placeholder": "Avreisested",
       "destination-placeholder": "Destinasjon",
       "departure-date-placeholder": "Avreisedato",
-      "trip-type-default": "Reisetype",
+      "trip-type-default": "Alle reisetyper",
       "trip-type-leisure": "Fritid",
       "trip-type-adventure": "Eventyr",
       "trip-type-cultural": "Kulturell",
@@ -458,10 +458,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Atnaujiname select optionus
     updateSelectOption('trip-type', '', 'trip-type-default');
-    updateSelectOption('trip-type', 'leisure', 'trip-type-leisure');
-    updateSelectOption('trip-type', 'adventure', 'trip-type-adventure');
-    updateSelectOption('trip-type', 'cultural', 'trip-type-cultural');
-    updateSelectOption('trip-type', 'last-minute', 'trip-type-last-minute');
+    updateSelectOption('trip-type', 'Pajūrio poilsis', 'trip-type-leisure');
+    updateSelectOption('trip-type', 'Kalnų turizmas', 'trip-type-adventure');
+    updateSelectOption('trip-type', 'Miesto turizmas', 'trip-type-cultural');
+    updateSelectOption('trip-type', 'Kultūrinė kelionė', 'trip-type-last-minute');
     updateSelectOption('price-sort', '', 'price-sort-default');
     updateSelectOption('price-sort', 'price-low', 'price-sort-low');
     updateSelectOption('price-sort', 'price-high', 'price-sort-high');
@@ -495,11 +495,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Inicijavimas
+  // Inicijavimas - PRADINĖ KALBA ANGLŲ
   const supportedLangs = ['en', 'lt', 'fr', 'es', 'de', 'zh', 'ko', 'da', 'sv', 'no'];
-  const browserLang = navigator.language.slice(0, 2);
-  const savedLang = localStorage.getItem('selectedLanguage') || 
-                   (supportedLangs.includes(browserLang) ? browserLang : 'en');
+  
+  // 👇 PRIDĖTA: Nustatoma anglų kalba kaip pradinė, nepaisant naršyklės kalbos
+  const savedLang = localStorage.getItem('selectedLanguage') || 'en';
 
   const languageSelector = document.querySelector('.language-selector select');
   if (languageSelector) {
@@ -510,7 +510,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.setLanguage = setLanguage;
-  setLanguage(savedLang);
+  
+  // 👇 PRIDĖTA: Užtikrinama, kad pradinė kalba būtų anglų
+  setLanguage('en');
 
   // Papildoma: datos įvesties palaikymas mobiliuose įrenginiuose
   const departureDateInput = document.getElementById('departure-date');
@@ -521,8 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Jei mobiliame įrenginyje, pridedame papildomą informaciją
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      const currentLang = localStorage.getItem('selectedLanguage') || 'en';
-      departureDateInput.setAttribute('title', window.translations[currentLang]['departure-date-placeholder'] || 'Select date');
+      departureDateInput.setAttribute('title', 'Select date');
     }
   }
 });
