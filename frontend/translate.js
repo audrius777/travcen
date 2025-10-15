@@ -1,4 +1,3 @@
-// translate.js - Pilnai atnaujinta ir papildyta versija su visais vertimais
 document.addEventListener('DOMContentLoaded', () => {
   // Visi vertimai, atitinkantys index.html elementus
   window.translations = {
