@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="lt">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TravCen - Kelionių pasiūlymo forma</title>
+    <title>TravCen - Travel Offer Form</title>
     <style>
         * {
             margin: 0;
@@ -173,50 +173,50 @@
 <body>
     <div class="form-container">
         <div class="header">
-            <h1>Kelionių pasiūlymo forma</h1>
-            <p>Įveskite savo kelionių pasiūlymo informaciją</p>
+            <h1>Travel Offer Form</h1>
+            <p>Enter your travel offer information</p>
         </div>
 
         <div id="partnerInfo" class="partner-info" style="display: none;">
             <i class="fas fa-user-check"></i> 
-            Partnerio ID: <span id="partnerIdDisplay" class="partner-id"></span>
+            Partner ID: <span id="partnerIdDisplay" class="partner-id"></span>
         </div>
 
         <form id="offerForm">
             <input type="hidden" id="partnerId" name="partnerId" value="PART40046156">
             
             <div class="form-group">
-                <label for="companyName" class="required">Įmonės pavadinimas</label>
+                <label for="companyName" class="required">Company Name</label>
                 <input type="text" id="companyName" required 
-                       placeholder="Jūsų įmonės pavadinimas">
+                       placeholder="Your company name">
             </div>
 
             <div class="form-group">
-                <label for="offerUrl" class="required">Kelionių pasiūlymo nuoroda</label>
+                <label for="offerUrl" class="required">Travel Offer URL</label>
                 <input type="url" id="offerUrl" required 
-                       placeholder="https://jūsų-svetainė.lt/kelionė"
+                       placeholder="https://your-website.com/travel-offer"
                        pattern="https?://.+">
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="departureLocation" class="required">Išvykimo vieta</label>
+                    <label for="departureLocation" class="required">Departure Location</label>
                     <input type="text" id="departureLocation" required 
-                           placeholder="Pvz.: Vilnius, Kaunas, etc.">
+                           placeholder="e.g.: Vilnius, Kaunas, etc.">
                 </div>
 
                 <div class="form-group">
-                    <label for="destination" class="required">Kelionės tikslas</label>
+                    <label for="destination" class="required">Destination</label>
                     <input type="text" id="destination" required 
-                           placeholder="Pvz.: Palanga, Druskininkai, etc.">
+                           placeholder="e.g.: Palanga, Druskininkai, etc.">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="tripType" class="required">Kelionės tipas</label>
+                    <label for="tripType" class="required">Trip Type</label>
                     <select id="tripType" required>
-                        <option value="">Pasirinkite tipą</option>
+                        <option value="">Select type</option>
                         <option value="Pajūrio poilsis">Pajūrio poilsis</option>
                         <option value="Kalnų turizmas">Kalnų turizmas</option>
                         <option value="Miesto turizmas">Miesto turizmas</option>
@@ -225,7 +225,7 @@
                         <option value="Šeimos kelionė">Šeimos kelionė</option>
                         <option value="Romantinė kelionė">Romantinė kelionė</option>
                         <option value="Last Minute">Last Minute</option>
-                        <!-- PRIDĖTOS NAUJOS KATEGORIJOS -->
+                        <!-- ADDED NEW CATEGORIES -->
                         <option value="Relaxation / Beach Vacations">Relaxation / Beach Vacations</option>
                         <option value="Adventure Travel">Adventure Travel</option>
                         <option value="Last-Minute Deals">Last-Minute Deals</option>
@@ -249,48 +249,48 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="price" class="required">Kaina (€)</label>
+                    <label for="price" class="required">Price (€)</label>
                     <input type="number" id="price" required 
                            min="1" max="10000" step="0.01"
                            placeholder="299.99">
                 </div>
             </div>
 
-            <!-- PRIDĖTA VIEŠBUČIO KOKYBĖS PASIRINKIMAS -->
+            <!-- ADDED HOTEL QUALITY SELECTION -->
             <div class="form-group">
-                <label class="required">Viešbučio kokybė / apgyvendinimo lygis</label>
+                <label class="required">Hotel Quality / Accommodation Level</label>
                 <div class="hotel-rating">
-                    <button type="button" class="star-btn" data-stars="1">⭐ 1 žvaigždutė</button>
-                    <button type="button" class="star-btn" data-stars="2">⭐⭐ 2 žvaigždutės</button>
-                    <button type="button" class="star-btn" data-stars="3">⭐⭐⭐ 3 žvaigždutės</button>
-                    <button type="button" class="star-btn" data-stars="4">⭐⭐⭐⭐ 4 žvaigždutės</button>
-                    <button type="button" class="star-btn" data-stars="5">⭐⭐⭐⭐⭐ 5 žvaigždutės</button>
+                    <button type="button" class="star-btn" data-stars="1">⭐ 1 star</button>
+                    <button type="button" class="star-btn" data-stars="2">⭐⭐ 2 stars</button>
+                    <button type="button" class="star-btn" data-stars="3">⭐⭐⭐ 3 stars</button>
+                    <button type="button" class="star-btn" data-stars="4">⭐⭐⭐⭐ 4 stars</button>
+                    <button type="button" class="star-btn" data-stars="5">⭐⭐⭐⭐⭐ 5 stars</button>
                 </div>
                 <input type="hidden" id="hotelRating" required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="tripDate" class="required">Išvykimo data</label>
+                    <label for="tripDate" class="required">Departure Date</label>
                     <input type="date" id="tripDate" required 
                            min="${new Date().toISOString().split('T')[0]}">
                 </div>
 
                 <div class="form-group">
-                    <label for="validUntil" class="required">Pasiūlymas galioja iki</label>
+                    <label for="validUntil" class="required">Offer Valid Until</label>
                     <input type="date" id="validUntil" required 
                            min="${new Date().toISOString().split('T')[0]}">
                 </div>
             </div>
 
-            <button type="submit" class="submit-btn">Patvirtinti ir pateikti pasiūlymą</button>
+            <button type="submit" class="submit-btn">Confirm and Submit Offer</button>
         </form>
 
         <div id="message" class="message"></div>
     </div>
 
     <script>
-    // PARTNERIO ID NUSKAITYMAS IŠ URL
+    // PARTNER ID READING FROM URL
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const partnerId = urlParams.get('partnerId');
@@ -301,15 +301,15 @@
             document.getElementById('partnerInfo').style.display = 'block';
         }
 
-        // VIEŠBUČIO ŽVAIGŽDUTĖS PASIRINKIMAS
+        // HOTEL STAR SELECTION
         const starButtons = document.querySelectorAll('.star-btn');
         starButtons.forEach(button => {
             button.addEventListener('click', function() {
-                // Nuimti pasirinkimą nuo kitų mygtukų
+                // Remove selection from other buttons
                 starButtons.forEach(btn => btn.classList.remove('selected'));
-                // Pridėti pasirinkimą šiam mygtukui
+                // Add selection to this button
                 this.classList.add('selected');
-                // Įrašyti reikšmę į paslėptą lauką
+                // Write value to hidden field
                 document.getElementById('hotelRating').value = this.getAttribute('data-stars');
             });
         });
@@ -331,37 +331,37 @@
             validUntil: document.getElementById('validUntil').value
         };
 
-        // VALIDACIJA SU PARTNERIO ID
+        // VALIDATION WITH PARTNER ID
         if (!formData.partnerId) {
-            showMessage('Netinkama forma. Naudokite partnerio gautą nuorodą.', 'error');
+            showMessage('Invalid form. Use the partner link provided.', 'error');
             return;
         }
 
-        // PAPILDOMA VALIDACIJA VIEŠBUČIO KOKYBEI
+        // ADDITIONAL VALIDATION FOR HOTEL QUALITY
         if (!formData.hotelRating) {
-            showMessage('Pasirinkite viešbučio kokybę', 'error');
+            showMessage('Please select hotel quality', 'error');
             return;
         }
 
         if (!formData.companyName || !formData.offerUrl || !formData.departureLocation || 
             !formData.destination || !formData.tripType || !formData.price || 
             !formData.tripDate || !formData.validUntil) {
-            showMessage('Visi laukai yra privalomi', 'error');
+            showMessage('All fields are required', 'error');
             return;
         }
 
         if (formData.price <= 0) {
-            showMessage('Kaina turi būti teigiamas skaičius', 'error');
+            showMessage('Price must be a positive number', 'error');
             return;
         }
 
         if (new Date(formData.validUntil) <= new Date(formData.tripDate)) {
-            showMessage('Galiojimo data turi būti vėlesnė už kelionės datą', 'error');
+            showMessage('Valid until date must be later than trip date', 'error');
             return;
         }
 
         if (new Date(formData.tripDate) < new Date()) {
-            showMessage('Kelionės data negali būti praeityje', 'error');
+            showMessage('Trip date cannot be in the past', 'error');
             return;
         }
 
@@ -377,17 +377,17 @@
             const result = await response.json();
 
             if (result.success) {
-                showMessage('Pasiūlymas sėkmingai pateiktas! Jis atsiras svetainėje po patvirtinimo.', 'success');
+                showMessage('Offer submitted successfully! It will appear on the website after approval.', 'success');
                 document.getElementById('offerForm').reset();
-                // Išvalyti viešbučio pasirinkimą
+                // Clear hotel selection
                 document.querySelectorAll('.star-btn').forEach(btn => btn.classList.remove('selected'));
                 document.getElementById('hotelRating').value = '';
             } else {
-                showMessage(result.error || 'Įvyko klaida pateikiant pasiūlymą', 'error');
+                showMessage(result.error || 'An error occurred while submitting the offer', 'error');
             }
         } catch (error) {
-            showMessage('Įvyko serverio klaida. Bandykite vėliau.', 'error');
-            console.error('Klaida:', error);
+            showMessage('Server error occurred. Please try again later.', 'error');
+            console.error('Error:', error);
         }
     });
 
@@ -402,7 +402,7 @@
         }, type === 'success' ? 5000 : 10000);
     }
 
-    // DATŲ VALIDACIJA
+    // DATE VALIDATION
     const tripDateInput = document.getElementById('tripDate');
     const validUntilInput = document.getElementById('validUntil');
 
@@ -410,8 +410,10 @@
         validUntilInput.min = this.value;
     });
 
-    // NUSTATYTI MINIMALIĄ DATĄ ŠIANDIENAI
+    // SET MINIMUM DATE TO TODAY
     const today = new Date().toISOString().split('T')[0];
     tripDateInput.min = today;
     validUntilInput.min = today;
-</script>>
+</script>
+</body>
+</html>
