@@ -168,6 +168,23 @@
             color: white;
             border-color: #667eea;
         }
+        
+        .price-input {
+            position: relative;
+        }
+        
+        .dollar-sign {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .price-input input {
+            padding-left: 30px;
+        }
     </style>
 </head>
 <body>
@@ -217,13 +234,13 @@
                     <label for="tripType" class="required">Trip Type</label>
                     <select id="tripType" required>
                         <option value="">Select type</option>
-                        <option value="Pajūrio poilsis">Pajūrio poilsis</option>
-                        <option value="Kalnų turizmas">Kalnų turizmas</option>
-                        <option value="Miesto turizmas">Miesto turizmas</option>
-                        <option value="Kultūrinė kelionė">Kultūrinė kelionė</option>
-                        <option value="Ekstremalus turizmas">Ekstremalus turizmas</option>
-                        <option value="Šeimos kelionė">Šeimos kelionė</option>
-                        <option value="Romantinė kelionė">Romantinė kelionė</option>
+                        <option value="Coastal Vacation">Coastal Vacation</option>
+                        <option value="Mountain Tourism">Mountain Tourism</option>
+                        <option value="City Tourism">City Tourism</option>
+                        <option value="Cultural Trip">Cultural Trip</option>
+                        <option value="Extreme Tourism">Extreme Tourism</option>
+                        <option value="Family Trip">Family Trip</option>
+                        <option value="Romantic Trip">Romantic Trip</option>
                         <option value="Last Minute">Last Minute</option>
                         <!-- ADDED NEW CATEGORIES -->
                         <option value="Relaxation / Beach Vacations">Relaxation / Beach Vacations</option>
@@ -248,11 +265,14 @@
                     </select>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group price-input">
                     <label for="price" class="required">Price ($)</label>
-                    <input type="number" id="price" required 
-                           min="1" max="10000" step="0.01"
-                           placeholder="299.99">
+                    <div style="position: relative;">
+                        <span class="dollar-sign">$</span>
+                        <input type="number" id="price" required 
+                               min="1" max="10000" step="0.01"
+                               placeholder="299.99">
+                    </div>
                 </div>
             </div>
 
