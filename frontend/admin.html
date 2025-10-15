@@ -291,6 +291,17 @@
   </div>
 
   <script>
+    // 👇 PRIDĖTA: Pradinės kalbos nustatymas
+    document.addEventListener('DOMContentLoaded', function() {
+      // Nustatome anglų kalbą kaip pradinę
+      localStorage.setItem('selectedLanguage', 'en');
+      
+      // Užkrauname vertimų sistemą
+      if (typeof setLanguage === 'function') {
+        setLanguage('en');
+      }
+    });
+
     function onClick(e) {
       e.preventDefault();
       grecaptcha.enterprise.ready(async () => {
@@ -298,5 +309,6 @@
       });
     }
   </script>
+  <script src="translate.js"></script>
 </body>
 </html>
