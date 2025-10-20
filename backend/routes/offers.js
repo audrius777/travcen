@@ -124,6 +124,7 @@ router.post('/submit', async (req, res) => {
             destination,
             tripType, 
             price, 
+            currency,
             hotelRating,
             tripDate, 
             validUntil
@@ -131,7 +132,7 @@ router.post('/submit', async (req, res) => {
 
         // Validacija
         if (!partnerId || !companyName || !offerUrl || !departureLocation || 
-            !destination || !tripType || !price || !hotelRating || !tripDate || !validUntil) {
+            !destination || !tripType || !price || !currency || !hotelRating || !tripDate || !validUntil) {
             return res.status(400).json({ 
                 success: false, 
                 error: 'All fields are required' 
@@ -168,6 +169,7 @@ router.post('/submit', async (req, res) => {
             destination,
             tripType,
             price: parseFloat(price),
+            currency: currency,
             hotelRating: parseInt(hotelRating),
             tripDate: new Date(tripDate),
             validUntil: new Date(validUntil),
