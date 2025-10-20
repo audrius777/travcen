@@ -83,6 +83,10 @@
             color: #ffc107;
             font-weight: bold;
         }
+        .currency-badge {
+            font-size: 0.75rem;
+            margin-left: 2px;
+        }
     </style>
 </head>
 <body>
@@ -542,6 +546,15 @@
             // Sukurti žvaigždučių atvaizdavimą
             const stars = '⭐'.repeat(offer.hotelRating || 0);
             
+            // Valiutos simboliai
+            const currencySymbols = {
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£'
+            };
+            const currencySymbol = currencySymbols[offer.currency] || '$';
+            const currencyBadge = `<span class="badge bg-secondary currency-badge">${offer.currency}</span>`;
+            
             return `
                 <tr class="${rowClass}">
                     <td>
@@ -555,7 +568,10 @@
                         <div><strong>Išvyksta:</strong> ${offer.departureLocation || 'Nenurodyta'}</div>
                         <div><strong>Atvyksta:</strong> ${offer.destination || 'Nenurodyta'}</div>
                     </td>
-                    <td><strong>$${offer.price}</strong></td>
+                    <td>
+                        <strong>${currencySymbol}${offer.price}</strong>
+                        ${currencyBadge}
+                    </td>
                     <td>
                         <span class="hotel-stars">${stars}</span>
                         <div class="location-info">${offer.hotelRating} žvaigždutės</div>
@@ -706,3 +722,5 @@
         }
     }
 </script>
+</body>
+</html>
