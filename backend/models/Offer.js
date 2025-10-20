@@ -29,6 +29,12 @@ const offerSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  currency: {
+    type: String,
+    required: true,
+    enum: ['USD', 'EUR', 'GBP'],
+    default: 'USD'
+  },
   hotelRating: {
     type: Number,
     required: true,
