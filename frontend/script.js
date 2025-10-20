@@ -68,6 +68,14 @@ class OffersManager {
     const formattedDate = this.formatDateByLanguage(offer.tripDate, currentLang);
     const validUntil = this.formatDateByLanguage(offer.validUntil, currentLang);
 
+    // Valiutos simboliai
+    const currencySymbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£'
+    };
+    const currencySymbol = currencySymbols[offer.currency] || '$';
+
     return `
 <div class="card" 
      data-id="${offer._id}"
@@ -83,7 +91,7 @@ class OffersManager {
             <p class="location-info">From: ${offer.departureLocation} → To: ${offer.destination}</p>
             <p class="departure-date">Trip Date: ${formattedDate}</p>
             <p class="valid-until">Valid Until: ${validUntil}</p>
-            <p class="price">Price: $${offer.price}</p>
+            <p class="price">Price: ${currencySymbol}${offer.price}</p>
             <p class="hotel-stars">Hotel: ${'⭐'.repeat(offer.hotelRating)}</p>
         </div>
     </a>
