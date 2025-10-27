@@ -173,7 +173,9 @@ router.post('/submit', async (req, res) => {
             hotelRating: parseInt(hotelRating),
             tripDate: new Date(tripDate),
             validUntil: new Date(validUntil),
-            status: 'active'
+            status: 'active',
+            viewCount: 0,
+            clickCount: 0
         });
 
         await newOffer.save();
@@ -261,6 +263,118 @@ router.delete('/:offerId', async (req, res) => {
             success: false,
             error: 'Server error deleting offer' 
         });
+    }
+});
+
+// 6. Pasiūlymo peržiūros skaičiavimas (GET /api/offers/:offerId/view)
+router.get('/:offerId/view', async (req, res) => {
+    try {
+        const { offerId } = req.params;
+
+        const offer = await Offer.findById(offerId);
+        
+        if (!offer) {
+            return res.status(404).json({ success: false, error: 'Offer not found' });
+        }
+
+        // Atnaujinti peržiūrų skaičių
+        offer.viewCount += 1;
+        offer.lastViewed = new Date();
+        await offer.save();
+
+        res.json({
+            success: true,
+            viewCount: offer.viewCount,
+            message: 'View count updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Peržiūrų skaičiavimo klaida:', error);
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
+    }
+});
+
+// 7. Pasiūlymo paspaudimų skaičiavimas (GET /api/offers/:offerId/click)
+router.get('/:offerId/click', async (req, res) => {
+    try {
+        const { offerId } = req.params;
+
+        const offer = await Offer.findById(offerId);
+        
+        if (!offer) {
+            return res.status(404).json({ success: false, error: 'Offer not found' });
+        }
+
+        // Atnaujinti paspaudimų skaičių
+        offer.clickCount += 1;
+        offer.lastClicked = new Date();
+        await offer.save();
+
+        res.json({
+            success: true,
+            clickCount: offer.clickCount,
+            message: 'Click count updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Paspaudimų skaičiavimo klaida:', error);
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
+    }
+});
+
+// 8. Partnerio pasiūlymų statistika (GET /api/offers/stats/:partnerId)
+router.get('/stats/:partnerId', async (req, res) => {
+    try {
+        const { partnerId } = req.params;
+
+        // Gauti visus partnerio pasiūlymus
+        const offers = await Offer.find({ partnerId: partnerId });
+
+        if (offers.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'No offers found for this partner' 
+            });
+        }
+
+        // Apskaičiuoti bendrą statistiką
+        const totalViews = offers.reduce((sum, offer) => sum + offer.viewCount, 0);
+        const totalClicks = offers.reduce((sum, offer) => sum + offer.clickCount, 0);
+        const clickThroughRate = totalViews > 0 ? (totalClicks / totalViews * 100).toFixed(2) : 0;
+
+        // Gauti partnerio informaciją
+        const partner = await Partner.findOne({ partnerId: partnerId });
+
+        res.json({
+            success: true,
+            partner: {
+                partnerId: partnerId,
+                companyName: partner ? partner.companyName : 'Unknown',
+                email: partner ? partner.email : 'Unknown'
+            },
+            statistics: {
+                totalOffers: offers.length,
+                totalViews: totalViews,
+                totalClicks: totalClicks,
+                clickThroughRate: parseFloat(clickThroughRate),
+                activeOffers: offers.filter(offer => offer.status === 'active').length,
+                expiredOffers: offers.filter(offer => offer.status === 'expired').length
+            },
+            offers: offers.map(offer => ({
+                offerId: offer._id,
+                tripType: offer.tripType,
+                destination: offer.destination,
+                views: offer.viewCount,
+                clicks: offer.clickCount,
+                status: offer.status,
+                lastViewed: offer.lastViewed,
+                lastClicked: offer.lastClicked
+            }))
+        });
+
+    } catch (error) {
+        console.error('Partnerio statistikos klaida:', error);
+        res.status(500).json({ success: false, error: 'Serverio klaida' });
     }
 });
 
