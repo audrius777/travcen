@@ -150,7 +150,7 @@ async function startServer() {
       console.log(`🌍 CORS įjungtas Vercel domain'ams`);
       console.log(`📝 Partnerių sistema: /api/partners`);
       console.log(`🎯 Pasiūlymų sistema: /api/offers`);
-      console.log(`📊 Statistikos sistema: /api/statistics`); // PRIDĖTA
+      console.log(`📊 Statistikos sistema: /api/statistics`);
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
