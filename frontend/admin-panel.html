@@ -51,6 +51,11 @@
             border-color: #ffc107;
             color: white;
         }
+        .btn-statistics {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
         .login-container {
             max-width: 400px;
             margin: 100px auto;
@@ -86,6 +91,18 @@
         .currency-badge {
             font-size: 0.75rem;
             margin-left: 2px;
+        }
+        .stats-small {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .ctr-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #3498db;
         }
     </style>
 </head>
@@ -132,7 +149,7 @@
                 <div class="row align-items-center">
                     <div class="col">
                         <h1 class="h3 mb-0"><i class="fas fa-cogs me-2"></i>TravCen Admin Panelė</h1>
-                        <p class="mb-0">HTML formų ir pasiūlymų valdymas</p>
+                        <p class="mb-0">HTML formų ir pasiūlymų valdymas su statistika</p>
                     </div>
                     <div class="col-auto">
                         <button id="logoutBtn" class="btn btn-outline-light">
@@ -144,107 +161,211 @@
         </div>
 
         <div class="container">
-            <!-- Statistics -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="stats-card">
-                        <div class="stats-number" id="totalOffers">0</div>
-                        <div class="stats-label">Aktyvūs pasiūlymai</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
-                        <div class="stats-number" id="expiredOffers">0</div>
-                        <div class="stats-label">Pasenę pasiūlymai</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
-                        <div class="stats-number" id="totalPartners">0</div>
-                        <div class="stats-label">Aktyvūs partneriai</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stats-card">
-                        <div class="stats-number" id="pendingPartners">0</div>
-                        <div class="stats-label">Laukia patvirtinimo</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Partner Management -->
-            <div class="table-container mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Partnerių Valdymas</h5>
-                    <button id="refreshPartnersBtn" class="btn btn-primary">
-                        <i class="fas fa-sync-alt me-1"></i>Atnaujinti
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <i class="fas fa-chart-bar me-2"></i>Apžvalga
                     </button>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Partnerio ID</th>
-                                <th>Įmonės pavadinimas</th>
-                                <th>Svetainė</th>
-                                <th>El. paštas</th>
-                                <th>Formos nuoroda</th>
-                                <th>Veiksmai</th>
-                            </tr>
-                        </thead>
-                        <tbody id="partnersTableBody">
-                            <tr>
-                                <td colspan="6" class="text-center py-4">
-                                    <div class="spinner-border" role="status">
-                                        <span class="visually-hidden">Kraunama...</span>
-                                    </div>
-                                    <p class="mt-2 mb-0">Kraunami partneriai...</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="partners-tab" data-bs-toggle="tab" data-bs-target="#partners" type="button" role="tab">
+                        <i class="fas fa-handshake me-2"></i>Partneriai
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="offers-tab" data-bs-toggle="tab" data-bs-target="#offers" type="button" role="tab">
+                        <i class="fas fa-gift me-2"></i>Pasiūlymai
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
+                        <i class="fas fa-chart-line me-2"></i>Statistika
+                    </button>
+                </li>
+            </ul>
 
-            <!-- Offers Management -->
-            <div class="table-container">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0"><i class="fas fa-gift me-2"></i>Pasiūlymų Valdymas</h5>
-                    <div>
-                        <button id="cleanupOffersBtn" class="btn btn-cleanup me-2">
-                            <i class="fas fa-broom me-1"></i>Valyti pasenusius
-                        </button>
-                        <button id="refreshOffersBtn" class="btn btn-primary">
-                            <i class="fas fa-sync-alt me-1"></i>Atnaujinti
-                        </button>
+            <!-- Tab Content -->
+            <div class="tab-content" id="adminTabContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <!-- Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number" id="totalOffers">0</div>
+                                <div class="stats-label">Aktyvūs pasiūlymai</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number" id="expiredOffers">0</div>
+                                <div class="stats-label">Pasenę pasiūlymai</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number" id="totalPartners">0</div>
+                                <div class="stats-label">Aktyvūs partneriai</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number" id="pendingPartners">0</div>
+                                <div class="stats-label">Laukia patvirtinimo</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="stats-number" id="totalViews">0</div>
+                                <div class="stats-label">Viso peržiūrų</div>
+                                <div class="stats-small" id="viewsTrend"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="stats-number" id="totalClicks">0</div>
+                                <div class="stats-label">Viso paspaudimų</div>
+                                <div class="stats-small" id="clicksTrend"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card">
+                                <div class="stats-number" id="averageCTR">0%</div>
+                                <div class="stats-label">Vidutinis CTR</div>
+                                <div class="stats-small" id="ctrTrend"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Partneris</th>
-                                <th>Kelionės tipas</th>
-                                <th>Vietos</th>
-                                <th>Kaina</th>
-                                <th>Viešbutis</th>
-                                <th>Datų</th>
-                                <th>Veiksmai</th>
-                            </tr>
-                        </thead>
-                        <tbody id="offersTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center py-4">
-                                    <div class="spinner-border" role="status">
-                                        <span class="visually-hidden">Kraunama...</span>
-                                    </div>
-                                    <p class="mt-2 mb-0">Kraunami pasiūlymai...</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                <!-- Partners Tab -->
+                <div class="tab-pane fade" id="partners" role="tabpanel">
+                    <div class="table-container mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Partnerių Valdymas</h5>
+                            <button id="refreshPartnersBtn" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-1"></i>Atnaujinti
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Partnerio ID</th>
+                                        <th>Įmonės pavadinimas</th>
+                                        <th>Svetainė</th>
+                                        <th>El. paštas</th>
+                                        <th>Statistika</th>
+                                        <th>Formos nuoroda</th>
+                                        <th>Veiksmai</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="partnersTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Kraunama...</span>
+                                            </div>
+                                            <p class="mt-2 mb-0">Kraunami partneriai...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offers Tab -->
+                <div class="tab-pane fade" id="offers" role="tabpanel">
+                    <div class="table-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-gift me-2"></i>Pasiūlymų Valdymas</h5>
+                            <div>
+                                <button id="cleanupOffersBtn" class="btn btn-cleanup me-2">
+                                    <i class="fas fa-broom me-1"></i>Valyti pasenusius
+                                </button>
+                                <button id="refreshOffersBtn" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-1"></i>Atnaujinti
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Partneris</th>
+                                        <th>Kelionės tipas</th>
+                                        <th>Vietos</th>
+                                        <th>Kaina</th>
+                                        <th>Viešbutis</th>
+                                        <th>Statistika</th>
+                                        <th>Datų</th>
+                                        <th>Veiksmai</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="offersTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Kraunama...</span>
+                                            </div>
+                                            <p class="mt-2 mb-0">Kraunami pasiūlymai...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Tab -->
+                <div class="tab-pane fade" id="statistics" role="tabpanel">
+                    <div class="table-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Partnerių Statistika</h5>
+                            <div>
+                                <button id="exportStatsBtn" class="btn btn-success me-2">
+                                    <i class="fas fa-file-export me-1"></i>Eksportuoti
+                                </button>
+                                <button id="refreshStatsBtn" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-1"></i>Atnaujinti
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Partneris</th>
+                                        <th>Pasiūlymų</th>
+                                        <th>Peržiūros</th>
+                                        <th>Paspaudimai</th>
+                                        <th>CTR</th>
+                                        <th>Aktyvūs</th>
+                                        <th>Veiksmai</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Kraunama...</span>
+                                            </div>
+                                            <p class="mt-2 mb-0">Kraunama statistika...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -275,6 +396,26 @@
                         <button type="button" class="btn btn-primary" id="copyPartnerUrlBtn">
                             <i class="fas fa-copy me-1"></i>Kopijuoti nuorodą
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Partner Statistics Modal -->
+        <div class="modal fade" id="partnerStatsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="partnerStatsTitle">Partnerio Statistika</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="partnerStatsContent">
+                            <!-- Statistics will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
                     </div>
                 </div>
             </div>
@@ -334,6 +475,7 @@
         loadStats();
         loadAllOffers();
         loadAllPartners();
+        loadStatistics(); // Load statistics tab
     }
 
     function setupEventListeners() {
@@ -345,6 +487,10 @@
         document.getElementById('refreshPartnersBtn').addEventListener('click', loadAllPartners);
         document.getElementById('cleanupOffersBtn').addEventListener('click', cleanupExpiredOffers);
         document.getElementById('copyPartnerUrlBtn').addEventListener('click', copyPartnerUrl);
+        
+        // Statistics functionality
+        document.getElementById('refreshStatsBtn').addEventListener('click', loadStatistics);
+        document.getElementById('exportStatsBtn').addEventListener('click', exportStatistics);
         
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -414,6 +560,16 @@
                 const pendingPartners = partners.filter(p => p.status === 'pending');
                 document.getElementById('pendingPartners').textContent = pendingPartners.length;
             }
+
+            // Calculate total statistics
+            const totalViews = offers.reduce((sum, offer) => sum + (offer.viewCount || 0), 0);
+            const totalClicks = offers.reduce((sum, offer) => sum + (offer.clickCount || 0), 0);
+            const averageCTR = totalViews > 0 ? ((totalClicks / totalViews) * 100).toFixed(1) : 0;
+
+            document.getElementById('totalViews').textContent = totalViews.toLocaleString();
+            document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+            document.getElementById('averageCTR').textContent = averageCTR + '%';
+
         } catch (error) {
             console.error('Klaida kraunant statistiką:', error);
         }
@@ -433,7 +589,7 @@
             console.error('Klaida kraunant partnerius:', error);
             document.getElementById('partnersTableBody').innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-danger py-4">
+                    <td colspan="7" class="text-center text-danger py-4">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         Klaida kraunant partnerius
                     </td>
@@ -448,7 +604,7 @@
         if (partners.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center py-4">
+                    <td colspan="7" class="text-center py-4">
                         <i class="fas fa-inbox me-2"></i>
                         Nėra partnerių
                     </td>
@@ -476,6 +632,11 @@
                         </a>
                     </td>
                     <td>${partner.email}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="showPartnerStatistics('${partner.partnerId}')">
+                            <i class="fas fa-chart-bar me-1"></i>Statistika
+                        </button>
+                    </td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary" onclick="showPartnerLink('${partner.partnerId}')">
                             <i class="fas fa-link me-1"></i>Gauti nuorodą
@@ -514,7 +675,7 @@
             console.error('Klaida kraunant pasiūlymus:', error);
             document.getElementById('offersTableBody').innerHTML = `
                 <tr>
-                    <td colspan="7" class="text-center text-danger py-4">
+                    <td colspan="8" class="text-center text-danger py-4">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         Klaida kraunant pasiūlymus
                     </td>
@@ -530,7 +691,7 @@
         if (offers.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="text-center py-4">
+                    <td colspan="8" class="text-center py-4">
                         <i class="fas fa-inbox me-2"></i>
                         Nėra pasiūlymų
                     </td>
@@ -555,6 +716,10 @@
             const currencySymbol = currencySymbols[offer.currency] || '$';
             const currencyBadge = `<span class="badge bg-secondary currency-badge">${offer.currency}</span>`;
             
+            // CTR calculation
+            const ctr = offer.viewCount > 0 ? ((offer.clickCount / offer.viewCount) * 100).toFixed(1) : 0;
+            const ctrBadge = ctr > 5 ? 'bg-success' : ctr > 1 ? 'bg-warning' : 'bg-danger';
+            
             return `
                 <tr class="${rowClass}">
                     <td>
@@ -577,6 +742,11 @@
                         <div class="location-info">${offer.hotelRating} žvaigždutės</div>
                     </td>
                     <td>
+                        <div><small>👁️ ${offer.viewCount || 0} peržiūrų</small></div>
+                        <div><small>👆 ${offer.clickCount || 0} paspaudimų</small></div>
+                        <div><span class="badge ${ctrBadge} ctr-badge">CTR: ${ctr}%</span></div>
+                    </td>
+                    <td>
                         <div><strong>Kelionė:</strong> ${new Date(offer.tripDate).toLocaleDateString('lt-LT')}</div>
                         <div><strong>Galioja iki:</strong> ${new Date(offer.validUntil).toLocaleDateString('lt-LT')}</div>
                         ${!isValid ? '<span class="badge bg-danger ms-1">Pasenęs</span>' : ''}
@@ -589,6 +759,193 @@
                 </tr>
             `;
         }).join('');
+    }
+
+    // PRIDĖTA: Partnerių statistikos įkėlimas
+    async function loadStatistics() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/partners`);
+            const data = await response.json();
+
+            if (data.success) {
+                const partners = data.partners || [];
+                displayStatistics(partners);
+            } else {
+                throw new Error(data.error || 'Nepavyko įkelti statistikos');
+            }
+        } catch (error) {
+            console.error('Klaida kraunant statistiką:', error);
+            document.getElementById('statsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Klaida kraunant statistiką
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // PRIDĖTA: Partnerių statistikos atvaizdavimas
+    async function displayStatistics(partners) {
+        const tbody = document.getElementById('statsTableBody');
+        
+        if (partners.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="fas fa-inbox me-2"></i>
+                        Nėra partnerių statistikai
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Load statistics for each partner
+        const statsPromises = partners.map(async (partner) => {
+            try {
+                const statsResponse = await fetch(`${BACKEND_URL}/offers/stats/${partner.partnerId}`);
+                if (statsResponse.ok) {
+                    const statsData = await statsResponse.json();
+                    return statsData;
+                }
+                return null;
+            } catch (error) {
+                console.error(`Klaida kraunant statistiką partneriui ${partner.partnerId}:`, error);
+                return null;
+            }
+        });
+
+        const statsResults = await Promise.all(statsPromises);
+        
+        tbody.innerHTML = statsResults.map((stats, index) => {
+            if (!stats || !stats.success) {
+                const partner = partners[index];
+                return `
+                    <tr>
+                        <td>
+                            <strong>${partner.companyName}</strong>
+                            <div class="location-info">${partner.partnerId}</div>
+                        </td>
+                        <td colspan="6" class="text-center text-muted">
+                            <small>Statistika neprieinama</small>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            const ctr = stats.statistics.clickThroughRate;
+            const ctrBadge = ctr > 5 ? 'bg-success' : ctr > 1 ? 'bg-warning' : 'bg-danger';
+            
+            return `
+                <tr>
+                    <td>
+                        <strong>${stats.partner.companyName}</strong>
+                        <div class="location-info">${stats.partner.partnerId}</div>
+                    </td>
+                    <td>${stats.statistics.totalOffers}</td>
+                    <td>${stats.statistics.totalViews.toLocaleString()}</td>
+                    <td>${stats.statistics.totalClicks.toLocaleString()}</td>
+                    <td>
+                        <span class="badge ${ctrBadge}">${ctr}%</span>
+                    </td>
+                    <td>${stats.statistics.activeOffers}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="showPartnerStatistics('${stats.partner.partnerId}')">
+                            <i class="fas fa-chart-bar me-1"></i>Detaliau
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // PRIDĖTA: Partnerio statistikos rodymas modale
+    async function showPartnerStatistics(partnerId) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/offers/stats/${partnerId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                const stats = data.statistics;
+                const offers = data.offers || [];
+                
+                let offersHTML = '';
+                if (offers.length > 0) {
+                    offersHTML = `
+                        <h6 class="mt-4">Pasiūlymų statistika:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Kelionės tipas</th>
+                                        <th>Paskirtis</th>
+                                        <th>Peržiūros</th>
+                                        <th>Paspaudimai</th>
+                                        <th>CTR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${offers.map(offer => {
+                                        const ctr = offer.views > 0 ? ((offer.clicks / offer.views) * 100).toFixed(1) : 0;
+                                        return `
+                                            <tr>
+                                                <td>${offer.tripType}</td>
+                                                <td>${offer.destination}</td>
+                                                <td>${offer.views}</td>
+                                                <td>${offer.clicks}</td>
+                                                <td><span class="badge bg-secondary">${ctr}%</span></td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('partnerStatsTitle').textContent = `Statistika - ${data.partner.companyName}`;
+                document.getElementById('partnerStatsContent').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Bendri rodikliai</h6>
+                                    <div class="mb-2"><strong>Pasiūlymų skaičius:</strong> ${stats.totalOffers}</div>
+                                    <div class="mb-2"><strong>Aktyvūs pasiūlymai:</strong> ${stats.activeOffers}</div>
+                                    <div class="mb-2"><strong>Pasenę pasiūlymai:</strong> ${stats.expiredOffers}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Veiklos rodikliai</h6>
+                                    <div class="mb-2"><strong>Viso peržiūrų:</strong> ${stats.totalViews.toLocaleString()}</div>
+                                    <div class="mb-2"><strong>Viso paspaudimų:</strong> ${stats.totalClicks.toLocaleString()}</div>
+                                    <div class="mb-2"><strong>CTR:</strong> <span class="badge bg-primary">${stats.clickThroughRate}%</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${offersHTML}
+                `;
+
+                new bootstrap.Modal(document.getElementById('partnerStatsModal')).show();
+            } else {
+                throw new Error(data.error || 'Nepavyko įkelti statistikos');
+            }
+        } catch (error) {
+            console.error('Klaida kraunant partnerio statistiką:', error);
+            alert('Klaida kraunant statistiką: ' + error.message);
+        }
+    }
+
+    // PRIDĖTA: Statistikos eksportas
+    async function exportStatistics() {
+        alert('Eksporto funkcija bus įgyvendinta artimiausiu metu!');
+        // Čia galima pridėti CSV arba PDF eksporto funkcionalumą
     }
 
     // Partnerio funkcijos
