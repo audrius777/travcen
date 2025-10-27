@@ -83,7 +83,11 @@ app.use('/api/partners', partnerRoutes);
 import offerRoutes from './routes/offers.js';
 app.use('/api/offers', offerRoutes);
 
-// 9. Autentifikacijos endpoint'ai
+// 9. PRIDĖTA: Statistikos route'ai
+import statisticsRoutes from './routes/statistics.js';
+app.use('/api/statistics', statisticsRoutes);
+
+// 10. Autentifikacijos endpoint'ai
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   
@@ -110,7 +114,7 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// 10. Pagrindinis route'as
+// 11. Pagrindinis route'as
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
@@ -120,18 +124,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// 11. Klaidų apdorojimas
+// 12. Klaidų apdorojimas
 app.use((err, req, res, next) => {
   console.error('Serverio klaida:', err.message);
   res.status(500).json({ error: 'Vidinė serverio klaida' });
 });
 
-// 12. 404 handler
+// 13. 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Endpoint nerastas' });
 });
 
-// 13. Serverio paleidimas
+// 14. Serverio paleidimas
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -146,6 +150,7 @@ async function startServer() {
       console.log(`🌍 CORS įjungtas Vercel domain'ams`);
       console.log(`📝 Partnerių sistema: /api/partners`);
       console.log(`🎯 Pasiūlymų sistema: /api/offers`);
+      console.log(`📊 Statistikos sistema: /api/statistics`); // PRIDĖTA
     });
   } catch (err) {
     console.error('❌ Serverio paleidimo klaida:', err);
