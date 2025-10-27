@@ -35,12 +35,39 @@ class OffersManager {
             // 👇 PRIDĖTA: Iškart filtruoti pasiūlymus po įkėlimo
             this.filterOffers(filters);
             
+            // 👇 PRIDĖTA: Registruoti peržiūras kiekvienam pasiūlymui
+            this.registerViews(this.offers);
+            
             return this.offers;
             
         } catch (error) {
             console.error('Klaida įkeliant pasiūlymus:', error);
             this.showError('Nepavyko įkelti pasiūlymų. Bandykite vėliau.');
             return [];
+        }
+    }
+
+    // PRIDĖTA: Registruoti peržiūras pasiūlymams
+    async registerViews(offers) {
+        try {
+            // Siųsti peržiūrų įrašus visiems pasiūlymams
+            const viewPromises = offers.map(offer => 
+                fetch(`${API_BASE_URL}/offers/${offer._id}/view`, { method: 'GET' })
+                    .catch(err => console.error(`Klaida registruojant peržiūrą ${offer._id}:`, err))
+            );
+            
+            await Promise.all(viewPromises);
+        } catch (error) {
+            console.error('Klaida registruojant peržiūras:', error);
+        }
+    }
+
+    // PRIDĖTA: Registruoti paspaudimą pasiūlymui
+    async registerClick(offerId) {
+        try {
+            await fetch(`${API_BASE_URL}/offers/${offerId}/click`, { method: 'GET' });
+        } catch (error) {
+            console.error('Klaida registruojant paspaudimą:', error);
         }
     }
 
@@ -60,23 +87,26 @@ class OffersManager {
         }
 
         cardList.innerHTML = offers.map(offer => this.createOfferCard(offer)).join('');
+        
+        // 👇 PRIDĖTA: Pridėti event listenerius paspaudimų registravimui
+        this.addClickEventListeners();
     }
 
     // Sukurti pasiūlymo kortelę
     createOfferCard(offer) {
-    const currentLang = localStorage.getItem('selectedLanguage') || 'en';
-    const formattedDate = this.formatDateByLanguage(offer.tripDate, currentLang);
-    const validUntil = this.formatDateByLanguage(offer.validUntil, currentLang);
+        const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+        const formattedDate = this.formatDateByLanguage(offer.tripDate, currentLang);
+        const validUntil = this.formatDateByLanguage(offer.validUntil, currentLang);
 
-    // Valiutos simboliai
-    const currencySymbols = {
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£'
-    };
-    const currencySymbol = currencySymbols[offer.currency] || '$';
+        // Valiutos simboliai
+        const currencySymbols = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£'
+        };
+        const currencySymbol = currencySymbols[offer.currency] || '$';
 
-    return `
+        return `
 <div class="card" 
      data-id="${offer._id}"
      data-from="${offer.companyName}"
@@ -84,7 +114,7 @@ class OffersManager {
      data-price="${offer.price}"
      data-type="${offer.tripType}"
      data-date="${offer.tripDate}">
-    <a href="${offer.offerUrl}" target="_blank" class="card-link">
+    <a href="${offer.offerUrl}" target="_blank" class="card-link" data-offer-id="${offer._id}">
         <div class="card-content">
             <h3>${offer.tripType}</h3>
             <p class="company">${offer.companyName}</p>
@@ -93,11 +123,32 @@ class OffersManager {
             <p class="valid-until">Valid Until: ${validUntil}</p>
             <p class="price">Price: ${currencySymbol}${offer.price}</p>
             <p class="hotel-stars">Hotel: ${'⭐'.repeat(offer.hotelRating)}</p>
+            <!-- PRIDĖTA: Statistikos rodikliai -->
+            <div class="offer-stats">
+                <small>👁️ ${offer.viewCount || 0} views • 👆 ${offer.clickCount || 0} clicks</small>
+            </div>
         </div>
     </a>
 </div>
 `;
-}
+    }
+
+    // PRIDĖTA: Pridėti event listenerius paspaudimų registravimui
+    addClickEventListeners() {
+        const cardLinks = document.querySelectorAll('.card-link[data-offer-id]');
+        
+        cardLinks.forEach(link => {
+            link.addEventListener('click', async (e) => {
+                const offerId = link.getAttribute('data-offer-id');
+                
+                // Registruoti paspaudimą prieš pereinant į nuorodą
+                await this.registerClick(offerId);
+                
+                // Leisti naršyklei tęsti į pasiūlymo nuorodą
+                // Event listeneris netrukdo numatytajam link veikimui
+            });
+        });
+    }
 
     // Filtruoti pasiūlymus pagal vartotojo kriterijus
     filterOffers(filters = {}) {
