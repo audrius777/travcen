@@ -54,6 +54,21 @@ const offerSchema = new mongoose.Schema({
     enum: ['active', 'expired'],
     default: 'active'
   },
+  // PRIDĖTI SKAITIKLIAI
+  viewCount: {
+    type: Number,
+    default: 0
+  },
+  clickCount: {
+    type: Number,
+    default: 0
+  },
+  lastViewed: {
+    type: Date
+  },
+  lastClicked: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now
