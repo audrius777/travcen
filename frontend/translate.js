@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     lt: {
       "site-title": "TravCen",
-      "welcome-text": "Visos kelionių pasiūlymos vienoje vietoje",
+      "welcome-text": "Visi kelionių pasiūlymai vienoje vietoje",
       "departure-placeholder": "Išvykimo vieta",
       "destination-placeholder": "Kelionės tikslas",
       "departure-date-placeholder": "Išvykimo data",
